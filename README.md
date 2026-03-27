@@ -1,4 +1,4 @@
-# 🚆 Rail Data Hub
+# Rail Data Hub
 
 Automatisiertes Tool zur Erfassung und Analyse von Preis- und Kapazitätsdaten im europäischen Schienenpersonenfernverkehr.
 
@@ -115,13 +115,17 @@ test:     Tests hinzufügen
 | ÖBB | Open Data Portal (GTFS) | Offizielle API |
 | SNCF | SNCF Developer API | Offizielle API |
 | Trenitalia | ViaggiaTreno | Inoffizielle API |
-| Flixtrain | Website | Scraping |
+| Flixtrain | Website + | Offizielle API |
+
+*Die Methode ist bisher nur der Stand einer kurzen Recherche, APIs sind verfügbar, genauere Analyse der bereitgestellten Informationen nötig. Vermutlich je nach Website js. Scraper nötig um Auslastungs- und Preisdaten zu erhalten.
+
+Ziel / Plan ist es das GTFS Format (https://gtfs.org/) zur Skalierbarkeit beizubehalten.
 
 ## Wichtige Dateien
 
 | Datei | Zweck |
 |-------|-------|
-| `.env` | Lokale Secrets – **niemals committen!** |
+| `.env` | Lokale "Settings" – **niemals committen!** |
 | `.env.example` | Vorlage für `.env` |
 | `docker-compose.yml` | Startet lokale TimescaleDB |
 | `requirements.txt` | Python-Abhängigkeiten |
