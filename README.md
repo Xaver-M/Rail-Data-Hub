@@ -8,7 +8,7 @@ Dieses Tool sammelt regelmäßig Daten von verschiedenen Bahnanbietern (DB, Flix
 
 **Forschungsfrage:** Wie entwickelt sich der Wettbewerb im europäischen Schienenpersonenfernverkehr?
 
-## 👥 Team
+## Team
 
 
 
