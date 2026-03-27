@@ -1,0 +1,21 @@
+# HTTP & Scraping
+requests==2.31.0
+beautifulsoup4==4.12.2
+lxml==5.3.1
+
+# Datenbank
+psycopg2-binary==2.9.10
+duckdb==1.2.1
+
+# Scheduling
+APScheduler==3.10.4
+
+# Datenverarbeitung
+pandas==2.2.3
+numpy==2.2.4
+
+# Umgebungsvariablen
+python-dotenv==1.0.0
+
+# Logging
+loguru==0.7.2
