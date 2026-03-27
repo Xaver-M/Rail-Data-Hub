@@ -115,7 +115,7 @@ test:     Tests hinzufügen
 | ÖBB | Open Data Portal (GTFS) | Offizielle API |
 | SNCF | SNCF Developer API | Offizielle API |
 | Trenitalia | ViaggiaTreno | Inoffizielle API |
-| Flixtrain | Website + | Offizielle API |
+| Flixtrain | Website + Offizieller GitHub | Offizielle API |
 
 *Die Methode ist bisher nur der Stand einer kurzen Recherche, APIs sind verfügbar, genauere Analyse der bereitgestellten Informationen nötig. Vermutlich je nach Website js. Scraper nötig um Auslastungs- und Preisdaten zu erhalten.
 
