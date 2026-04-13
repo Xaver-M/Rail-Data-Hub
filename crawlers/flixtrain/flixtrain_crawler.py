@@ -10,7 +10,11 @@ Wichtig: Basic Plan = 100 Requests/Monat kostenlos.
 Nur für relevante Routen crawlen!
 """
 
+import sys, os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
+
 import os
+import re
 from datetime import datetime
 import requests
 
@@ -163,13 +167,22 @@ class FlixtrainCrawler(BaseCrawler):
 
     def _parse_journey(self, journey: dict) -> dict | None:
         """
-        Parst eine einzelne Verbindung – gibt None zurück wenn es ein Bus ist.
+        Parst eine einzelne Verbindung - gibt None zurück wenn es ein Bus ist.
 
         Args:
             journey: Ein einzelnes Journey-Objekt aus der API
 
         Returns:
             Datensatz im einheitlichen Format oder None
+
+        Hinweis zur Sitzverfügbarkeit:
+            Die RapidAPI liefert Sitzinformationen nur über das Textfeld
+            additional_info in den fares (z.B. "1 seat left at this price").
+            Dieses Feld ist nur befüllt wenn wenige Plätze verbleiben (~1-9).
+            Bei normaler Verfügbarkeit ist es leer → seats_available bleibt None.
+            Eine exakte Sitzanzahl wie bei Trenitalia (availableAmount) ist
+            über diese API nicht verfügbar. Dies ist in der Analyse entsprechend
+            als Limitation zu dokumentieren.
         """
         # Nur Züge – Busse herausfiltern
         segments = journey.get("segments", [])
@@ -179,7 +192,7 @@ class FlixtrainCrawler(BaseCrawler):
         )
 
         if not is_train:
-            return None  # Bus überspringen
+            return None
 
         # Abfahrts- und Ankunftszeit
         departure_str = journey.get("dep_offset")
@@ -188,38 +201,50 @@ class FlixtrainCrawler(BaseCrawler):
         if not departure_str or not arrival_str:
             return None
 
-        # Format: "2026-04-20T09:55:00.000"
         departure_time = datetime.fromisoformat(departure_str)
         arrival_time = datetime.fromisoformat(arrival_str)
 
-        # Preis aus fares Array
+        # Preis + Sitzverfügbarkeit aus fares
         fares = journey.get("fares", [])
         price_eur = None
         seats_available = None
+        availability_level = None  # "low" | "normal" | "sold_out" | None
 
         if fares:
             first_fare = fares[0]
             price_eur = first_fare.get("price")
 
-            # Verfügbare Plätze aus additional_info extrahieren
-            # z.B. "2 seats left at this price"
-            additional_info = first_fare.get("additional_info", "")
-            if additional_info and "seat" in additional_info:
-                try:
-                    seats_available = int(additional_info.split()[0])
-                except (ValueError, IndexError):
-                    pass
+            additional_info = first_fare.get("additional_info", "") or ""
+
+            if additional_info:
+                info_lower = additional_info.lower()
+
+                if "sold out" in info_lower:
+                    seats_available = 0
+                    availability_level = "sold_out"
+
+                else:
+                    # Muster: "1 seat left at this price" / "3 seats left"
+                    match = re.search(r"(\d+)\s+seat", info_lower)
+                    if match:
+                        seats_available = int(match.group(1))
+                        # Unter 5 Sitze = knappes Angebot
+                        availability_level = "low" if seats_available <= 5 else "normal"
+            else:
+                # Kein additional_info = normale Verfügbarkeit
+                availability_level = "normal"
 
         return {
-            "operator":         self.OPERATOR_NAME,
-            "origin":           journey.get("dep_name"),
-            "destination":      journey.get("arr_name"),
-            "departure_time":   departure_time,
-            "arrival_time":     arrival_time,
-            "price_eur":        float(price_eur) if price_eur else None,
-            "travel_class":     "2",        # Flixtrain hat nur eine Klasse
-            "seats_available":  seats_available,
-            "currency":         "EUR",
+            "operator":           self.OPERATOR_NAME,
+            "origin":             journey.get("dep_name"),
+            "destination":        journey.get("arr_name"),
+            "departure_time":     departure_time,
+            "arrival_time":       arrival_time,
+            "price_eur":          float(price_eur) if price_eur else None,
+            "travel_class":       "2",
+            "seats_available":    seats_available,    # int oder None
+            "availability_level": availability_level, # "low"/"normal"/"sold_out"/None
+            "currency":           "EUR",
         }
 
     # ──────────────────────────────────────────────
@@ -249,7 +274,7 @@ if __name__ == "__main__":
     """
     Schnelltest ohne Datenbankverbindung.
 
-    Aufruf: py crawlers/flixtrain/flixtrain_crawler.py
+    Aufruf: py -m crawlers.flixtrain.flixtrain_crawler
     Voraussetzung: RAPIDAPI_KEY in .env eingetragen
     """
     import sys
@@ -259,20 +284,20 @@ if __name__ == "__main__":
     from dotenv import load_dotenv
     load_dotenv()
 
-    print("🚆 Flixtrain Crawler Test (RapidAPI)")
+    print("Flixtrain Crawler Test (RapidAPI)")
     print("=" * 40)
 
     try:
         crawler = FlixtrainCrawler()
     except ValueError as e:
-        print(f"❌ {e}")
+        print(f"FEHLER: {e}")
         sys.exit(1)
 
     url = crawler.get_url()
     params = crawler.get_params("Berlin", "Hamburg", "2026-04-20")
 
     print(f"URL: {url}")
-    print(f"Von: Berlin → Hamburg | Datum: 20.04.2026")
+    print(f"Von: Berlin -> Hamburg | Datum: 20.04.2026")
     print()
 
     try:
@@ -281,20 +306,32 @@ if __name__ == "__main__":
         valid = crawler.validate(records)
 
         if valid:
-            print(f"✅ {len(valid)} Flixtrain-Verbindungen gefunden:")
+            print(f"OK – {len(valid)} Flixtrain-Verbindungen gefunden:")
             print()
+            print(f"  {'Abfahrt':<8} {'Ankunft':<8} {'Preis':<10} {'Verfuegb.':<14} {'Plaetze':<8} Route")
+            print("  " + "-" * 74)
+
             for r in valid:
-                seats = f"{r['seats_available']} Plätze" if r['seats_available'] else ""
+                avail = r.get("availability_level") or "unknown"
+                seats = r.get("seats_available")
+                seats_str = str(seats) if seats is not None else "-"
+                avail_label = {
+                    "low":      "[LOW]",
+                    "normal":   "[OK]",
+                    "sold_out": "[AUSVERKAUFT]",
+                }.get(avail, "[?]")
+
                 print(
-                    f"  {r['departure_time'].strftime('%H:%M')} → "
-                    f"{r['arrival_time'].strftime('%H:%M')} | "
-                    f"{r['price_eur']:.2f}€ | "
-                    f"{r['origin']} → {r['destination']} "
-                    f"{seats}"
+                    f"  {r['departure_time'].strftime('%H:%M'):<8}"
+                    f"{r['arrival_time'].strftime('%H:%M'):<8}"
+                    f"{r['price_eur']:.2f} EUR  "
+                    f"{avail_label:<14}"
+                    f"{seats_str:<8}  "
+                    f"{r['origin']} -> {r['destination']}"
                 )
         else:
-            print("⚠️  Keine Flixtrain-Zugverbindungen gefunden")
-            print("   Möglicherweise fährt Flixtrain an diesem Tag nicht.")
+            print("WARNUNG: Keine Flixtrain-Zugverbindungen gefunden.")
+            print("Moeglicherweise faehrt Flixtrain an diesem Tag nicht.")
 
     except Exception as e:
-        print(f"❌ Fehler: {e}")
+        print(f"FEHLER: {e}")
