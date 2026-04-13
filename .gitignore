@@ -210,3 +210,7 @@ __marimo__/
 *_raw.json
 *_response.json
 *.csv
+
+# Testskripte
+crawlers/**/test_*.py
+tests/
