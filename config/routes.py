@@ -268,7 +268,7 @@ def get_routes_with_competition() -> list[Route]:
 BOOKING_HORIZONS = [
     1, 2, 3, 4, 5, 6, 7,        # Jeder Tag der nächsten Woche
     10, 14, 21, 30,              # Wöchentlich bis 30 Tage
-    45, 60, 90, 120              # Monatlich bis 4 Monate
+    45, 60, 90,               # Monatlich bis 3 Monate
 ]
 
 
