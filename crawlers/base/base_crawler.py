@@ -7,7 +7,7 @@ die abstrakten Methoden get_url(), get_params() und parse().
 import time
 import os
 from abc import ABC, abstractmethod
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 import requests
 from loguru import logger
@@ -23,30 +23,25 @@ class BaseCrawler(ABC):
     Gemeinsame Logik:
     - HTTP-Anfragen mit Timeout, Headers und automatischem Retry
     - Logging jeder Aktion via loguru
-    - Datenbankverbindung (wird später mit psycopg2 befüllt)
+    - Datenbankverbindung via psycopg2
     - Validierung der Daten
     - Einheitlicher run()-Ablauf
 
     Jeder Operator-Crawler muss implementieren:
     - get_url()
-    - get_params(origin, destination, date)
-    - parse(response)
+    - get_params(route, date)
+    - parse(response, route)
     """
 
-    # Standardwerte – können in Unterklassen überschrieben werden
-    MAX_RETRIES = 3          # Maximale Anzahl Wiederholungsversuche
-    RETRY_DELAY = 5          # Sekunden zwischen Versuchen
-    REQUEST_TIMEOUT = 30     # Sekunden bis Timeout
-    OPERATOR_NAME = "base"   # Wird in Unterklassen überschrieben
+    MAX_RETRIES = 3
+    RETRY_DELAY = 5
+    REQUEST_TIMEOUT = 30
+    OPERATOR_NAME = "base"
 
     def __init__(self):
-        """
-        Initialisierung: Logging einrichten, HTTP-Session erstellen,
-        Datenbankverbindung konfigurieren.
-        """
         self._setup_logging()
         self.session = self._create_session()
-        self.db_conn = None  # Wird bei Bedarf geöffnet
+        self.db_conn = None
         self.logger.info(f"{self.OPERATOR_NAME} Crawler initialisiert")
 
     # ──────────────────────────────────────────────
@@ -54,22 +49,16 @@ class BaseCrawler(ABC):
     # ──────────────────────────────────────────────
 
     def _setup_logging(self):
-        """Richtet loguru Logger für diesen Crawler ein."""
         self.logger = logger.bind(operator=self.OPERATOR_NAME)
         logger.add(
             f"logs/{self.OPERATOR_NAME}_crawler.log",
-            rotation="1 day",       # Täglich neue Logdatei
-            retention="30 days",    # 30 Tage aufbewahren
+            rotation="1 day",
+            retention="30 days",
             level="INFO",
             format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {extra[operator]} | {message}"
         )
 
     def _create_session(self) -> requests.Session:
-        """
-        Erstellt eine wiederverwendbare HTTP-Session mit Standard-Headers.
-        Eine Session ist effizienter als einzelne requests.get() Aufrufe
-        weil TCP-Verbindungen wiederverwendet werden.
-        """
         session = requests.Session()
         session.headers.update({
             "User-Agent": "Mozilla/5.0 (compatible; RailDataHub/1.0; research)",
@@ -79,10 +68,6 @@ class BaseCrawler(ABC):
         return session
 
     def _connect_db(self):
-        """
-        Öffnet Datenbankverbindung zu TimescaleDB.
-        Verbindungsparameter kommen aus der .env Datei.
-        """
         try:
             import psycopg2
             self.db_conn = psycopg2.connect(
@@ -98,7 +83,6 @@ class BaseCrawler(ABC):
             raise
 
     def _close_db(self):
-        """Schließt Datenbankverbindung sauber."""
         if self.db_conn and not self.db_conn.closed:
             self.db_conn.close()
             self.logger.info("Datenbankverbindung geschlossen")
@@ -108,20 +92,6 @@ class BaseCrawler(ABC):
     # ──────────────────────────────────────────────
 
     def fetch(self, url: str, params: dict = None, headers: dict = None) -> requests.Response:
-        """
-        Sendet HTTP GET-Anfrage mit automatischem Retry bei Fehlern.
-
-        Args:
-            url: Die aufzurufende URL
-            params: Query-Parameter (werden an URL angehängt)
-            headers: Zusätzliche HTTP-Headers (z.B. API-Key)
-
-        Returns:
-            requests.Response Objekt
-
-        Raises:
-            Exception wenn alle Versuche fehlschlagen
-        """
         for attempt in range(1, self.MAX_RETRIES + 1):
             try:
                 self.logger.info(f"HTTP GET {url} (Versuch {attempt}/{self.MAX_RETRIES})")
@@ -132,7 +102,7 @@ class BaseCrawler(ABC):
                     headers=headers,
                     timeout=self.REQUEST_TIMEOUT,
                 )
-                response.raise_for_status()  # Wirft Exception bei 4xx/5xx
+                response.raise_for_status()
 
                 self.logger.info(f"HTTP {response.status_code} – {len(response.content)} Bytes")
                 return response
@@ -141,7 +111,6 @@ class BaseCrawler(ABC):
                 self.logger.warning(f"Timeout bei Versuch {attempt}")
             except requests.exceptions.HTTPError as e:
                 self.logger.warning(f"HTTP Fehler {e.response.status_code} bei Versuch {attempt}")
-                # Bei 404 oder 400 sofort aufgeben – Retry hilft nicht
                 if e.response.status_code in (400, 404):
                     raise
             except requests.exceptions.ConnectionError:
@@ -149,7 +118,6 @@ class BaseCrawler(ABC):
             except Exception as e:
                 self.logger.warning(f"Unbekannter Fehler bei Versuch {attempt}: {e}")
 
-            # Warten vor nächstem Versuch (außer beim letzten)
             if attempt < self.MAX_RETRIES:
                 self.logger.info(f"Warte {self.RETRY_DELAY}s vor nächstem Versuch...")
                 time.sleep(self.RETRY_DELAY)
@@ -161,16 +129,6 @@ class BaseCrawler(ABC):
     # ──────────────────────────────────────────────
 
     def validate(self, records: list[dict]) -> list[dict]:
-        """
-        Prüft ob die geparsten Datensätze vollständig und plausibel sind.
-        Ungültige Datensätze werden herausgefiltert und geloggt.
-
-        Args:
-            records: Liste von Datensätzen aus parse()
-
-        Returns:
-            Liste valider Datensätze
-        """
         valid = []
         for record in records:
             if self._is_valid(record):
@@ -182,26 +140,17 @@ class BaseCrawler(ABC):
         return valid
 
     def _is_valid(self, record: dict) -> bool:
-        """
-        Prüft einen einzelnen Datensatz auf Vollständigkeit und Plausibilität.
-
-        Pflichtfelder: operator, origin, destination, departure_time, price_eur
-        Plausibilität: Preis > 0, Abfahrt in der Zukunft, bekannter Operator
-        """
         required_fields = ["operator", "origin", "destination", "departure_time", "price_eur"]
 
-        # Alle Pflichtfelder vorhanden?
         for field in required_fields:
             if field not in record or record[field] is None:
                 self.logger.warning(f"Pflichtfeld fehlt: {field}")
                 return False
 
-        # Preis plausibel?
         if not isinstance(record["price_eur"], (int, float)) or record["price_eur"] <= 0:
             self.logger.warning(f"Ungültiger Preis: {record['price_eur']}")
             return False
 
-        # Preis nicht unrealistisch hoch? (Sicherheitsnetz gegen Datenfehler)
         if record["price_eur"] > 2000:
             self.logger.warning(f"Verdächtig hoher Preis: {record['price_eur']}€")
             return False
@@ -213,15 +162,6 @@ class BaseCrawler(ABC):
     # ──────────────────────────────────────────────
 
     def save(self, records: list[dict]) -> int:
-        """
-        Schreibt validierte Datensätze in TimescaleDB.
-
-        Args:
-            records: Liste valider Datensätze
-
-        Returns:
-            Anzahl erfolgreich gespeicherter Datensätze
-        """
         if not records:
             self.logger.info("Keine Datensätze zu speichern")
             return 0
@@ -232,15 +172,32 @@ class BaseCrawler(ABC):
         try:
             for record in records:
                 cursor.execute("""
-                    INSERT INTO prices (
-                        time, operator, origin, destination,
-                        departure_time, arrival_time,
-                        price_eur, travel_class, seats_available, currency
+                    INSERT INTO price_observations (
+                        collected_at,
+                        operator,
+                        origin_name,
+                        destination_name,
+                        origin_id,
+                        destination_id,
+                        departure_at,
+                        arrival_at,
+                        price_eur,
+                        seats_available,
+                        booking_horizon_days,
+                        route_id
                     ) VALUES (
-                        NOW(), %(operator)s, %(origin)s, %(destination)s,
-                        %(departure_time)s, %(arrival_time)s,
-                        %(price_eur)s, %(travel_class)s, %(seats_available)s,
-                        %(currency)s
+                        NOW(),
+                        %(operator)s,
+                        %(origin)s,
+                        %(destination)s,
+                        %(origin_id)s,
+                        %(destination_id)s,
+                        %(departure_time)s,
+                        %(arrival_time)s,
+                        %(price_eur)s,
+                        %(seats_available)s,
+                        %(booking_horizon_days)s,
+                        %(route_id)s
                     )
                     ON CONFLICT DO NOTHING
                 """, record)
@@ -258,22 +215,13 @@ class BaseCrawler(ABC):
 
         return saved
 
-    def log_run(self, status: str, records_fetched: int, error_msg: str = None):
-        """
-        Schreibt einen Eintrag in crawler_logs – wann wurde gecrawlt,
-        wie viele Datensätze, Erfolg oder Fehler.
-
-        Args:
-            status: "success" oder "error"
-            records_fetched: Anzahl abgerufener Datensätze
-            error_msg: Fehlermeldung falls status="error"
-        """
+    def log_run(self, status: str, records_written: int, error_msg: str = None):
         cursor = self.db_conn.cursor()
         try:
             cursor.execute("""
-                INSERT INTO crawler_logs (time, operator, status, records_fetched, error_message)
+                INSERT INTO crawler_logs (run_at, operator, status, records_written, error_msg)
                 VALUES (NOW(), %s, %s, %s, %s)
-            """, (self.OPERATOR_NAME, status, records_fetched, error_msg))
+            """, (self.OPERATOR_NAME, status, records_written, error_msg))
             self.db_conn.commit()
         except Exception as e:
             self.logger.error(f"Fehler beim Schreiben des Crawler-Logs: {e}")
@@ -284,12 +232,12 @@ class BaseCrawler(ABC):
     # HAUPTABLAUF
     # ──────────────────────────────────────────────
 
-    def run(self, routes: list[tuple]):
+    def run(self, routes: list, horizons: list[int]):
         """
         Hauptablauf – wird von APScheduler aufgerufen.
 
-        Ablauf für jede Route:
-        1. URL und Parameter holen
+        Ablauf für jede Route × Horizont:
+        1. Parameter erstellen
         2. HTTP-Anfrage senden
         3. Antwort parsen
         4. Validieren
@@ -297,10 +245,13 @@ class BaseCrawler(ABC):
         6. Lauf loggen
 
         Args:
-            routes: Liste von (origin, destination, date) Tupeln
-                    z.B. [("Berlin Hbf", "München Hbf", "2026-04-01")]
+            routes:   Liste von Route-Objekten aus config/routes.py
+            horizons: Liste von Buchungshorizonten in Tagen
+                      z.B. [1, 2, 3, 7, 14, 30, 90]
         """
-        self.logger.info(f"Crawler gestartet – {len(routes)} Routen")
+        self.logger.info(
+            f"Crawler gestartet – {len(routes)} Routen, {len(horizons)} Horizonte"
+        )
         start_time = datetime.now(timezone.utc)
         total_saved = 0
         errors = 0
@@ -308,32 +259,47 @@ class BaseCrawler(ABC):
         try:
             self._connect_db()
 
-            for origin, destination, date in routes:
-                try:
-                    # 1. URL und Parameter
-                    url = self.get_url()
-                    params = self.get_params(origin, destination, date)
-
-                    # 2. HTTP-Anfrage
-                    response = self.fetch(url, params)
-
-                    # 3. Parsen
-                    records = self.parse(response)
-                    self.logger.info(f"{origin}→{destination}: {len(records)} Verbindungen gefunden")
-
-                    # 4. Validieren
-                    valid_records = self.validate(records)
-
-                    # 5. Speichern
-                    saved = self.save(valid_records)
-                    total_saved += saved
-
-                except Exception as e:
-                    errors += 1
-                    self.logger.error(f"Fehler bei Route {origin}→{destination}: {e}")
+            for route in routes:
+                # Nur Routen die dieser Operator bedient
+                if self.OPERATOR_NAME not in route.operators:
                     continue
 
-            # 6. Lauf loggen
+                for horizon in horizons:
+                    date = (datetime.now() + timedelta(days=horizon)).strftime("%Y-%m-%d")
+                    try:
+                        # 1. URL und Parameter
+                        url = self.get_url()
+                        params = self.get_params(route, date)
+
+                        # 2. HTTP-Anfrage
+                        response = self.fetch(url, params)
+
+                        # 3. Parsen
+                        records = self.parse(response, route)
+
+                        # 4. Buchungshorizont zu jedem Record hinzufügen
+                        for r in records:
+                            r["booking_horizon_days"] = horizon
+                            r["route_id"] = route.route_id  
+
+                        # 5. Validieren
+                        valid_records = self.validate(records)
+
+                        # 6. Speichern
+                        saved = self.save(valid_records)
+                        total_saved += saved
+
+                        self.logger.info(
+                            f"{route.description} +{horizon}d: {saved} gespeichert"
+                        )
+
+                    except Exception as e:
+                        errors += 1
+                        self.logger.error(
+                            f"Fehler bei {route.description} +{horizon}d: {e}"
+                        )
+                        continue
+
             status = "success" if errors == 0 else "partial_error"
             self.log_run(status, total_saved)
 
@@ -357,52 +323,34 @@ class BaseCrawler(ABC):
 
     @abstractmethod
     def get_url(self) -> str:
-        """
-        Gibt die API-URL oder Website-URL des Operators zurück.
-
-        Beispiel DB:
-            return "https://reiseauskunft.bahn.de/bin/query.exe"
-
-        Beispiel Flixtrain:
-            return "https://shop.flixtrain.com/api/v1/search"
-        """
+        """Gibt die API-URL des Operators zurück."""
         pass
 
     @abstractmethod
-    def get_params(self, origin: str, destination: str, date: str) -> dict:
+    def get_params(self, route, date: str) -> dict:
         """
         Gibt die Query-Parameter für eine Suchanfrage zurück.
 
         Args:
-            origin: Abfahrtsbahnhof
-            destination: Zielbahnhof
-            date: Datum im Format YYYY-MM-DD
-
-        Beispiel DB:
-            return {
-                "S": origin,
-                "Z": destination,
-                "date": date,
-                "time": "06:00",
-            }
+            route: Route-Objekt aus config/routes.py
+            date:  Datum im Format YYYY-MM-DD
         """
         pass
 
     @abstractmethod
-    def parse(self, response: requests.Response) -> list[dict]:
+    def parse(self, response: requests.Response, route=None) -> list[dict]:
         """
         Verarbeitet die Rohantwort und gibt eine Liste von Datensätzen zurück.
-        Jeder Datensatz muss diese Felder haben:
-        {
-            "operator":        str,   z.B. "DB"
-            "origin":          str,   z.B. "Berlin Hbf"
-            "destination":     str,   z.B. "München Hbf"
-            "departure_time":  datetime
-            "arrival_time":    datetime
-            "price_eur":       float  z.B. 29.90
-            "travel_class":    str,   z.B. "2"
-            "seats_available": int,   z.B. 42 (None wenn unbekannt)
-            "currency":        str,   z.B. "EUR"
-        }
+
+        Pflichtfelder pro Datensatz:
+            operator        str      z.B. "flixtrain"
+            origin          str      z.B. "Stuttgart Hbf"
+            destination     str      z.B. "Berlin Hbf"
+            departure_time  datetime
+            arrival_time    datetime
+            price_eur       float    z.B. 24.49
+            origin_id       str      operator-spez. ID (optional)
+            destination_id  str      operator-spez. ID (optional)
+            seats_available int      None wenn unbekannt
         """
         pass
