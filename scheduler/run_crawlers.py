@@ -27,6 +27,8 @@ from datetime import datetime
 
 from config.routes import ROUTES, BOOKING_HORIZONS
 from crawlers.flixtrain.flixtrain_crawler import FlixtrainCrawler
+from crawlers.trenitalia.trenitalia_crawler import TrenitaliaCrawler  
+from crawlers.ouigo_es.ougio_es_crawler import OuigoEsCrawler
 
 
 def run_all_crawlers():
@@ -34,7 +36,8 @@ def run_all_crawlers():
 
     crawlers = [
         FlixtrainCrawler(),
-        # TrenitaliaCrawler(),  ← später hinzufügen
+        TrenitaliaCrawler(), 
+        OuigoEsCrawler(),
         # DBCrawler(),          ← später hinzufügen
     ]
 
@@ -57,13 +60,13 @@ if __name__ == "__main__":
     scheduler = BlockingScheduler()
     scheduler.add_job(
         run_all_crawlers,
-        trigger=CronTrigger(hour=6, minute=0),
+        trigger=CronTrigger(hour=10, minute=0),
         id="daily_crawl",
         name="Täglicher Crawler-Run",
         misfire_grace_time=3600  # 1 Stunde Toleranz falls PC kurz aus war
     )
 
-    logger.info("Nächster Run: morgen 06:00 Uhr")
+    logger.info("Nächster Run: morgen 10:00 Uhr")
 
     try:
         scheduler.start()

@@ -1,0 +1,234 @@
+"""
+Ouigo España Crawler - Preisdaten über die mdw02.api-es.ouigo.com API
+
+Token-Login mit App-Credentials aus .env.
+Gibt günstigsten Tagespreis pro Route zurück (Calendar/prices Endpoint).
+"""
+
+import sys, os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
+
+import time
+from datetime import datetime
+import requests
+
+from crawlers.base.base_crawler import BaseCrawler
+from config.routes import Route
+
+
+class OuigoEsCrawler(BaseCrawler):
+
+    OPERATOR_NAME = "ouigo_es"
+    BASE_URL = "https://mdw02.api-es.ouigo.com/api/Sale/journeysearch"
+    TOKEN_URL = "https://mdw02.api-es.ouigo.com/api/Token/login"
+
+    HEADERS = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Content-Type": "application/json",
+        "Origin": "https://ventas.ouigo.com",
+        "Referer": "https://ventas.ouigo.com/"
+    }
+
+    def __init__(self):
+        super().__init__()
+        self._token = None
+        self._token_expiry = None
+        username = os.getenv("OUIGO_ES_USERNAME")
+        password = os.getenv("OUIGO_ES_PASSWORD")
+        if not username or not password:
+            raise ValueError("OUIGO_ES_USERNAME und OUIGO_ES_PASSWORD müssen in .env gesetzt sein")
+        self._username = username
+        self._password = password
+        self.logger.info("Ouigo España Crawler bereit")
+
+    def _get_token(self) -> str:
+        """Token holen oder erneuern falls abgelaufen."""
+        now = datetime.now()
+        if self._token and self._token_expiry and now < self._token_expiry:
+            return self._token
+
+        self.logger.info("Ouigo España Token wird geholt...")
+        r = self.session.post(
+            self.TOKEN_URL,
+            json={"username": self._username, "password": self._password},
+            headers=self.HEADERS,
+            timeout=self.REQUEST_TIMEOUT,
+        )
+        r.raise_for_status()
+        data = r.json()
+        self._token = data["token"]
+        # Token-Ablauf mit 5 Minuten Puffer
+        expiry_str = data.get("expirationDate", "")
+        if expiry_str:
+            from datetime import timezone
+            expiry = datetime.fromisoformat(expiry_str)
+            if expiry.tzinfo:
+                expiry = expiry.replace(tzinfo=None)
+            self._token_expiry = expiry - __import__("datetime").timedelta(minutes=5)
+        self.logger.info(f"Token erhalten, läuft ab: {data.get('expirationDate')}")
+        return self._token
+
+    def get_url(self) -> str:
+        return self.BASE_URL
+
+    def get_params(self, route: Route, date: str) -> dict:
+        origin_id = route.origin.ouigo_es_id
+        destination_id = route.destination.ouigo_es_id
+
+        if not origin_id:
+            raise ValueError(f"Keine ouigo_es_id für {route.origin.name}")
+        if not destination_id:
+            raise ValueError(f"Keine ouigo_es_id für {route.destination.name}")
+
+        return {
+            "origin": origin_id,
+            "destination": destination_id,
+            "outbound_date": date,
+            "passengers": [{"discount_cards": [], "disability_type": "NH", "type": "A"}],
+            "with_ttt": False
+        }
+
+    def fetch(self, url: str, params: dict = None, headers: dict = None) -> requests.Response:
+        for attempt in range(1, self.MAX_RETRIES + 1):
+            try:
+                token = self._get_token()
+                auth_headers = {
+                    **self.HEADERS,
+                    "Authorization": f"Bearer {token}"
+                }
+                self.logger.info(f"HTTP POST {url} (Versuch {attempt}/{self.MAX_RETRIES})")
+                response = self.session.post(
+                    url,
+                    json=params,
+                    headers=auth_headers,
+                    timeout=self.REQUEST_TIMEOUT,
+                )
+                response.raise_for_status()
+                self.logger.info(f"HTTP {response.status_code} – {len(response.content)} Bytes")
+                return response
+
+            except requests.exceptions.Timeout:
+                self.logger.warning(f"Timeout bei Versuch {attempt}")
+            except requests.exceptions.HTTPError as e:
+                self.logger.warning(f"HTTP Fehler {e.response.status_code} bei Versuch {attempt}")
+                if e.response.status_code == 401:
+                    self._token = None  # Token zurücksetzen
+                if e.response.status_code in (400, 404):
+                    raise
+            except requests.exceptions.ConnectionError:
+                self.logger.warning(f"Verbindungsfehler bei Versuch {attempt}")
+            except Exception as e:
+                self.logger.warning(f"Unbekannter Fehler bei Versuch {attempt}: {e}")
+
+            if attempt < self.MAX_RETRIES:
+                time.sleep(self.RETRY_DELAY)
+
+        raise Exception(f"Alle {self.MAX_RETRIES} Versuche für {url} fehlgeschlagen")
+
+    def parse(self, response: requests.Response, route: Route = None) -> list[dict]:
+        records = []
+        try:
+            data = response.json()
+        except Exception as e:
+            self.logger.error(f"JSON Parse Fehler: {e}")
+            return records
+
+        journeys = data.get("outbound", [])
+        self.logger.info(f"{len(journeys)} Verbindungen in API-Antwort")
+
+        for j in journeys:
+            try:
+                record = self._parse_journey(j, route)
+                if record:
+                    records.append(record)
+            except Exception as e:
+                self.logger.warning(f"Fehler beim Parsen: {e}")
+                continue
+
+        self.logger.info(f"{len(records)} Ouigo-Verbindungen geparst")
+        return records
+
+    def _parse_journey(self, j: dict, route: Route = None) -> dict | None:
+        if j.get("full"):
+            return None
+
+        dep_str = j.get("departure_station", {}).get("departure_timestamp", "")
+        arr_str = j.get("arrival_station", {}).get("arrival_timestamp", "")
+        if not dep_str or not arr_str:
+            return None
+
+        departure_time = datetime.fromisoformat(dep_str).replace(tzinfo=None)
+        arrival_time = datetime.fromisoformat(arr_str).replace(tzinfo=None)
+
+        price = j.get("price")
+        train_number = j.get("service_name")
+        is_promo = j.get("is_promo", False)
+
+        return {
+            "operator":        self.OPERATOR_NAME,
+            "origin":          route.origin.name if route else "unknown",
+            "destination":     route.destination.name if route else "unknown",
+            "origin_id":       str(route.origin.ouigo_es_id) if route else None,
+            "destination_id":  str(route.destination.ouigo_es_id) if route else None,
+            "departure_time":  departure_time,
+            "arrival_time":    arrival_time,
+            "price_eur":       float(price) if price is not None else None,
+            "seats_available": j.get("remaining_seats"),
+            "fare_class":      "OUIGO_FULL" if is_promo else "OUIGO_BASE",
+            "offer_type":      "promo" if is_promo else "standard",
+            "train_number":    train_number,
+        }
+
+
+# ──────────────────────────────────────────────
+# DIREKTER TEST
+# ──────────────────────────────────────────────
+
+if __name__ == "__main__":
+    from datetime import timedelta
+    from dotenv import load_dotenv
+    from config.routes import get_routes_for_operator, BOOKING_HORIZONS
+
+    load_dotenv()
+
+    print("Ouigo España Crawler Test")
+    print("=" * 50)
+
+    crawler = OuigoEsCrawler()
+    routes = get_routes_for_operator("ouigo_es")
+
+    print(f"{len(routes)} Ouigo-Routen, {len(BOOKING_HORIZONS)} Horizonte\n")
+
+    for route in routes[:1]:
+        for horizon in BOOKING_HORIZONS[:3]:
+            date = (datetime.now() + timedelta(days=horizon)).strftime("%Y-%m-%d")
+            print(f"── {route.description} | +{horizon} Tage ({date})")
+
+            try:
+                url = crawler.get_url()
+                params = crawler.get_params(route, date)
+                response = crawler.fetch(url, params)
+                records = crawler.parse(response, route)
+                valid = crawler.validate(records)
+
+                if valid:
+                    print(f"   {len(valid)} Züge gefunden:")
+                    for r in valid[:3]:
+                        seats = r.get("seats_available")
+                        seats_str = str(seats) if seats is not None else "-"
+                        print(
+                            f"   {r['departure_time'].strftime('%H:%M')} -> "
+                            f"{r['arrival_time'].strftime('%H:%M')} | "
+                            f"{r['price_eur']:.2f} EUR | "
+                            f"{r.get('fare_class', '-')} | "
+                            f"Zug: {r.get('train_number', '-')}"
+                        )
+                    if len(valid) > 3:
+                        print(f"   ... und {len(valid) - 3} weitere")
+                else:
+                    print(f"   Keine Verbindungen gefunden")
+
+            except Exception as e:
+                print(f"   FEHLER: {e}")
+
+            print()

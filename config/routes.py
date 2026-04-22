@@ -9,13 +9,16 @@ from typing import Optional
 @dataclass
 class Station:
     name: str
-    flixtrain_id: Optional[str] = None          # Station-UUID (für zukünftige station-basierte Abfragen)
-    flixtrain_city_id: Optional[str] = None     # City-UUID (aktuell genutzt, search_by=cities)
-    flixbus_id: Optional[str] = None            # UUID für Flixbus (zukünftig)
+    flixtrain_id: Optional[str] = None
+    flixtrain_city_id: Optional[str] = None
+    flixbus_id: Optional[str] = None
     trenitalia_id: Optional[int] = None
     italo_id: Optional[int] = None
     db_id: Optional[str] = None
     oebb_id: Optional[str] = None
+    ouigo_es_id: Optional[str] = None          # UIC-Code für Ouigo España
+    renfe_id: Optional[str] = None
+    iryo_id: Optional[str] = None
 
 
 @dataclass
@@ -124,18 +127,45 @@ NAPOLI = Station(
 
 TORINO = Station(
     name="Torino Porta Nuova",
-    trenitalia_id=830001098,
+    trenitalia_id=830000219,
 )
 
 VENEZIA = Station(
     name="Venezia Santa Lucia",
-    trenitalia_id=830001217,
+    trenitalia_id=830002593,
+)
+
+# ── Spanien ────────────────────────────────────────────────────
+MADRID = Station(
+    name="Madrid - Todas las estaciones",
+    ouigo_es_id="MT1",
+    renfe_id="0071,MADRI,null",
+)
+
+BARCELONA = Station(
+    name="Barcelona - Sants",
+    ouigo_es_id="7171801",
+    renfe_id="0071,BARCE,null",
+)
+
+VALENCIA = Station(
+    name="Valencia - Joaquín Sorolla",
+    ouigo_es_id="7103216",
+)
+
+SEVILLA = Station(
+    name="Sevilla - Santa Justa",
+    ouigo_es_id="7151003",
+)
+
+ZARAGOZA = Station(
+    name="Zaragoza - Delicias",
+    ouigo_es_id="7104040",
 )
 
 
 # ─────────────────────────────────────────────────────────────
 # ROUTEN
-# Nur Wettbewerbsrouten (mind. 2 Anbieter)
 # ─────────────────────────────────────────────────────────────
 
 ROUTES = [
@@ -236,6 +266,29 @@ ROUTES = [
         route_id="milano-venezia"
     ),
 
+    # ── Spanien: Renfe vs. Ouigo España vs. Iryo ───────────────
+    Route(
+        origin=MADRID,
+        destination=BARCELONA,
+        operators=["renfe", "ouigo_es", "iryo"],
+        description="Madrid–Barcelona (Renfe vs. Ouigo vs. Iryo)",
+        route_id="madrid-barcelona"
+    ),
+    Route(
+        origin=MADRID,
+        destination=VALENCIA,
+        operators=["renfe", "ouigo_es"],
+        description="Madrid–Valencia (Renfe vs. Ouigo)",
+        route_id="madrid-valencia"
+    ),
+    Route(
+        origin=MADRID,
+        destination=SEVILLA,
+        operators=["renfe", "ouigo_es"],
+        description="Madrid–Sevilla (Renfe vs. Ouigo)",
+        route_id="madrid-sevilla"
+    ),
+
     # ── International ──────────────────────────────────────────
     Route(
         origin=MÜNCHEN,
@@ -252,38 +305,33 @@ ROUTES = [
 # ─────────────────────────────────────────────────────────────
 
 def get_routes_for_operator(operator: str) -> list[Route]:
-    """Gibt alle Routen zurück die ein bestimmter Anbieter bedient."""
     return [r for r in ROUTES if operator in r.operators]
 
 
 def get_routes_with_competition() -> list[Route]:
-    """Gibt alle Routen zurück auf denen mind. 2 Anbieter konkurrieren."""
     return [r for r in ROUTES if len(r.operators) >= 2]
 
 
 # ─────────────────────────────────────────────────────────────
-# BUCHUNGSHORIZONTE (Tage in die Zukunft)
+# BUCHUNGSHORIZONTE
 # ─────────────────────────────────────────────────────────────
 
 BOOKING_HORIZONS = [
-    1, 2, 3, 4, 5, 6, 7,        # Jeder Tag der nächsten Woche
-    10, 14, 21, 30,              # Wöchentlich bis 30 Tage
-    45, 60, 90,               # Monatlich bis 3 Monate
+    1, 2, 3, 4, 5, 6, 7,
+    10, 14, 21, 30,
+    45, 60, 90,
 ]
 
-
-# ─────────────────────────────────────────────────────────────
-# QUICK-CHECK beim direkten Ausführen
-# ─────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     print(f"Gesamt Routen: {len(ROUTES)}")
     print()
-    for op in ["db", "flixtrain", "trenitalia", "italo", "oebb"]:
+    for op in ["db", "flixtrain", "trenitalia", "italo", "oebb", "ouigo_es", "renfe", "iryo"]:
         routes = get_routes_for_operator(op)
-        print(f"{op.upper():<12} {len(routes)} Routen:")
-        for r in routes:
-            print(f"  → {r.description} [{r.route_id}]")
-        print()
+        if routes:
+            print(f"{op.upper():<12} {len(routes)} Routen:")
+            for r in routes:
+                print(f"  → {r.description} [{r.route_id}]")
+            print()
     print(f"Buchungshorizonte: {BOOKING_HORIZONS} Tage")
     print(f"Requests/Tag (geschätzt): {len(ROUTES) * len(BOOKING_HORIZONS)}")
