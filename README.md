@@ -1,131 +1,163 @@
 # Rail Data Hub
 
-Automatisiertes Tool zur Erfassung und Analyse von Preis- und Kapazitätsdaten im europäischen Schienenpersonenfernverkehr.
+Automated tool for collecting and analysing price and capacity data in European long-distance rail.
 
-## Projektübersicht
+## Project Overview
 
-Dieses Tool sammelt regelmäßig Daten von verschiedenen Bahnanbietern (DB, Flixtrain, Trenitalia, ÖBB, SNCF) und ermöglicht eine systematische Wettbewerbsanalyse anhand von Preis- und Kapazitätsentwicklungen.
+Rail Data Hub collects daily ticket prices and occupancy data from major European long-distance rail operators and makes them systematically comparable. The goal is a data-driven competitive analysis: How do operators react to each other? How do prices develop as a function of booking horizon?
 
-**Forschungsfrage:** Wie entwickelt sich der Wettbewerb im europäischen Schienenpersonenfernverkehr?
+
 
 ## Team
 
+KIT – Karlsruhe Institute of Technology - part of the "Teamprojekt SS26 - Rail-Data-Hub" - Department for Economics and Management - Institute of Economics
 
+## Project Structure
 
-## Projektstruktur
 ```
 rail-data-hub/
-├── crawlers/           # Operator-spezifische Webcrawler
-│   ├── base/           # Basis-Crawler-Klasse
-│   ├── db/             # Deutsche Bahn
-│   ├── flixtrain/      # Flixtrain
-│   ├── trenitalia/     # Trenitalia
-│   ├── oebb/           # ÖBB
-│   └── sncf/           # SNCF
+├── crawlers/
+│   ├── base/               # BaseCrawler (abstract class)
+│   ├── db/                 # Deutsche Bahn (pending – partnership request)
+│   ├── flixtrain/          # Flixtrain (production)
+│   ├── trenitalia          # Trenitalia (production)
+|   |── italo/              # Italo (WIP) 
+│   ├── ouigo_es/           # OUIGO Spain (production)
+│   ├── oebb/               # OBB (deprioritised)
+│   └── sncf/               # SNCF (open data planned)
 ├── database/
-│   ├── timescaledb/    # Schema & Migrations
-│   └── duckdb/         # Analytische Queries
-├── dashboard/          # UI & Visualisierung
-├── analysis/           # Wettbewerbsanalyse-Module
-├── docs/               # Handbuch & Lastenheft
-├── tests/              # Tests
-└── config/             # Konfiguration & Scheduling
+│   ├── timescaledb/        # Schema & migrations
+│   └── duckdb/             # Analytical queries
+├── scheduler/              # APScheduler – daily crawler runs
+├── dashboard/              # UI & visualisation (planned)
+├── analysis/               # Competitive analysis modules (planned)
+├── docs/                   # Handbook & requirements
+├── tests/
+└── config/                 # Route configuration & scheduling
 ```
 
-## Technologie-Stack
+## Tech Stack
 
-| Komponente | Technologie | Zweck |
-|------------|-------------|-------|
-| Scraping | Python, BeautifulSoup | Datenabruf |
-| Scheduling | APScheduler | Automatisierung |
-| Datenbank (Schreiben) | TimescaleDB | Zeitreihenspeicherung |
-| Datenbank (Analyse) | DuckDB | Analytische Queries |
-| Dashboard | TBD | Visualisierung |
+| Component          | Technology               | Purpose                              |
+|--------------------|--------------------------|--------------------------------------|
+| Crawlers           | Python 3.13, requests    | Data retrieval from operator APIs    |
+| Scheduling         | APScheduler              | Daily automated runs                 |
+| Database (write)   | TimescaleDB (PostgreSQL) | Time-series storage                  |
+| Database (read)    | DuckDB                   | Analytical queries                   |
+| Containerisation   | Docker Compose           | Local TimescaleDB instance           |
+| Version control    | GitHub                   | Branch protection, collaboration     |
 
-## Setup
+## Data Sources
 
-### Voraussetzungen
+| Operator        | Endpoint                      | Type                 | Status                      |
+|-----------------|-------------------------------|----------------------|-----------------------------|
+| Flixtrain       | global.api.flixbus.com        | Unofficial API       | Production                  |
+| Trenitalia      | lefrecce.it BFF               | Unofficial API       | Production                  |
+| OUIGO           | mdw02.api-es.ouigo.com        | Unofficial API       | Production                  |
+| Italo           | Pending                       | Pending              | WIP                         |
+| Deutsche Bahn   | Pending                       | Official API         | WIP                         |
+| SNCF            | data.sncf.com (static)        | Open Data (ODbL)     | Ingestion planned           |
+| OBB             | HAFAS mgate                   | Semi-public          | Deprioritised               |
 
-- [Python 3.13+](https://python.org/downloads) – beim Installieren "Add to PATH" aktivieren
-- [Docker Desktop](https://docker.com/products/docker-desktop) – für die lokale Datenbank
-- [Git](https://git-scm.com) – Versionskontrolle
-- [VSCode](https://code.visualstudio.com) – empfohlener Editor
+## Booking Horizons
 
-### 1. Repository klonen
-```bash
+Each route is queried daily at 15 booking horizons. This produces a price curve showing how fares develop as a function of the departure date — the core data for yield management analysis.
+
+| Group                  | Horizons                             |
+|------------------------|--------------------------------------|
+| Daily, next week       | +1d +2d +3d +4d +5d +6d +7d          |
+| Weekly up to 30 days   | +10d +14d +21d +30d                  |
+| Monthly up to 90 days  | +45d +60d +90d                       |
+
+## Database Schema
+
+Three tables:
+
+- **`price_observations`** — Hypertable (TimescaleDB). One row per price snapshot. Key field: `booking_horizon_days`, the core variable for yield management analysis.
+- **`routes`** — Reference table. 13 competition routes with an operator-agnostic `route_id` (e.g. `hamburg-berlin`) for cross-operator comparisons.
+- **`crawler_logs`** — One row per crawler run. Status and error tracking.
+
+## Setup (local)
+
+### Prerequisites
+
+- [Python 3.13+](https://python.org/downloads) – enable "Add to PATH" during installation
+- [Docker Desktop](https://docker.com/products/docker-desktop) – for the local database
+- [Git](https://git-scm.com)
+- [VSCode](https://code.visualstudio.com) – recommended editor
+
+### 1. Clone the repository
+
+```cmd
 git clone https://github.com/Xaver-M/Rail-Data-Hub.git
 cd Rail-Data-Hub
 ```
 
-### 2. Python-Umgebung einrichten
-```bash
+### 2. Install Python dependencies
+
+```cmd
 py -m pip install -r requirements.txt
 ```
 
-### 3. Umgebungsvariablen einrichten
-```bash
+### 3. Set up environment variables
+
+```cmd
 copy .env.example .env
 ```
 
-Dann `.env` öffnen und Werte eintragen – Passwort von Xaver erfragen.
+Open `.env` and fill in the values – ask Xaver for the database password.
 
-### 4. Datenbank starten
-```bash
+### 4. Start the database
+
+```cmd
 docker-compose up -d
 ```
 
-Die Datenbank läuft jetzt lokal auf Port 5432. Beim ersten Start wird das Schema automatisch angelegt.
+TimescaleDB is now running locally on port 5432. The schema is applied automatically on first start.
 
-### 5. Verbindung testen
-```bash
-py -c "import psycopg2; conn = psycopg2.connect(host='localhost', dbname='rail_data', user='rail_user', password='DEIN_PASSWORT'); print('Datenbankverbindung erfolgreich!')"
+### 5. Test the connection
+
+```cmd
+py -c "import psycopg2; conn = psycopg2.connect(host='localhost', dbname='rail_data', user='rail_user', password='YOUR_PASSWORD'); print('Database connection successful!')"
 ```
 
-### Datenbank stoppen
-```bash
+### Stop the database
+
+```cmd
 docker-compose down
 ```
 
-## Git-Workflow
+## Git Workflow
 
-Wir arbeiten **nie direkt auf `main`**. Der Workflow ist immer:
-```
-1. Neuen Branch erstellen:   git checkout -b feature/mein-feature
-2. Änderungen machen & committen
-3. Branch pushen:            git push origin feature/mein-feature
-4. Pull Request auf GitHub erstellen
-5. Review von mindestens 1 Teammitglied
-6. Merge in main
-```
+We never commit directly to `main`. The workflow is always:
 
-### Commit-Konventionen
 ```
-feat:     Neues Feature
-fix:      Bugfix
-docs:     Dokumentation
-refactor: Code-Umbau ohne neue Funktion
-test:     Tests hinzufügen
+1. Create a new branch:   git checkout -b feature/my-feature
+2. Make changes & commit
+3. Push the branch:       git push origin feature/my-feature
+4. Open a Pull Request on GitHub
+5. Review by at least 1 team member
+6. Merge into main
 ```
 
-## Datenquellen
+### Commit Conventions
 
-| Anbieter | Quelle | Methode |
-|----------|--------|---------|
-| Deutsche Bahn | DB API Marketplace | Offizielle API |
-| ÖBB | Open Data Portal (GTFS) | Offizielle API |
-| SNCF | SNCF Developer API | Offizielle API |
-| Trenitalia | ViaggiaTreno | Inoffizielle API |
-| Flixtrain | Website + Offizieller GitHub | Offizielle API |
+```
+feat:     New feature
+fix:      Bug fix
+docs:     Documentation
+refactor: Code restructuring without new functionality
+test:     Adding tests
+```
 
-*Die Methode ist bisher nur der Stand einer kurzen Recherche, APIs sind verfügbar, genauere Analyse der bereitgestellten Informationen nötig. Vermutlich je nach Website js. Scraper nötig um Auslastungs- und Preisdaten zu erhalten.
+## Key Files
 
-Ziel / Plan ist es das GTFS Format (https://gtfs.org/) zur Skalierbarkeit beizubehalten.
-
-## Wichtige Dateien
-
-| Datei | Zweck |
-|-------|-------|
-| `.env` | Lokale "Settings" – **niemals committen!** |
-| `.env.example` | Vorlage für `.env` |
-| `docker-compose.yml` | Startet lokale TimescaleDB |
-| `requirements.txt` | Python-Abhängigkeiten |
+| File                                  | Purpose                                            |
+|---------------------------------------|----------------------------------------------------|
+| `.env`                                | Local configuration – never commit this            |
+| `.env.example`                        | Template for `.env`                                |
+| `docker-compose.yml`                  | Starts local TimescaleDB                           |
+| `requirements.txt`                    | Python dependencies                                |
+| `config/routes.py`                    | Route definitions with operator-specific IDs       |
+| `database/timescaledb/01_schema.sql`  | Database schema                                    |
+| `scheduler/run_crawlers.py`           | Entry point for automated daily runs               |
