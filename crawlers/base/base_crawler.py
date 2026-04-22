@@ -50,12 +50,24 @@ class BaseCrawler(ABC):
 
     def _setup_logging(self):
         self.logger = logger.bind(operator=self.OPERATOR_NAME)
+        # Standard-Console-Handler entfernen (kennt {extra[operator]} nicht)
+        logger.remove()
+        # Console ohne operator-Feld
+        logger.add(
+            lambda msg: print(msg, end=""),
+            level="INFO",
+            format="{time:YYYY-MM-DD HH:mm:ss} | {level:<8} | {message}",
+            colorize=True,
+        )
+        # Datei-Handler mit operator-Feld
+        os.makedirs("logs", exist_ok=True)
         logger.add(
             f"logs/{self.OPERATOR_NAME}_crawler.log",
             rotation="1 day",
             retention="30 days",
             level="INFO",
-            format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {extra[operator]} | {message}"
+            format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {extra[operator]} | {message}",
+            filter=lambda record: "operator" in record["extra"],
         )
 
     def _create_session(self) -> requests.Session:
@@ -171,6 +183,11 @@ class BaseCrawler(ABC):
 
         try:
             for record in records:
+                # Felder die nicht alle Crawler liefern auf None defaulten
+                record.setdefault("travel_class",  None)
+                record.setdefault("train_number",  None)
+                record.setdefault("is_direct",     None)
+
                 cursor.execute("""
                     INSERT INTO price_observations (
                         collected_at,
@@ -182,9 +199,12 @@ class BaseCrawler(ABC):
                         departure_at,
                         arrival_at,
                         price_eur,
+                        fare_class,
                         seats_available,
                         booking_horizon_days,
-                        route_id
+                        route_id,
+                        train_number,
+                        is_direct
                     ) VALUES (
                         NOW(),
                         %(operator)s,
@@ -195,9 +215,12 @@ class BaseCrawler(ABC):
                         %(departure_time)s,
                         %(arrival_time)s,
                         %(price_eur)s,
+                        %(travel_class)s,
                         %(seats_available)s,
                         %(booking_horizon_days)s,
-                        %(route_id)s
+                        %(route_id)s,
+                        %(train_number)s,
+                        %(is_direct)s
                     )
                     ON CONFLICT DO NOTHING
                 """, record)
@@ -280,7 +303,7 @@ class BaseCrawler(ABC):
                         # 4. Buchungshorizont zu jedem Record hinzufügen
                         for r in records:
                             r["booking_horizon_days"] = horizon
-                            r["route_id"] = route.route_id  
+                            r["route_id"] = route.route_id
 
                         # 5. Validieren
                         valid_records = self.validate(records)
