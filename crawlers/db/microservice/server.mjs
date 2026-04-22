@@ -54,7 +54,7 @@ api.listen(PORT, (err) => {
         console.error('Fehler beim Starten:', err)
         process.exit(1)
     }
-    console.log(`✅ DB Microservice läuft auf http://localhost:${PORT}`)
+    console.log(` DB Microservice läuft auf http://localhost:${PORT}`)
     console.log(`   Profil:     dbnav (DB Navigator API)`)
     console.log(`   User-Agent: ${USER_AGENT}`)
     console.log(`   Throttling: 2 req/s`)
