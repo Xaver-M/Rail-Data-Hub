@@ -162,6 +162,7 @@ class DBCrawler(BaseCrawler):
         return "1" if any(x in n for x in ["1. klasse", "first", "klasse 1", "1st"]) else "2"
 
     def fetch(self, url: str, params: dict = None, headers: dict = None) -> requests.Response:
+        headers = {**(headers or {}), "Origin": self.MICROSERVICE_URL}
         return super().fetch(url, params, headers)
 
 

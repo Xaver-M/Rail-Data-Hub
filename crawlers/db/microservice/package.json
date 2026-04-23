@@ -6,10 +6,10 @@
   "main": "server.mjs",
   "scripts": {
     "start": "node server.mjs",
-    "dev":   "node --watch server.mjs"
+    "dev": "node --watch server.mjs"
   },
   "dependencies": {
     "db-vendo-client": "^6.10.8",
-    "hafas-rest-api":  "*"
+    "hafas-rest-api": "*"
   }
 }

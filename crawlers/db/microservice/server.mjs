@@ -17,7 +17,7 @@
 import { createClient }        from 'db-vendo-client'
 import { withThrottling }      from 'db-vendo-client/throttle.js'
 import { withRetrying }        from 'db-vendo-client/retry.js'
-import { profile as dbnavProfile } from 'db-vendo-client/p/dbnav/index.js'
+import { profile as dbnavProfile } from 'db-vendo-client/p/db/index.js'
 import { createHafasRestApi }  from 'hafas-rest-api'
 
 // ---------------------------------------------------------------------------
@@ -27,16 +27,17 @@ import { createHafasRestApi }  from 'hafas-rest-api'
 const PORT       = process.env.PORT       || 3123
 const USER_AGENT = process.env.USER_AGENT || 'rail-data-hub/1.0 (KIT Karlsruhe, github.com/Xaver-M/Rail-Data-Hub)'
 
-// Throttling: max. 2 Requests/Sekunde um Rate Limits zu vermeiden
-const throttledProfile = withThrottling(dbnavProfile, 2, 1000)
-// Retrying: bei transienten Fehlern automatisch wiederholen
-const robustProfile    = withRetrying(throttledProfile)
-
 // ---------------------------------------------------------------------------
 // Client & API erstellen
 // ---------------------------------------------------------------------------
 
-const client = createClient(robustProfile, USER_AGENT)
+const client          = createClient(dbnavProfile, USER_AGENT)
+// Throttling: max. 2 Requests/Sekunde um Rate Limits zu vermeiden
+const throttledClient = withThrottling(client, 2, 1000)
+// Retrying: bei transienten Fehlern automatisch wiederholen
+const robustClient    = withRetrying(throttledClient)
+// withThrottling/withRetrying leiten .profile nicht weiter — hafas-rest-api braucht es
+robustClient.profile  = client.profile
 
 const config = {
     hostname:    'localhost',
@@ -47,7 +48,7 @@ const config = {
     cors:        true,   // Python kann von localhost anfragen
 }
 
-const api = await createHafasRestApi(client, config)
+const api = await createHafasRestApi(robustClient, config)
 
 api.listen(PORT, (err) => {
     if (err) {
