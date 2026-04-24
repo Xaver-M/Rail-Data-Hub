@@ -4,7 +4,7 @@ Automated tool for collecting and analysing price and capacity data in European 
 
 ## Project Overview
 
-Rail Data Hub collects daily ticket prices and occupancy data from major European long-distance rail operators and makes them systematically comparable. The goal is a data-driven competitive analysis: How do operators react to each other? How do prices develop as a function of booking horizon?
+Rail Data Hub collects daily ticket prices and occupancy data from major European long-distance rail operators and makes them systematically comparable. The goal is a data driven analysis.
 
 
 
@@ -18,7 +18,7 @@ KIT – Karlsruhe Institute of Technology - part of the "Teamprojekt SS26 - Rail
 rail-data-hub/
 ├── crawlers/
 │   ├── base/               # BaseCrawler (abstract class)
-│   ├── db/                 # Deutsche Bahn (pending – partnership request)
+│   ├── db/                 # Deutsche Bahn (production - no capacity data)
 │   ├── flixtrain/          # Flixtrain (production)
 │   ├── trenitalia          # Trenitalia (production)
 |   |── italo/              # Italo (WIP) 
@@ -55,7 +55,7 @@ rail-data-hub/
 | Trenitalia      | lefrecce.it BFF               | Unofficial API       | Production                  |
 | OUIGO           | mdw02.api-es.ouigo.com        | Unofficial API       | Production                  |
 | Italo           | Pending                       | Pending              | WIP                         |
-| Deutsche Bahn   | Pending                       | Official API         | WIP                         |
+| Deutsche Bahn   | -                             | Unofficial API         | Production                |
 | SNCF            | data.sncf.com (static)        | Open Data (ODbL)     | Ingestion planned           |
 | OBB             | HAFAS mgate                   | Semi-public          | Deprioritised               |
 
