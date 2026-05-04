@@ -19,6 +19,8 @@ class Station:
     ouigo_es_id: Optional[str] = None          # UIC-Code für Ouigo España
     renfe_id: Optional[str] = None
     iryo_id: Optional[str] = None
+    regiojet_station_id: Optional[str] = None  # RegioJet STATION-ID
+    regiojet_city_id: Optional[str] = None     # RegioJet CITY-ID 
 
 
 @dataclass
@@ -108,6 +110,22 @@ WIEN = Station(
     name="Wien Hbf",
     db_id="8100003",
     oebb_id="1190100",
+    regiojet_station_id="372825000",
+)
+
+PRAG = Station(
+    name="Praha hlavní nádraží",
+    regiojet_city_id="10202052",
+)
+
+BRATISLAVA = Station(
+    name="Bratislava hlavná stanica",
+    regiojet_city_id="10202043",
+)
+
+BUDAPEST = Station(
+    name="Budapest-Keleti",
+    regiojet_city_id="10202059",
 )
 
 MILANO = Station(
@@ -297,6 +315,36 @@ ROUTES = [
         description="München–Wien (DB vs. ÖBB)",
         route_id="muenchen-wien"
     ),
+
+    # ── RegioJet: Tschechien / Österreich ──────────────────────
+    Route(
+        origin=WIEN,
+        destination=PRAG,
+        operators=["regiojet"],
+        description="Wien–Praha (RegioJet)",
+        route_id="wien-prag"
+    ),
+    Route(
+        origin=PRAG,
+        destination=WIEN,
+        operators=["regiojet"],
+        description="Praha–Wien (RegioJet)",
+        route_id="prag-wien"
+    ),
+    Route(
+        origin=PRAG,
+        destination=BRATISLAVA,
+        operators=["regiojet"],
+        description="Praha–Bratislava (RegioJet)",
+        route_id="prag-bratislava"
+    ),
+    Route(
+        origin=PRAG,
+        destination=BUDAPEST,
+        operators=["regiojet"],
+        description="Praha–Budapest (RegioJet)",
+        route_id="prag-budapest"
+    ),
 ]
 
 
@@ -326,7 +374,7 @@ BOOKING_HORIZONS = [
 if __name__ == "__main__":
     print(f"Gesamt Routen: {len(ROUTES)}")
     print()
-    for op in ["db", "flixtrain", "trenitalia", "italo", "oebb", "ouigo_es", "renfe", "iryo"]:
+    for op in ["db", "flixtrain", "trenitalia", "italo", "oebb", "ouigo_es", "renfe", "iryo", "regiojet"]:
         routes = get_routes_for_operator(op)
         if routes:
             print(f"{op.upper():<12} {len(routes)} Routen:")
