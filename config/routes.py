@@ -111,21 +111,22 @@ WIEN = Station(
     db_id="8100003",
     oebb_id="1190100",
     regiojet_station_id="372825000",
+    regiojet_city_id="10202052",   # fix: war None
 )
 
 PRAG = Station(
     name="Praha hlavní nádraží",
-    regiojet_city_id="10202052",
+    regiojet_city_id="10202003",   # fix: war 10202052 (Wiens ID)
 )
 
 BRATISLAVA = Station(
     name="Bratislava hlavná stanica",
-    regiojet_city_id="10202043",
+    regiojet_city_id="10202001",   # fix: war 10202043
 )
 
 BUDAPEST = Station(
     name="Budapest-Keleti",
-    regiojet_city_id="10202059",
+    regiojet_city_id="10202091",   # fix: war 10202059
 )
 
 MILANO = Station(
