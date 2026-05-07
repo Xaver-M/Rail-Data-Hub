@@ -1,6 +1,6 @@
 # config/routes.py
-# Zentrale Routen-Konfiguration für Rail Data Hub
-# Nur Routen mit mindestens 2 Anbietern (Wettbewerbsrouten)
+# Central route configuration for Rail Data Hub
+# Only routes served by at least 2 operators (competitive routes)
 
 from dataclasses import dataclass
 from typing import Optional
@@ -16,11 +16,11 @@ class Station:
     italo_id: Optional[int] = None
     db_id: Optional[str] = None
     oebb_id: Optional[str] = None
-    ouigo_es_id: Optional[str] = None          # UIC-Code für Ouigo España
+    ouigo_es_id: Optional[str] = None          # UIC code for Ouigo España
     renfe_id: Optional[str] = None
     iryo_id: Optional[str] = None
-    regiojet_station_id: Optional[str] = None  # RegioJet STATION-ID
-    regiojet_city_id: Optional[str] = None     # RegioJet CITY-ID 
+    regiojet_station_id: Optional[str] = None  # RegioJet station ID
+    regiojet_city_id: Optional[str] = None     # RegioJet city ID
 
 
 @dataclass
@@ -33,7 +33,7 @@ class Route:
 
 
 # ─────────────────────────────────────────────────────────────
-# STATIONEN
+# STATIONS
 # ─────────────────────────────────────────────────────────────
 
 BERLIN = Station(
@@ -154,7 +154,7 @@ VENEZIA = Station(
     trenitalia_id=830002593,
 )
 
-# ── Spanien ────────────────────────────────────────────────────
+# ── Spain ──────────────────────────────────────────────────────
 MADRID = Station(
     name="Madrid - Todas las estaciones",
     ouigo_es_id="MT1",
@@ -184,7 +184,7 @@ ZARAGOZA = Station(
 
 
 # ─────────────────────────────────────────────────────────────
-# ROUTEN
+# ROUTES
 # ─────────────────────────────────────────────────────────────
 
 ROUTES = [
@@ -248,7 +248,7 @@ ROUTES = [
         route_id="hamburg-leipzig"
     ),
 
-    # ── Italien: Trenitalia vs. Italo ──────────────────────────
+    # ── Italy: Trenitalia vs. Italo ────────────────────────────
     Route(
         origin=MILANO,
         destination=ROMA,
@@ -285,7 +285,7 @@ ROUTES = [
         route_id="milano-venezia"
     ),
 
-    # ── Spanien: Renfe vs. Ouigo España vs. Iryo ───────────────
+    # ── Spain: Renfe vs. Ouigo España vs. Iryo ─────────────────
     Route(
         origin=MADRID,
         destination=BARCELONA,
@@ -309,6 +309,7 @@ ROUTES = [
     ),
 
     # ── International ──────────────────────────────────────────
+
     Route(
         origin=MÜNCHEN,
         destination=WIEN,
@@ -317,7 +318,7 @@ ROUTES = [
         route_id="muenchen-wien"
     ),
 
-    # ── RegioJet: Tschechien / Österreich ──────────────────────
+    # ── RegioJet: Czech Republic / Austria ─────────────────────
     Route(
         origin=WIEN,
         destination=PRAG,
@@ -350,7 +351,7 @@ ROUTES = [
 
 
 # ─────────────────────────────────────────────────────────────
-# HILFSFUNKTIONEN
+# HELPER FUNCTIONS
 # ─────────────────────────────────────────────────────────────
 
 def get_routes_for_operator(operator: str) -> list[Route]:
@@ -362,7 +363,7 @@ def get_routes_with_competition() -> list[Route]:
 
 
 # ─────────────────────────────────────────────────────────────
-# BUCHUNGSHORIZONTE
+# BOOKING HORIZONS
 # ─────────────────────────────────────────────────────────────
 
 BOOKING_HORIZONS = [
@@ -373,14 +374,14 @@ BOOKING_HORIZONS = [
 
 
 if __name__ == "__main__":
-    print(f"Gesamt Routen: {len(ROUTES)}")
+    print(f"Total routes: {len(ROUTES)}")
     print()
     for op in ["db", "flixtrain", "trenitalia", "italo", "oebb", "ouigo_es", "renfe", "iryo", "regiojet"]:
         routes = get_routes_for_operator(op)
         if routes:
-            print(f"{op.upper():<12} {len(routes)} Routen:")
+            print(f"{op.upper():<12} {len(routes)} routes:")
             for r in routes:
                 print(f"  → {r.description} [{r.route_id}]")
             print()
-    print(f"Buchungshorizonte: {BOOKING_HORIZONS} Tage")
-    print(f"Requests/Tag (geschätzt): {len(ROUTES) * len(BOOKING_HORIZONS)}")
+    print(f"Booking horizons: {BOOKING_HORIZONS} days")
+    print(f"Requests/day (estimated): {len(ROUTES) * len(BOOKING_HORIZONS)}")

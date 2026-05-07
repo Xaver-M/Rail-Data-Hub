@@ -1,8 +1,8 @@
 """
-Ouigo España Crawler - Preisdaten über die mdw02.api-es.ouigo.com API
+Ouigo España Crawler - Price data via the mdw02.api-es.ouigo.com API.
 
-Token-Login mit App-Credentials aus .env.
-Gibt günstigsten Tagespreis pro Route zurück (Calendar/prices Endpoint).
+Token login with app credentials from .env.
+Returns the cheapest daily price per route (Calendar/prices endpoint).
 """
 
 import sys, os
@@ -36,18 +36,18 @@ class OuigoEsCrawler(BaseCrawler):
         username = os.getenv("OUIGO_ES_USERNAME")
         password = os.getenv("OUIGO_ES_PASSWORD")
         if not username or not password:
-            raise ValueError("OUIGO_ES_USERNAME und OUIGO_ES_PASSWORD müssen in .env gesetzt sein")
+            raise ValueError("OUIGO_ES_USERNAME and OUIGO_ES_PASSWORD must be set in .env")
         self._username = username
         self._password = password
-        self.logger.info("Ouigo España Crawler bereit")
+        self.logger.info("Ouigo España Crawler ready")
 
     def _get_token(self) -> str:
-        """Token holen oder erneuern falls abgelaufen."""
+        """Fetch or renew the token if expired."""
         now = datetime.now()
         if self._token and self._token_expiry and now < self._token_expiry:
             return self._token
 
-        self.logger.info("Ouigo España Token wird geholt...")
+        self.logger.info("Fetching Ouigo España token...")
         r = self.session.post(
             self.TOKEN_URL,
             json={"username": self._username, "password": self._password},
@@ -57,7 +57,7 @@ class OuigoEsCrawler(BaseCrawler):
         r.raise_for_status()
         data = r.json()
         self._token = data["token"]
-        # Token-Ablauf mit 5 Minuten Puffer
+        # Token expiry with 5-minute buffer
         expiry_str = data.get("expirationDate", "")
         if expiry_str:
             from datetime import timezone
@@ -65,7 +65,7 @@ class OuigoEsCrawler(BaseCrawler):
             if expiry.tzinfo:
                 expiry = expiry.replace(tzinfo=None)
             self._token_expiry = expiry - __import__("datetime").timedelta(minutes=5)
-        self.logger.info(f"Token erhalten, läuft ab: {data.get('expirationDate')}")
+        self.logger.info(f"Token received, expires: {data.get('expirationDate')}")
         return self._token
 
     def get_url(self) -> str:
@@ -76,9 +76,9 @@ class OuigoEsCrawler(BaseCrawler):
         destination_id = route.destination.ouigo_es_id
 
         if not origin_id:
-            raise ValueError(f"Keine ouigo_es_id für {route.origin.name}")
+            raise ValueError(f"No ouigo_es_id for {route.origin.name}")
         if not destination_id:
-            raise ValueError(f"Keine ouigo_es_id für {route.destination.name}")
+            raise ValueError(f"No ouigo_es_id for {route.destination.name}")
 
         return {
             "origin": origin_id,
@@ -96,7 +96,7 @@ class OuigoEsCrawler(BaseCrawler):
                     **self.HEADERS,
                     "Authorization": f"Bearer {token}"
                 }
-                self.logger.info(f"HTTP POST {url} (Versuch {attempt}/{self.MAX_RETRIES})")
+                self.logger.info(f"HTTP POST {url} (attempt {attempt}/{self.MAX_RETRIES})")
                 response = self.session.post(
                     url,
                     json=params,
@@ -104,37 +104,37 @@ class OuigoEsCrawler(BaseCrawler):
                     timeout=self.REQUEST_TIMEOUT,
                 )
                 response.raise_for_status()
-                self.logger.info(f"HTTP {response.status_code} – {len(response.content)} Bytes")
+                self.logger.info(f"HTTP {response.status_code} – {len(response.content)} bytes")
                 return response
 
             except requests.exceptions.Timeout:
-                self.logger.warning(f"Timeout bei Versuch {attempt}")
+                self.logger.warning(f"Timeout on attempt {attempt}")
             except requests.exceptions.HTTPError as e:
-                self.logger.warning(f"HTTP Fehler {e.response.status_code} bei Versuch {attempt}")
+                self.logger.warning(f"HTTP error {e.response.status_code} on attempt {attempt}")
                 if e.response.status_code == 401:
-                    self._token = None  # Token zurücksetzen
+                    self._token = None  # reset token
                 if e.response.status_code in (400, 404):
                     raise
             except requests.exceptions.ConnectionError:
-                self.logger.warning(f"Verbindungsfehler bei Versuch {attempt}")
+                self.logger.warning(f"Connection error on attempt {attempt}")
             except Exception as e:
-                self.logger.warning(f"Unbekannter Fehler bei Versuch {attempt}: {e}")
+                self.logger.warning(f"Unknown error on attempt {attempt}: {e}")
 
             if attempt < self.MAX_RETRIES:
                 time.sleep(self.RETRY_DELAY)
 
-        raise Exception(f"Alle {self.MAX_RETRIES} Versuche für {url} fehlgeschlagen")
+        raise Exception(f"All {self.MAX_RETRIES} attempts failed for {url}")
 
     def parse(self, response: requests.Response, route: Route = None) -> list[dict]:
         records = []
         try:
             data = response.json()
         except Exception as e:
-            self.logger.error(f"JSON Parse Fehler: {e}")
+            self.logger.error(f"JSON parse error: {e}")
             return records
 
         journeys = data.get("outbound", [])
-        self.logger.info(f"{len(journeys)} Verbindungen in API-Antwort")
+        self.logger.info(f"{len(journeys)} connections in API response")
 
         for j in journeys:
             try:
@@ -142,10 +142,10 @@ class OuigoEsCrawler(BaseCrawler):
                 if record:
                     records.append(record)
             except Exception as e:
-                self.logger.warning(f"Fehler beim Parsen: {e}")
+                self.logger.warning(f"Parse error: {e}")
                 continue
 
-        self.logger.info(f"{len(records)} Ouigo-Verbindungen geparst")
+        self.logger.info(f"{len(records)} Ouigo connections parsed")
         return records
 
     def _parse_journey(self, j: dict, route: Route = None) -> dict | None:
@@ -181,7 +181,7 @@ class OuigoEsCrawler(BaseCrawler):
 
 
 # ──────────────────────────────────────────────
-# DIREKTER TEST
+# DIRECT TEST
 # ──────────────────────────────────────────────
 
 if __name__ == "__main__":
@@ -197,12 +197,12 @@ if __name__ == "__main__":
     crawler = OuigoEsCrawler()
     routes = get_routes_for_operator("ouigo_es")
 
-    print(f"{len(routes)} Ouigo-Routen, {len(BOOKING_HORIZONS)} Horizonte\n")
+    print(f"{len(routes)} Ouigo routes, {len(BOOKING_HORIZONS)} horizons\n")
 
     for route in routes[:1]:
         for horizon in BOOKING_HORIZONS[:3]:
             date = (datetime.now() + timedelta(days=horizon)).strftime("%Y-%m-%d")
-            print(f"── {route.description} | +{horizon} Tage ({date})")
+            print(f"── {route.description} | +{horizon} days ({date})")
 
             try:
                 url = crawler.get_url()
@@ -212,7 +212,7 @@ if __name__ == "__main__":
                 valid = crawler.validate(records)
 
                 if valid:
-                    print(f"   {len(valid)} Züge gefunden:")
+                    print(f"   {len(valid)} trains found:")
                     for r in valid[:3]:
                         seats = r.get("seats_available")
                         seats_str = str(seats) if seats is not None else "-"
@@ -221,14 +221,14 @@ if __name__ == "__main__":
                             f"{r['arrival_time'].strftime('%H:%M')} | "
                             f"{r['price_eur']:.2f} EUR | "
                             f"{r.get('fare_class', '-')} | "
-                            f"Zug: {r.get('train_number', '-')}"
+                            f"train: {r.get('train_number', '-')}"
                         )
                     if len(valid) > 3:
-                        print(f"   ... und {len(valid) - 3} weitere")
+                        print(f"   ... and {len(valid) - 3} more")
                 else:
-                    print(f"   Keine Verbindungen gefunden")
+                    print(f"   No connections found")
 
             except Exception as e:
-                print(f"   FEHLER: {e}")
+                print(f"   ERROR: {e}")
 
             print()
