@@ -1,13 +1,13 @@
 """
-DB Crawler — Preisdaten via lokalem db-vendo-client Microservice
+DB Crawler — Price data via local db-vendo-client microservice.
 
-Voraussetzung: Node.js Microservice muss laufen:
+Prerequisite: Node.js microservice must be running:
     cd crawlers/db/microservice
     node server.mjs
 
-Kein API-Key erforderlich. Nutzt die DB Navigator API (dbnav-Profil).
-Speichert Direkt- und Umstiegsverbindungen als separate Datensätze.
-Auslastungsdaten (loadFactor) nicht verfügbar — API-Limitation der DB.
+No API key required. Uses the DB Navigator API (dbnav profile).
+Saves direct and connecting journeys as separate records.
+Load factor data (loadFactor) not available — API limitation of DB.
 """
 
 import sys, os
@@ -27,7 +27,7 @@ class DBCrawler(BaseCrawler):
 
     def __init__(self):
         super().__init__()
-        self.logger.info("DB Crawler (db-vendo-client Microservice) bereit")
+        self.logger.info("DB Crawler (db-vendo-client microservice) ready")
 
     def get_url(self) -> str:
         return f"{self.MICROSERVICE_URL}/journeys"
@@ -37,9 +37,9 @@ class DBCrawler(BaseCrawler):
         to_id   = route.destination.db_id
 
         if not from_id:
-            raise ValueError(f"Keine db_id für {route.origin.name}")
+            raise ValueError(f"No db_id for {route.origin.name}")
         if not to_id:
-            raise ValueError(f"Keine db_id für {route.destination.name}")
+            raise ValueError(f"No db_id for {route.destination.name}")
 
         date_obj  = datetime.strptime(date, "%Y-%m-%d")
         departure = date_obj.replace(hour=10, minute=0).isoformat()
@@ -67,7 +67,7 @@ class DBCrawler(BaseCrawler):
         try:
             data = response.json()
         except Exception as e:
-            self.logger.error(f"JSON Parse Fehler: {e}")
+            self.logger.error(f"JSON parse error: {e}")
             return records
 
         journeys = data.get("journeys", [])
@@ -109,7 +109,7 @@ class DBCrawler(BaseCrawler):
                     "is_direct":       is_direct,
                 })
 
-        self.logger.info(f"{len(journeys)} Verbindungen, {len(records)} Datensätze")
+        self.logger.info(f"{len(journeys)} journeys, {len(records)} records")
         return records
 
     def _extract_train_name(self, legs: list) -> str:
@@ -122,8 +122,8 @@ class DBCrawler(BaseCrawler):
 
     def _extract_prices(self, journey: dict) -> list[dict]:
         """
-        Extrahiert Preise. Besonderheit dbnav API:
-        priceObj.amount ist in Cent (6999 → 69.99 EUR)
+        Extracts prices. Note for dbnav API:
+        priceObj.amount is in cents (6999 → 69.99 EUR)
         """
         tickets    = journey.get("tickets", [])
         agg        = (journey.get("price") or {})
@@ -159,7 +159,7 @@ class DBCrawler(BaseCrawler):
 
     def _infer_class(self, name: str) -> str:
         n = (name or "").lower()
-        return "1" if any(x in n for x in ["1. klasse", "first", "klasse 1", "1st"]) else "2"
+        return "1" if any(x in n for x in ["1st class", "first", "class 1", "1st", "1. klasse", "klasse 1"]) else "2"
 
     def fetch(self, url: str, params: dict = None, headers: dict = None) -> requests.Response:
         headers = {**(headers or {}), "Origin": self.MICROSERVICE_URL}
@@ -167,7 +167,7 @@ class DBCrawler(BaseCrawler):
 
 
 # ──────────────────────────────────────────────
-# DIREKTER TEST
+# DIRECT TEST
 # ──────────────────────────────────────────────
 
 if __name__ == "__main__":
@@ -177,25 +177,25 @@ if __name__ == "__main__":
 
     load_dotenv()
 
-    print("DB Crawler Test (db-vendo-client Microservice)")
+    print("DB Crawler Test (db-vendo-client microservice)")
     print("=" * 50)
 
     try:
         requests.get("http://localhost:3123/", timeout=3)
     except requests.exceptions.ConnectionError:
-        print("❌ Microservice nicht erreichbar!")
+        print("❌ Microservice not reachable!")
         print("   cd crawlers/db/microservice && node server.mjs")
         sys.exit(1)
 
     crawler = DBCrawler()
     routes  = get_routes_for_operator("db")
 
-    print(f"{len(routes)} DB-Routen, {len(BOOKING_HORIZONS)} Horizonte\n")
+    print(f"{len(routes)} DB routes, {len(BOOKING_HORIZONS)} horizons\n")
 
     for route in routes[:2]:
         for horizon in BOOKING_HORIZONS[:3]:
             date = (datetime.now() + timedelta(days=horizon)).strftime("%Y-%m-%d")
-            print(f"── {route.description} | +{horizon} Tage ({date})")
+            print(f"── {route.description} | +{horizon} days ({date})")
 
             try:
                 url      = crawler.get_url()
@@ -206,21 +206,21 @@ if __name__ == "__main__":
 
                 if valid:
                     direct = sum(1 for r in valid if r.get("is_direct"))
-                    print(f"   {len(valid)} Datensätze ({direct} direkt, {len(valid)-direct} Umstieg):")
+                    print(f"   {len(valid)} records ({direct} direct, {len(valid)-direct} with transfer):")
                     for r in valid[:3]:
                         print(
                             f"   {r['departure_time'].strftime('%H:%M')} → "
                             f"{r['arrival_time'].strftime('%H:%M')} | "
                             f"{r['price_eur']:.2f} EUR | "
                             f"{r['train_number']} | "
-                            f"{'direkt' if r['is_direct'] else 'Umstieg'}"
+                            f"{'direct' if r['is_direct'] else 'transfer'}"
                         )
                     if len(valid) > 3:
-                        print(f"   ... und {len(valid) - 3} weitere")
+                        print(f"   ... and {len(valid) - 3} more")
                 else:
-                    print("   Keine Verbindungen gefunden")
+                    print("   No connections found")
 
             except Exception as e:
-                print(f"   FEHLER: {e}")
+                print(f"   ERROR: {e}")
 
             print()

@@ -1,8 +1,8 @@
 """
-Flixtrain Crawler - Preisdaten über die öffentliche Flixbus API
+Flixtrain Crawler - Price data via the public Flixbus API.
 
-Kein API-Key erforderlich, kein Request-Limit.
-Filtert ausschließlich direkte Flixtrain-Züge heraus
+No API key required, no rate limit.
+Filters only direct Flixtrain trains
 (transfer_type_key == "train", operator_id == "train").
 """
 
@@ -23,7 +23,7 @@ class FlixtrainCrawler(BaseCrawler):
 
     def __init__(self):
         super().__init__()
-        self.logger.info("Flixtrain Crawler (direkte API, kein Key) bereit")
+        self.logger.info("Flixtrain Crawler (direct API, no key) ready")
 
     def get_url(self) -> str:
         return self.BASE_URL
@@ -33,9 +33,9 @@ class FlixtrainCrawler(BaseCrawler):
         destination_id = route.destination.flixtrain_city_id
 
         if not origin_id:
-            raise ValueError(f"Keine flixtrain_city_id für {route.origin.name}")
+            raise ValueError(f"No flixtrain_city_id for {route.origin.name}")
         if not destination_id:
-            raise ValueError(f"Keine flixtrain_city_id für {route.destination.name}")
+            raise ValueError(f"No flixtrain_city_id for {route.destination.name}")
 
         date_obj = datetime.strptime(date, "%Y-%m-%d")
         date_formatted = date_obj.strftime("%d.%m.%Y")
@@ -56,7 +56,7 @@ class FlixtrainCrawler(BaseCrawler):
         try:
             data = response.json()
         except Exception as e:
-            self.logger.error(f"JSON Parse Fehler: {e}")
+            self.logger.error(f"JSON parse error: {e}")
             return records
 
         trips = data.get("trips", [])
@@ -71,10 +71,10 @@ class FlixtrainCrawler(BaseCrawler):
                     if record:
                         records.append(record)
                 except Exception as e:
-                    self.logger.warning(f"Fehler beim Parsen: {e}")
+                    self.logger.warning(f"Parse error: {e}")
                     continue
 
-        # Deduplizieren: pro Abfahrtszeit nur früheste Ankunft behalten
+        # Deduplicate: keep only earliest arrival per departure time
         seen = {}
         for r in records:
             key = r["departure_time"]
@@ -82,7 +82,7 @@ class FlixtrainCrawler(BaseCrawler):
                 seen[key] = r
         records = list(seen.values())
 
-        self.logger.info(f"{total} Verbindungen gesamt, {len(records)} direkte Flixtrain-Züge")
+        self.logger.info(f"{total} total connections, {len(records)} direct Flixtrain trains")
         return records
 
     def _parse_journey(self, journey: dict, route: Route = None) -> dict | None:
@@ -132,7 +132,7 @@ class FlixtrainCrawler(BaseCrawler):
 
 
 # ──────────────────────────────────────────────
-# DIREKTER TEST
+# DIRECT TEST
 # ──────────────────────────────────────────────
 
 if __name__ == "__main__":
@@ -142,18 +142,18 @@ if __name__ == "__main__":
 
     load_dotenv()
 
-    print("Flixtrain Crawler Test (direkte API)")
+    print("Flixtrain Crawler Test (direct API)")
     print("=" * 50)
 
     crawler = FlixtrainCrawler()
     routes = get_routes_for_operator("flixtrain")
 
-    print(f"{len(routes)} Flixtrain-Routen, {len(BOOKING_HORIZONS)} Horizonte\n")
+    print(f"{len(routes)} Flixtrain routes, {len(BOOKING_HORIZONS)} horizons\n")
 
     for route in routes[:2]:
         for horizon in BOOKING_HORIZONS:
             date = (datetime.now() + timedelta(days=horizon)).strftime("%Y-%m-%d")
-            print(f"── {route.description} | +{horizon} Tage ({date})")
+            print(f"── {route.description} | +{horizon} days ({date})")
 
             try:
                 url = crawler.get_url()
@@ -163,7 +163,7 @@ if __name__ == "__main__":
                 valid = crawler.validate(records)
 
                 if valid:
-                    print(f"   {len(valid)} Züge gefunden:")
+                    print(f"   {len(valid)} trains found:")
                     for r in valid[:3]:
                         seats = r.get("seats_available")
                         seats_str = str(seats) if seats is not None else "-"
@@ -171,15 +171,15 @@ if __name__ == "__main__":
                             f"   {r['departure_time'].strftime('%H:%M')} → "
                             f"{r['arrival_time'].strftime('%H:%M')} | "
                             f"{r['price_eur']:.2f} EUR | "
-                            f"{seats_str} Plätze | "
-                            f"Kapazität: {r.get('capacity_level', '?')}"
+                            f"{seats_str} seats | "
+                            f"capacity: {r.get('capacity_level', '?')}"
                         )
                     if len(valid) > 3:
-                        print(f"   ... und {len(valid) - 3} weitere")
+                        print(f"   ... and {len(valid) - 3} more")
                 else:
-                    print(f"   Keine Flixtrain-Züge gefunden")
+                    print(f"   No Flixtrain trains found")
 
             except Exception as e:
-                print(f"   FEHLER: {e}")
+                print(f"   ERROR: {e}")
 
             print()

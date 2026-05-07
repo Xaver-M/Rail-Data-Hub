@@ -1,8 +1,8 @@
 """
-run_crawlers.py – Manueller Crawler-Run
-Führt alle aktiven Crawler einmalig aus.
+run_crawlers.py – Manual crawler run.
+Executes all active crawlers once.
 
-Starten: py scheduler/run_crawlers.py
+Run with: py scheduler/run_crawlers.py
 """
 
 import sys, os
@@ -26,7 +26,7 @@ from crawlers.db.db_crawler import DBCrawler
 
 
 def run_all_crawlers():
-    logger.info(f"=== Crawler-Run gestartet: {datetime.now()} ===")
+    logger.info(f"=== Crawler run started: {datetime.now()} ===")
 
     crawlers = [
         FlixtrainCrawler(),
@@ -39,10 +39,10 @@ def run_all_crawlers():
         try:
             crawler.run(ROUTES, BOOKING_HORIZONS)
         except Exception as e:
-            logger.error(f"Crawler {crawler.OPERATOR_NAME} fehlgeschlagen: {e}")
+            logger.error(f"Crawler {crawler.OPERATOR_NAME} failed: {e}")
             continue
 
-    logger.info("=== Crawler-Run abgeschlossen ===")
+    logger.info("=== Crawler run completed ===")
 
 
 if __name__ == "__main__":
