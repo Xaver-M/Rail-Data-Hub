@@ -23,6 +23,7 @@ from crawlers.flixtrain.flixtrain_crawler import FlixtrainCrawler
 from crawlers.trenitalia.trenitalia_crawler import TrenitaliaCrawler
 from crawlers.ouigo_es.ougio_es_crawler import OuigoEsCrawler
 from crawlers.db.db_crawler import DBCrawler
+from crawlers.regiojet.regiojet_crawler import RegioJetCrawler
 
 
 def run_all_crawlers():
@@ -33,6 +34,7 @@ def run_all_crawlers():
         TrenitaliaCrawler(),
         OuigoEsCrawler(),
         DBCrawler(),
+        RegioJetCrawler(),
     ]
 
     for crawler in crawlers:
