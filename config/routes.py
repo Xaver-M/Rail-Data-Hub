@@ -1,6 +1,6 @@
 # config/routes.py
-# Zentrale Routen-Konfiguration für Rail Data Hub
-# Nur Routen mit mindestens 2 Anbietern (Wettbewerbsrouten)
+# Central route configuration for Rail Data Hub
+# Only routes with at least 2 operators (competitive routes)
 
 from dataclasses import dataclass
 from typing import Optional
@@ -16,11 +16,11 @@ class Station:
     italo_id: Optional[int] = None
     db_id: Optional[str] = None
     oebb_id: Optional[str] = None
-    ouigo_es_id: Optional[str] = None          # UIC-Code für Ouigo España
+    ouigo_es_id: Optional[str] = None          # UIC code for Ouigo España
     renfe_id: Optional[str] = None
     iryo_id: Optional[str] = None
-    regiojet_station_id: Optional[str] = None  # RegioJet STATION-ID
-    regiojet_city_id: Optional[str] = None     # RegioJet CITY-ID 
+    regiojet_station_id: Optional[str] = None  # RegioJet station ID
+    regiojet_city_id: Optional[str] = None     # RegioJet city ID
 
 
 @dataclass
@@ -33,7 +33,7 @@ class Route:
 
 
 # ─────────────────────────────────────────────────────────────
-# STATIONEN
+# STATIONS
 # ─────────────────────────────────────────────────────────────
 
 BERLIN = Station(
@@ -50,7 +50,7 @@ HAMBURG = Station(
     db_id="8002549",
 )
 
-MÜNCHEN = Station(
+MUNICH = Station(
     name="München Hbf",
     flixtrain_id="dcbabbfa-9603-11e6-9066-549f350fcb0c",
     flixtrain_city_id="40d901a5-8646-11e6-9066-549f350fcb0c",
@@ -64,7 +64,7 @@ FRANKFURT = Station(
     db_id="8000105",
 )
 
-KÖLN = Station(
+COLOGNE = Station(
     name="Köln Hbf",
     flixtrain_id="5e24b585-a2eb-42ea-acf5-b1063555f002",
     flixtrain_city_id="40d91025-8646-11e6-9066-549f350fcb0c",
@@ -85,7 +85,7 @@ LEIPZIG = Station(
     db_id="8010205",
 )
 
-HANNOVER = Station(
+HANOVER = Station(
     name="Hannover Hbf",
     flixtrain_id="b3c64a07-e6ae-4e39-9e36-d6e3a739f083",
     flixtrain_city_id="40da4ac8-8646-11e6-9066-549f350fcb0c",
@@ -106,55 +106,55 @@ BASEL = Station(
     db_id="8000026",
 )
 
-WIEN = Station(
+VIENNA = Station(
     name="Wien Hbf",
     db_id="8100003",
     oebb_id="1190100",
     regiojet_station_id="372825000",
-    regiojet_city_id="10202052",   # fix: war None
+    regiojet_city_id="10202052",
 )
 
-PRAG = Station(
+PRAGUE = Station(
     name="Praha hlavní nádraží",
-    regiojet_city_id="10202003",   # fix: war 10202052 (Wiens ID)
+    regiojet_city_id="10202003",
 )
 
 BRATISLAVA = Station(
     name="Bratislava hlavná stanica",
-    regiojet_city_id="10202001",   # fix: war 10202043
+    regiojet_city_id="10202001",
 )
 
 BUDAPEST = Station(
     name="Budapest-Keleti",
-    regiojet_city_id="10202091",   # fix: war 10202059
+    regiojet_city_id="10202091",
 )
 
-MILANO = Station(
+MILAN = Station(
     name="Milano Centrale",
     trenitalia_id=830001700,
 )
 
-ROMA = Station(
+ROME = Station(
     name="Roma Termini",
     trenitalia_id=830008409,
 )
 
-NAPOLI = Station(
+NAPLES = Station(
     name="Napoli Centrale",
     trenitalia_id=830000219,
 )
 
-TORINO = Station(
+TURIN = Station(
     name="Torino Porta Nuova",
     trenitalia_id=830000219,
 )
 
-VENEZIA = Station(
+VENICE = Station(
     name="Venezia Santa Lucia",
     trenitalia_id=830002593,
 )
 
-# ── Spanien ────────────────────────────────────────────────────
+# ── Spain ──────────────────────────────────────────────────────
 MADRID = Station(
     name="Madrid - Todas las estaciones",
     ouigo_es_id="MT1",
@@ -172,7 +172,7 @@ VALENCIA = Station(
     ouigo_es_id="7103216",
 )
 
-SEVILLA = Station(
+SEVILLE = Station(
     name="Sevilla - Santa Justa",
     ouigo_es_id="7151003",
 )
@@ -184,7 +184,7 @@ ZARAGOZA = Station(
 
 
 # ─────────────────────────────────────────────────────────────
-# ROUTEN
+# ROUTES
 # ─────────────────────────────────────────────────────────────
 
 ROUTES = [
@@ -194,14 +194,14 @@ ROUTES = [
         origin=STUTTGART,
         destination=BERLIN,
         operators=["db", "flixtrain"],
-        description="Stuttgart–Berlin (FLX10 vs. DB)",
+        description="Stuttgart-Berlin (FLX10 vs. DB)",
         route_id="stuttgart-berlin"
     ),
     Route(
         origin=FRANKFURT,
         destination=BERLIN,
         operators=["db", "flixtrain"],
-        description="Frankfurt–Berlin (FLX10 vs. DB)",
+        description="Frankfurt-Berlin (FLX10 vs. DB)",
         route_id="frankfurt-berlin"
     ),
 
@@ -210,26 +210,26 @@ ROUTES = [
         origin=BASEL,
         destination=BERLIN,
         operators=["db", "flixtrain"],
-        description="Basel–Berlin (FLX10 vs. DB)",
+        description="Basel-Berlin (FLX10 vs. DB)",
         route_id="basel-berlin"
     ),
 
-    # ── FLX 20: Hamburg–Köln ───────────────────────────────────
+    # ── FLX 20: Hamburg–Cologne ────────────────────────────────
     Route(
         origin=HAMBURG,
-        destination=KÖLN,
+        destination=COLOGNE,
         operators=["db", "flixtrain"],
-        description="Hamburg–Köln (FLX20 vs. DB)",
-        route_id="hamburg-koeln"
+        description="Hamburg-Cologne (FLX20 vs. DB)",
+        route_id="hamburg-cologne"
     ),
 
-    # ── FLX 30: Köln–Berlin ────────────────────────────────────
+    # ── FLX 30: Cologne–Berlin ─────────────────────────────────
     Route(
-        origin=KÖLN,
+        origin=COLOGNE,
         destination=BERLIN,
         operators=["db", "flixtrain"],
-        description="Köln–Berlin (FLX30 vs. DB)",
-        route_id="koeln-berlin"
+        description="Cologne-Berlin (FLX30 vs. DB)",
+        route_id="cologne-berlin"
     ),
 
     # ── FLX 35: Hamburg–Berlin, Hamburg–Leipzig ────────────────
@@ -237,120 +237,120 @@ ROUTES = [
         origin=HAMBURG,
         destination=BERLIN,
         operators=["db", "flixtrain"],
-        description="Hamburg–Berlin (FLX35 vs. DB)",
+        description="Hamburg-Berlin (FLX35 vs. DB)",
         route_id="hamburg-berlin"
     ),
     Route(
         origin=HAMBURG,
         destination=LEIPZIG,
         operators=["db", "flixtrain"],
-        description="Hamburg–Leipzig (FLX35 vs. DB)",
+        description="Hamburg-Leipzig (FLX35 vs. DB)",
         route_id="hamburg-leipzig"
     ),
 
-    # ── Italien: Trenitalia vs. Italo ──────────────────────────
+    # ── Italy: Trenitalia vs. Italo ────────────────────────────
     Route(
-        origin=MILANO,
-        destination=ROMA,
+        origin=MILAN,
+        destination=ROME,
         operators=["trenitalia", "italo"],
-        description="Milano–Roma (Trenitalia vs. Italo)",
-        route_id="milano-roma"
+        description="Milan-Rome (Trenitalia vs. Italo)",
+        route_id="milan-rome"
     ),
     Route(
-        origin=MILANO,
-        destination=NAPOLI,
+        origin=MILAN,
+        destination=NAPLES,
         operators=["trenitalia", "italo"],
-        description="Milano–Napoli (Trenitalia vs. Italo)",
-        route_id="milano-napoli"
+        description="Milan-Naples (Trenitalia vs. Italo)",
+        route_id="milan-naples"
     ),
     Route(
-        origin=ROMA,
-        destination=NAPOLI,
+        origin=ROME,
+        destination=NAPLES,
         operators=["trenitalia", "italo"],
-        description="Roma–Napoli (Trenitalia vs. Italo)",
-        route_id="roma-napoli"
+        description="Rome-Naples (Trenitalia vs. Italo)",
+        route_id="rome-naples"
     ),
     Route(
-        origin=TORINO,
-        destination=ROMA,
+        origin=TURIN,
+        destination=ROME,
         operators=["trenitalia", "italo"],
-        description="Torino–Roma (Trenitalia vs. Italo)",
-        route_id="torino-roma"
+        description="Turin-Rome (Trenitalia vs. Italo)",
+        route_id="turin-rome"
     ),
     Route(
-        origin=MILANO,
-        destination=VENEZIA,
+        origin=MILAN,
+        destination=VENICE,
         operators=["trenitalia", "italo"],
-        description="Milano–Venezia (Trenitalia vs. Italo)",
-        route_id="milano-venezia"
+        description="Milan-Venice (Trenitalia vs. Italo)",
+        route_id="milan-venice"
     ),
 
-    # ── Spanien: Renfe vs. Ouigo España vs. Iryo ───────────────
+    # ── Spain: Renfe vs. Ouigo España vs. Iryo ─────────────────
     Route(
         origin=MADRID,
         destination=BARCELONA,
         operators=["renfe", "ouigo_es", "iryo"],
-        description="Madrid–Barcelona (Renfe vs. Ouigo vs. Iryo)",
+        description="Madrid-Barcelona (Renfe vs. Ouigo vs. Iryo)",
         route_id="madrid-barcelona"
     ),
     Route(
         origin=MADRID,
         destination=VALENCIA,
         operators=["renfe", "ouigo_es"],
-        description="Madrid–Valencia (Renfe vs. Ouigo)",
+        description="Madrid-Valencia (Renfe vs. Ouigo)",
         route_id="madrid-valencia"
     ),
     Route(
         origin=MADRID,
-        destination=SEVILLA,
+        destination=SEVILLE,
         operators=["renfe", "ouigo_es"],
-        description="Madrid–Sevilla (Renfe vs. Ouigo)",
-        route_id="madrid-sevilla"
+        description="Madrid-Seville (Renfe vs. Ouigo)",
+        route_id="madrid-seville"
     ),
 
     # ── International ──────────────────────────────────────────
     Route(
-        origin=MÜNCHEN,
-        destination=WIEN,
+        origin=MUNICH,
+        destination=VIENNA,
         operators=["db", "oebb"],
-        description="München–Wien (DB vs. ÖBB)",
-        route_id="muenchen-wien"
+        description="Munich-Vienna (DB vs. OeBB)",
+        route_id="munich-vienna"
     ),
 
-    # ── RegioJet: Tschechien / Österreich ──────────────────────
+    # ── RegioJet: Czech Republic / Austria ─────────────────────
     Route(
-        origin=WIEN,
-        destination=PRAG,
+        origin=VIENNA,
+        destination=PRAGUE,
         operators=["regiojet"],
-        description="Wien–Praha (RegioJet)",
-        route_id="wien-prag"
+        description="Vienna-Prague (RegioJet)",
+        route_id="vienna-prague"
     ),
     Route(
-        origin=PRAG,
-        destination=WIEN,
+        origin=PRAGUE,
+        destination=VIENNA,
         operators=["regiojet"],
-        description="Praha–Wien (RegioJet)",
-        route_id="prag-wien"
+        description="Prague-Vienna (RegioJet)",
+        route_id="prague-vienna"
     ),
     Route(
-        origin=PRAG,
+        origin=PRAGUE,
         destination=BRATISLAVA,
         operators=["regiojet"],
-        description="Praha–Bratislava (RegioJet)",
-        route_id="prag-bratislava"
+        description="Prague-Bratislava (RegioJet)",
+        route_id="prague-bratislava"
     ),
     Route(
-        origin=PRAG,
+        origin=PRAGUE,
         destination=BUDAPEST,
         operators=["regiojet"],
-        description="Praha–Budapest (RegioJet)",
-        route_id="prag-budapest"
+        description="Prague-Budapest (RegioJet)",
+        route_id="prague-budapest"
     ),
 ]
 
 
 # ─────────────────────────────────────────────────────────────
-# HILFSFUNKTIONEN
+# HELPER FUNCTIONS
 # ─────────────────────────────────────────────────────────────
 
 def get_routes_for_operator(operator: str) -> list[Route]:
@@ -362,7 +362,7 @@ def get_routes_with_competition() -> list[Route]:
 
 
 # ─────────────────────────────────────────────────────────────
-# BUCHUNGSHORIZONTE
+# BOOKING HORIZONS
 # ─────────────────────────────────────────────────────────────
 
 BOOKING_HORIZONS = [
@@ -373,14 +373,14 @@ BOOKING_HORIZONS = [
 
 
 if __name__ == "__main__":
-    print(f"Gesamt Routen: {len(ROUTES)}")
+    print(f"Total routes: {len(ROUTES)}")
     print()
     for op in ["db", "flixtrain", "trenitalia", "italo", "oebb", "ouigo_es", "renfe", "iryo", "regiojet"]:
         routes = get_routes_for_operator(op)
         if routes:
-            print(f"{op.upper():<12} {len(routes)} Routen:")
+            print(f"{op.upper():<12} {len(routes)} routes:")
             for r in routes:
-                print(f"  → {r.description} [{r.route_id}]")
+                print(f"  -> {r.description} [{r.route_id}]")
             print()
-    print(f"Buchungshorizonte: {BOOKING_HORIZONS} Tage")
-    print(f"Requests/Tag (geschätzt): {len(ROUTES) * len(BOOKING_HORIZONS)}")
+    print(f"Booking horizons: {BOOKING_HORIZONS} days")
+    print(f"Requests/day (estimated): {len(ROUTES) * len(BOOKING_HORIZONS)}")
