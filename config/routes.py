@@ -1,6 +1,10 @@
 # config/routes.py
 # Central route configuration for Rail Data Hub
+<<<<<<< HEAD
 # Only routes with at least 2 operators (competitive routes)
+=======
+# Only routes served by at least 2 operators (competitive routes)
+>>>>>>> origin/main
 
 from dataclasses import dataclass
 from typing import Optional
@@ -309,6 +313,7 @@ ROUTES = [
     ),
 
     # ── International ──────────────────────────────────────────
+
     Route(
         origin=MUNICH,
         destination=VIENNA,

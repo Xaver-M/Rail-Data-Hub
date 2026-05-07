@@ -1,9 +1,9 @@
 """
-Trenitalia Crawler - Preisdaten über die lefrecce.it BFF API
+Trenitalia Crawler - Price data via the lefrecce.it BFF API.
 
-Kein API-Key erforderlich, kein Request-Limit.
-Gibt Preise und Sitzverfügbarkeit für Frecciarossa/Frecciargento zurück.
-Preis, Sitzzahl und Tarifinfo stammen immer aus demselben günstigsten Tarif.
+No API key required, no rate limit.
+Returns prices and seat availability for Frecciarossa/Frecciargento.
+Price, seat count and fare info always come from the same cheapest offer.
 """
 
 import sys, os
@@ -30,7 +30,7 @@ class TrenitaliaCrawler(BaseCrawler):
 
     def __init__(self):
         super().__init__()
-        self.logger.info("Trenitalia Crawler (lefrecce.it BFF) bereit")
+        self.logger.info("Trenitalia Crawler (lefrecce.it BFF) ready")
 
     def get_url(self) -> str:
         return self.BASE_URL
@@ -40,9 +40,9 @@ class TrenitaliaCrawler(BaseCrawler):
         destination_id = route.destination.trenitalia_id
 
         if not origin_id:
-            raise ValueError(f"Keine trenitalia_id für {route.origin.name}")
+            raise ValueError(f"No trenitalia_id for {route.origin.name}")
         if not destination_id:
-            raise ValueError(f"Keine trenitalia_id für {route.destination.name}")
+            raise ValueError(f"No trenitalia_id for {route.destination.name}")
 
         date_obj = datetime.strptime(date, "%Y-%m-%d")
         departure_time = date_obj.strftime("%Y-%m-%dT06:00:00.000+01:00")
@@ -69,7 +69,7 @@ class TrenitaliaCrawler(BaseCrawler):
     def fetch(self, url: str, params: dict = None, headers: dict = None) -> requests.Response:
         for attempt in range(1, self.MAX_RETRIES + 1):
             try:
-                self.logger.info(f"HTTP POST {url} (Versuch {attempt}/{self.MAX_RETRIES})")
+                self.logger.info(f"HTTP POST {url} (attempt {attempt}/{self.MAX_RETRIES})")
                 response = self.session.post(
                     url,
                     json=params,
@@ -77,35 +77,35 @@ class TrenitaliaCrawler(BaseCrawler):
                     timeout=self.REQUEST_TIMEOUT,
                 )
                 response.raise_for_status()
-                self.logger.info(f"HTTP {response.status_code} – {len(response.content)} Bytes")
+                self.logger.info(f"HTTP {response.status_code} – {len(response.content)} bytes")
                 return response
 
             except requests.exceptions.Timeout:
-                self.logger.warning(f"Timeout bei Versuch {attempt}")
+                self.logger.warning(f"Timeout on attempt {attempt}")
             except requests.exceptions.HTTPError as e:
-                self.logger.warning(f"HTTP Fehler {e.response.status_code} bei Versuch {attempt}")
+                self.logger.warning(f"HTTP error {e.response.status_code} on attempt {attempt}")
                 if e.response.status_code in (400, 404):
                     raise
             except requests.exceptions.ConnectionError:
-                self.logger.warning(f"Verbindungsfehler bei Versuch {attempt}")
+                self.logger.warning(f"Connection error on attempt {attempt}")
             except Exception as e:
-                self.logger.warning(f"Unbekannter Fehler bei Versuch {attempt}: {e}")
+                self.logger.warning(f"Unknown error on attempt {attempt}: {e}")
 
             if attempt < self.MAX_RETRIES:
                 time.sleep(self.RETRY_DELAY)
 
-        raise Exception(f"Alle {self.MAX_RETRIES} Versuche für {url} fehlgeschlagen")
+        raise Exception(f"All {self.MAX_RETRIES} attempts failed for {url}")
 
     def parse(self, response: requests.Response, route: Route = None) -> list[dict]:
         records = []
         try:
             data = response.json()
         except Exception as e:
-            self.logger.error(f"JSON Parse Fehler: {e}")
+            self.logger.error(f"JSON parse error: {e}")
             return records
 
         solutions = data.get("solutions", [])
-        self.logger.info(f"{len(solutions)} Verbindungen in API-Antwort")
+        self.logger.info(f"{len(solutions)} connections in API response")
 
         for item in solutions:
             try:
@@ -113,10 +113,10 @@ class TrenitaliaCrawler(BaseCrawler):
                 if record:
                     records.append(record)
             except Exception as e:
-                self.logger.warning(f"Fehler beim Parsen: {e}")
+                self.logger.warning(f"Parse error: {e}")
                 continue
 
-        self.logger.info(f"{len(records)} Trenitalia-Verbindungen geparst")
+        self.logger.info(f"{len(records)} Trenitalia connections parsed")
         return records
 
     def _parse_solution(self, item: dict, route: Route = None) -> dict | None:
@@ -135,7 +135,7 @@ class TrenitaliaCrawler(BaseCrawler):
         departure_time = datetime.fromisoformat(dep_str)
         arrival_time = datetime.fromisoformat(arr_str)
 
-        # Zugnummer
+        # Train number
         nodes = sol.get("nodes", [])
         train_number = None
         if nodes:
@@ -144,7 +144,7 @@ class TrenitaliaCrawler(BaseCrawler):
             name = train.get("name", "")
             train_number = f"{category} {name}".strip() if category or name else None
 
-        # Günstigsten Tarif finden — Preis, Sitzzahl und Tarifinfo aus derselben Quelle
+        # Find cheapest offer — price, seat count and fare info from the same source
         cheapest_price = None
         cheapest_seats = None
         cheapest_fare_class = None
@@ -165,7 +165,7 @@ class TrenitaliaCrawler(BaseCrawler):
                             cheapest_fare_class = offer.get("name")
                             cheapest_service_name = offer.get("serviceName")
 
-        # Fallback: Preis aus solution-Ebene falls grids leer
+        # Fallback: price from solution level if grids are empty
         if cheapest_price is None:
             price_obj = sol.get("price", {})
             cheapest_price = price_obj.get("amount") if price_obj else None
@@ -187,7 +187,7 @@ class TrenitaliaCrawler(BaseCrawler):
 
 
 # ──────────────────────────────────────────────
-# DIREKTER TEST
+# DIRECT TEST
 # ──────────────────────────────────────────────
 
 if __name__ == "__main__":
@@ -203,12 +203,12 @@ if __name__ == "__main__":
     crawler = TrenitaliaCrawler()
     routes = get_routes_for_operator("trenitalia")
 
-    print(f"{len(routes)} Trenitalia-Routen, {len(BOOKING_HORIZONS)} Horizonte\n")
+    print(f"{len(routes)} Trenitalia routes, {len(BOOKING_HORIZONS)} horizons\n")
 
     for route in routes[:1]:
         for horizon in BOOKING_HORIZONS[:3]:
             date = (datetime.now() + timedelta(days=horizon)).strftime("%Y-%m-%d")
-            print(f"── {route.description} | +{horizon} Tage ({date})")
+            print(f"── {route.description} | +{horizon} days ({date})")
 
             try:
                 url = crawler.get_url()
@@ -218,7 +218,7 @@ if __name__ == "__main__":
                 valid = crawler.validate(records)
 
                 if valid:
-                    print(f"   {len(valid)} Züge gefunden:")
+                    print(f"   {len(valid)} trains found:")
                     for r in valid[:3]:
                         seats = r.get("seats_available")
                         seats_str = str(seats) if seats is not None else "-"
@@ -229,16 +229,16 @@ if __name__ == "__main__":
                             f"   {r['departure_time'].strftime('%H:%M')} -> "
                             f"{r['arrival_time'].strftime('%H:%M')} | "
                             f"{r['price_eur']:.2f} EUR | "
-                            f"{seats_str} Plaetze | "
+                            f"{seats_str} seats | "
                             f"{fare} / {offer} | "
                             f"{train}"
                         )
                     if len(valid) > 3:
-                        print(f"   ... und {len(valid) - 3} weitere")
+                        print(f"   ... and {len(valid) - 3} more")
                 else:
-                    print(f"   Keine Verbindungen gefunden")
+                    print(f"   No connections found")
 
             except Exception as e:
-                print(f"   FEHLER: {e}")
+                print(f"   ERROR: {e}")
 
             print()

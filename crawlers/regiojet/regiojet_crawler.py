@@ -1,10 +1,10 @@
 """
-RegioJet Crawler – Preis- und Kapazitätsdaten über die öffentliche RegioJet REST-API
+RegioJet Crawler – Price and capacity data via the public RegioJet REST API.
 
-Kein API-Key erforderlich.
-Endpunkt: https://brn-ybus-pubapi.sa.cz/restapi/routes/search/simple
+No API key required.
+Endpoint: https://brn-ybus-pubapi.sa.cz/restapi/routes/search/simple
 
-Jede Route liefert priceFrom/priceTo sowie freeSeatsCount pro Verbindung.
+Each route returns priceFrom/priceTo and freeSeatsCount per connection.
 """
 
 import sys, os
@@ -24,7 +24,7 @@ class RegioJetCrawler(BaseCrawler):
 
     def __init__(self):
         super().__init__()
-        self.logger.info("RegioJet Crawler (öffentliche REST-API, kein Key) bereit")
+        self.logger.info("RegioJet Crawler (public REST API, no key) ready")
 
     def get_url(self) -> str:
         return self.BASE_URL
@@ -38,14 +38,14 @@ class RegioJetCrawler(BaseCrawler):
         elif origin.regiojet_station_id:
             from_id, from_type = origin.regiojet_station_id, "STATION"
         else:
-            raise ValueError(f"Keine RegioJet-ID für {origin.name}")
+            raise ValueError(f"No RegioJet ID for {origin.name}")
 
         if destination.regiojet_city_id:
             to_id, to_type = destination.regiojet_city_id, "CITY"
         elif destination.regiojet_station_id:
             to_id, to_type = destination.regiojet_station_id, "STATION"
         else:
-            raise ValueError(f"Keine RegioJet-ID für {destination.name}")
+            raise ValueError(f"No RegioJet ID for {destination.name}")
 
         return {
             "tariffs":         "REGULAR",
@@ -61,11 +61,11 @@ class RegioJetCrawler(BaseCrawler):
         try:
             data = response.json()
         except Exception as e:
-            self.logger.error(f"JSON Parse Fehler: {e}")
+            self.logger.error(f"JSON parse error: {e}")
             return records
 
         routes_raw = data.get("routes", [])
-        self.logger.info(f"{len(routes_raw)} Verbindungen empfangen")
+        self.logger.info(f"{len(routes_raw)} connections received")
 
         for entry in routes_raw:
             try:
@@ -73,7 +73,7 @@ class RegioJetCrawler(BaseCrawler):
                 if record:
                     records.append(record)
             except Exception as e:
-                self.logger.warning(f"Fehler beim Parsen: {e}")
+                self.logger.warning(f"Parse error: {e}")
                 continue
 
         return records
@@ -97,10 +97,10 @@ class RegioJetCrawler(BaseCrawler):
         vehicle_types   = entry.get("vehicleTypes", [])
         transfers_count = entry.get("transfersCount", 0)
         free_seats      = entry.get("freeSeatsCount")
-        vehicle_class   = entry.get("vehicleStandardKey")  # z.B. "YELLOW", "RED"
+        vehicle_class   = entry.get("vehicleStandardKey")  # e.g. "YELLOW", "RED"
         action_price    = entry.get("actionPrice", False)
 
-        # Kapazitätsstufe aus freien Plätzen ableiten
+        # Derive capacity level from free seats
         if free_seats is not None:
             if free_seats == 0:
                 capacity_level = "sold_out"
@@ -145,7 +145,7 @@ class RegioJetCrawler(BaseCrawler):
 
 
 # ──────────────────────────────────────────────
-# DIREKTER TEST
+# DIRECT TEST
 # ──────────────────────────────────────────────
 
 if __name__ == "__main__":
@@ -161,12 +161,12 @@ if __name__ == "__main__":
     crawler = RegioJetCrawler()
     routes = get_routes_for_operator("regiojet")
 
-    print(f"{len(routes)} RegioJet-Routen, {len(BOOKING_HORIZONS)} Horizonte\n")
+    print(f"{len(routes)} RegioJet routes, {len(BOOKING_HORIZONS)} horizons\n")
 
     for route in routes[:2]:
         for horizon in BOOKING_HORIZONS[:3]:
             date = (datetime.now() + timedelta(days=horizon)).strftime("%Y-%m-%d")
-            print(f"── {route.description} | +{horizon} Tage ({date})")
+            print(f"── {route.description} | +{horizon} days ({date})")
 
             try:
                 url = crawler.get_url()
@@ -176,25 +176,25 @@ if __name__ == "__main__":
                 valid = crawler.validate(records)
 
                 if valid:
-                    print(f"   {len(valid)} Verbindungen:")
+                    print(f"   {len(valid)} connections:")
                     for r in valid[:3]:
                         seats = r.get("seats_available")
                         seats_str = str(seats) if seats is not None else "-"
-                        direct = "direkt" if r.get("is_direct") else f"{r.get('transfers_count', '?')} Umstiege"
+                        direct = "direct" if r.get("is_direct") else f"{r.get('transfers_count', '?')} transfers"
                         print(
                             f"   {r['departure_time'].strftime('%H:%M')} → "
                             f"{r['arrival_time'].strftime('%H:%M')} | "
-                            f"ab {r['price_eur']:.2f} EUR | "
-                            f"{seats_str} Plätze | "
+                            f"from {r['price_eur']:.2f} EUR | "
+                            f"{seats_str} seats | "
                             f"{direct} | "
-                            f"Klasse: {r.get('travel_class', '?')}"
+                            f"class: {r.get('travel_class', '?')}"
                         )
                     if len(valid) > 3:
-                        print(f"   ... und {len(valid) - 3} weitere")
+                        print(f"   ... and {len(valid) - 3} more")
                 else:
-                    print("   Keine buchbaren Verbindungen gefunden")
+                    print("   No bookable connections found")
 
             except Exception as e:
-                print(f"   FEHLER: {e}")
+                print(f"   ERROR: {e}")
 
             print()
