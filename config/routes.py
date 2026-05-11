@@ -188,6 +188,36 @@ ZARAGOZA = Station(
     ouigo_es_id="7104040",
 )
 
+# ── France ──────────────────────────────────────────────────────
+PARIS = Station(
+    name="Paris - Toutes les gares",
+    ouigo_fr_id="PT1",
+)
+
+NANTES = Station(
+    name="Nantes",
+    ouigo_fr_id="87481002",
+)
+
+MONTPELLIER = Station(
+    name="Montpellier toutes gares",
+    ouigo_fr_id="MP1",
+)
+
+MARSEILLE = Station(
+    name="Marseille St Charles",
+    ouigo_fr_id="87751008",
+)
+
+LYON = Station(
+    name="Lyon toutes gares",
+    ouigo_fr_id="LY1",
+)
+
+BORDEAUX = Station(
+    name="Bordeaux St Jean",
+    ouigo_fr_id="87581009",
+)
 
 # ─────────────────────────────────────────────────────────────
 # ROUTES
@@ -312,6 +342,31 @@ ROUTES = [
         operators=["renfe", "ouigo_es"],
         description="Madrid-Seville (Renfe vs. Ouigo)",
         route_id="madrid-seville"
+    ),
+
+    # ── France: Ouigo vs. SNCF (TGV) ───────────────────────────────
+    Route(
+        origin=PARIS,
+        destination=LYON,
+        operators=["ouigo_fr", "SNCF"],
+        description="Paris-Lyon (Ouigo vs. SNCF)",
+        route_id="paris-lyon"
+    ),
+
+    Route(
+        origin=PARIS,
+        destination=MARSEILLE,
+        operators=["ouigo_fr", "SNCF"],
+        description="Paris-Marseille (Ouigo vs. SNCF)",
+        route_id="paris-marseille"
+    ),
+
+    Route(
+        origin=PARIS,
+        destination=NANTES,
+        operators=["ouigo_fr", "SNCF"],
+        description="Paris-Nantes (Ouigo vs. SNCF)",
+        route_id="paris-nantes"
     ),
 
     # ── International ──────────────────────────────────────────

@@ -19,8 +19,8 @@ from config.routes import Route
 class OuigoFrCrawler(BaseCrawler):
 
     OPERATOR_NAME = "ouigo_fr"
-    BASE_URL = "https://mdw.api-fr.ouigo.com/api/Token/login"
-    TOKEN_URL = "https://mdw02.api-es.ouigo.com/api/Token/login"
+    BASE_URL = "https://mdw.api-fr.ouigo.com/api/Sale/journeysearch"
+    TOKEN_URL = "https://mdw.api-fr.ouigo.com/api/Token/login"
 
     HEADERS = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
