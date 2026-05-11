@@ -1,10 +1,7 @@
 # config/routes.py
 # Central route configuration for Rail Data Hub
-<<<<<<< HEAD
 # Only routes with at least 2 operators (competitive routes)
-=======
 # Only routes served by at least 2 operators (competitive routes)
->>>>>>> origin/main
 
 from dataclasses import dataclass
 from typing import Optional
@@ -20,11 +17,12 @@ class Station:
     italo_id: Optional[int] = None
     db_id: Optional[str] = None
     oebb_id: Optional[str] = None
-    ouigo_es_id: Optional[str] = None          # UIC code for Ouigo España
+    ouigo_es_id: Optional[str] = None   
+    ouigo_fr_id: Optional[str] = None       
     renfe_id: Optional[str] = None
     iryo_id: Optional[str] = None
-    regiojet_station_id: Optional[str] = None  # RegioJet station ID
-    regiojet_city_id: Optional[str] = None     # RegioJet city ID
+    regiojet_station_id: Optional[str] = None  
+    regiojet_city_id: Optional[str] = None     
 
 
 @dataclass
@@ -39,6 +37,8 @@ class Route:
 # ─────────────────────────────────────────────────────────────
 # STATIONS
 # ─────────────────────────────────────────────────────────────
+
+# ── Germany ─────────────────────────────────────────────────── 
 
 BERLIN = Station(
     name="Berlin Hbf",
@@ -132,6 +132,8 @@ BUDAPEST = Station(
     name="Budapest-Keleti",
     regiojet_city_id="10202091",
 )
+
+# ── Italy ───────────────────────────────────────────────────── 
 
 MILAN = Station(
     name="Milano Centrale",
