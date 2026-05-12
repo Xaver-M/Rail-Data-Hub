@@ -219,17 +219,73 @@ ROME = Station(
 
 NAPLES = Station(
     name="Napoli Centrale",
-    trenitalia_id=830000219,
+    trenitalia_id=830009218,
 )
 
 TURIN = Station(
     name="Torino Porta Nuova",
     trenitalia_id=830000219,
+    db_id="8000096",
 )
 
 VENICE = Station(
     name="Venezia Santa Lucia",
     trenitalia_id=830002593,
+)
+
+SALERNO = Station(
+    name="Salerno",
+    trenitalia_id=830009818,
+)
+
+BERGAMO = Station(
+    name="Bergamo",
+    trenitalia_id=830001529,
+)
+
+BRESCIA = Station(
+    name="Brescia",
+    trenitalia_id=830001717,
+)
+
+UDINE = Station(
+    name="Udine",
+    trenitalia_id=830003026,
+)
+
+TRIESTE = Station(
+    name="Trieste Centrale",
+    trenitalia_id=830003317,
+)
+
+LECCE = Station(
+    name="Lecce",
+    trenitalia_id=830013555,
+)
+
+REGGIO_CALABRIA = Station(
+    name="Reggio di Calabria Centrale",
+    trenitalia_id=830011781,
+)
+
+TARANTO = Station(
+    name="Taranto",
+    trenitalia_id=830013554,
+)
+
+BOLZANO = Station(
+    name="Bolzano",
+    trenitalia_id=830002026,
+)
+
+GENOA = Station(
+    name="Genova Piazza Principe",
+    trenitalia_id=830004700,
+)
+
+RAVENNA = Station(
+    name="Ravenna",
+    trenitalia_id=830005811,
 )
 
 # ── Spain ──────────────────────────────────────────────────────
@@ -260,10 +316,16 @@ ZARAGOZA = Station(
     ouigo_es_id="7104040",
 )
 
+ALBACETE = Station(
+    name="Albacete - Los Llanos",
+    ouigo_es_id="7160600",
+)
+
 # ── France ──────────────────────────────────────────────────────
 PARIS = Station(
     name="Paris - Toutes les gares",
     ouigo_fr_id="PT1",
+    trenitalia_id=870075890,
 )
 
 NANTES = Station(
@@ -285,11 +347,57 @@ MARSEILLE = Station(
 LYON = Station(
     name="Lyon toutes gares",
     ouigo_fr_id="LY1",
+    trenitalia_id=870076291,
 )
 
 BORDEAUX = Station(
     name="Bordeaux St Jean",
     ouigo_fr_id="87581009",
+)
+
+NICE = Station(
+    name="Nice Ville",
+    ouigo_fr_id="87756056",
+)
+
+TOULOUSE = Station(
+    name="Toulouse Matabiau",
+    ouigo_fr_id="87611004",
+)
+
+HENDAYE = Station(
+    name="Hendaye",
+    ouigo_fr_id="87600007",
+)
+
+PERPIGNAN = Station(
+    name="Perpignan",
+    ouigo_fr_id="87696005",
+)
+
+RENNES = Station(
+    name="Rennes",
+    ouigo_fr_id="87471003",
+)
+
+STRASBOURG = Station(
+    name="Strasbourg Ville",
+    ouigo_fr_id="87212027",
+)
+
+COLMAR = Station(
+    name="Colmar",
+    ouigo_fr_id="87213645",
+)
+
+BREST = Station(
+    name="Brest",
+    ouigo_fr_id="87474007",
+)
+
+BOURG_ST_MAURICE = Station(
+    name="Bourg-Saint-Maurice",
+    ouigo_fr_id="87749093",
 )
 
 PARIS_EST = Station(
@@ -305,8 +413,9 @@ AMSTERDAM = Station(
 
 # ── Belgium ──────────────────────────────────────────────────
 BRUSSELS = Station(
-    name="Brüssel-Midi",
+    name="Brussels-Midi",
     db_id="8814001",
+    ouigo_fr_id="88140010",
 )
 
 # ─────────────────────────────────────────────────────────────
@@ -411,6 +520,166 @@ ROUTES = [
         route_id="milan-venice"
     ),
 
+    # ── Italy: Trenitalia Frecciarossa (FR) ────────────────────
+    Route(
+        origin=TURIN,
+        destination=SALERNO,
+        operators=["trenitalia"],
+        description="Turin-Salerno (FR)",
+        route_id="turin-salerno"
+    ),
+    Route(
+        origin=BERGAMO,
+        destination=SALERNO,
+        operators=["trenitalia"],
+        description="Bergamo-Salerno (FR)",
+        route_id="bergamo-salerno"
+    ),
+    Route(
+        origin=BRESCIA,
+        destination=SALERNO,
+        operators=["trenitalia"],
+        description="Brescia-Salerno (FR)",
+        route_id="brescia-salerno"
+    ),
+    Route(
+        origin=VENICE,
+        destination=SALERNO,
+        operators=["trenitalia"],
+        description="Venice-Salerno (FR)",
+        route_id="venice-salerno"
+    ),
+    Route(
+        origin=UDINE,
+        destination=SALERNO,
+        operators=["trenitalia"],
+        description="Udine-Salerno (FR)",
+        route_id="udine-salerno"
+    ),
+    Route(
+        origin=TRIESTE,
+        destination=SALERNO,
+        operators=["trenitalia"],
+        description="Trieste-Salerno (FR)",
+        route_id="trieste-salerno"
+    ),
+    Route(
+        origin=MILAN,
+        destination=LECCE,
+        operators=["trenitalia"],
+        description="Milan-Lecce (FR)",
+        route_id="milan-lecce"
+    ),
+    Route(
+        origin=MILAN,
+        destination=REGGIO_CALABRIA,
+        operators=["trenitalia"],
+        description="Milan-Reggio Calabria (FR)",
+        route_id="milan-reggio-calabria"
+    ),
+    Route(
+        origin=MILAN,
+        destination=TARANTO,
+        operators=["trenitalia"],
+        description="Milan-Taranto (FR)",
+        route_id="milan-taranto"
+    ),
+    Route(
+        origin=PARIS,
+        destination=MILAN,
+        operators=["trenitalia"],
+        description="Paris-Milan (FR international)",
+        route_id="paris-milan"
+    ),
+    Route(
+        origin=PARIS,
+        destination=TURIN,
+        operators=["trenitalia"],
+        description="Paris-Turin (FR international)",
+        route_id="paris-turin"
+    ),
+    Route(
+        origin=LYON,
+        destination=MILAN,
+        operators=["trenitalia"],
+        description="Lyon-Milan (FR international)",
+        route_id="lyon-milan"
+    ),
+    Route(
+        origin=LYON,
+        destination=TURIN,
+        operators=["trenitalia"],
+        description="Lyon-Turin (FR international)",
+        route_id="lyon-turin"
+    ),
+
+    # ── Italy: Trenitalia Frecciargento (FA) ───────────────────
+    Route(
+        origin=TRIESTE,
+        destination=ROME,
+        operators=["trenitalia"],
+        description="Trieste-Rome (FA)",
+        route_id="trieste-rome"
+    ),
+    Route(
+        origin=UDINE,
+        destination=ROME,
+        operators=["trenitalia"],
+        description="Udine-Rome (FA)",
+        route_id="udine-rome"
+    ),
+    Route(
+        origin=BOLZANO,
+        destination=ROME,
+        operators=["trenitalia"],
+        description="Bolzano-Rome (FA)",
+        route_id="bolzano-rome"
+    ),
+    Route(
+        origin=BRESCIA,
+        destination=ROME,
+        operators=["trenitalia"],
+        description="Brescia-Rome (FA)",
+        route_id="brescia-rome"
+    ),
+    Route(
+        origin=GENOA,
+        destination=ROME,
+        operators=["trenitalia"],
+        description="Genoa-Rome (FA)",
+        route_id="genoa-rome"
+    ),
+    Route(
+        origin=ROME,
+        destination=LECCE,
+        operators=["trenitalia"],
+        description="Rome-Lecce (FA)",
+        route_id="rome-lecce"
+    ),
+    Route(
+        origin=ROME,
+        destination=REGGIO_CALABRIA,
+        operators=["trenitalia"],
+        description="Rome-Reggio Calabria (FA)",
+        route_id="rome-reggio-calabria"
+    ),
+
+    # ── Italy: Trenitalia Frecciabianca (FB) ───────────────────
+    Route(
+        origin=MILAN,
+        destination=GENOA,
+        operators=["trenitalia"],
+        description="Milan-Genoa (FB)",
+        route_id="milan-genoa"
+    ),
+    Route(
+        origin=ROME,
+        destination=RAVENNA,
+        operators=["trenitalia"],
+        description="Rome-Ravenna (FB)",
+        route_id="rome-ravenna"
+    ),
+
     # ── Spain: Renfe vs. Ouigo España vs. Iryo ─────────────────
     Route(
         origin=MADRID,
@@ -420,11 +689,25 @@ ROUTES = [
         route_id="madrid-barcelona"
     ),
     Route(
+        origin=BARCELONA,
+        destination=MADRID,
+        operators=["renfe", "ouigo_es", "iryo"],
+        description="Barcelona-Madrid (Renfe vs. Ouigo vs. Iryo)",
+        route_id="barcelona-madrid"
+    ),
+    Route(
         origin=MADRID,
         destination=VALENCIA,
         operators=["renfe", "ouigo_es"],
         description="Madrid-Valencia (Renfe vs. Ouigo)",
         route_id="madrid-valencia"
+    ),
+    Route(
+        origin=VALENCIA,
+        destination=MADRID,
+        operators=["renfe", "ouigo_es"],
+        description="Valencia-Madrid (Renfe vs. Ouigo)",
+        route_id="valencia-madrid"
     ),
     Route(
         origin=MADRID,
@@ -433,8 +716,64 @@ ROUTES = [
         description="Madrid-Seville (Renfe vs. Ouigo)",
         route_id="madrid-seville"
     ),
+    Route(
+        origin=SEVILLE,
+        destination=MADRID,
+        operators=["renfe", "ouigo_es"],
+        description="Seville-Madrid (Renfe vs. Ouigo)",
+        route_id="seville-madrid"
+    ),
+    Route(
+        origin=MADRID,
+        destination=ZARAGOZA,
+        operators=["renfe", "ouigo_es"],
+        description="Madrid-Zaragoza (Renfe vs. Ouigo)",
+        route_id="madrid-zaragoza"
+    ),
+    Route(
+        origin=ZARAGOZA,
+        destination=MADRID,
+        operators=["renfe", "ouigo_es"],
+        description="Zaragoza-Madrid (Renfe vs. Ouigo)",
+        route_id="zaragoza-madrid"
+    ),
+    Route(
+        origin=MADRID,
+        destination=ALBACETE,
+        operators=["ouigo_es"],
+        description="Madrid-Albacete (Ouigo)",
+        route_id="madrid-albacete"
+    ),
+    Route(
+        origin=BARCELONA,
+        destination=ZARAGOZA,
+        operators=["renfe", "ouigo_es"],
+        description="Barcelona-Zaragoza (Renfe vs. Ouigo)",
+        route_id="barcelona-zaragoza"
+    ),
+    Route(
+        origin=ZARAGOZA,
+        destination=BARCELONA,
+        operators=["renfe", "ouigo_es"],
+        description="Zaragoza-Barcelona (Renfe vs. Ouigo)",
+        route_id="zaragoza-barcelona"
+    ),
+    Route(
+        origin=SEVILLE,
+        destination=BARCELONA,
+        operators=["renfe", "ouigo_es"],
+        description="Seville-Barcelona (Renfe vs. Ouigo)",
+        route_id="seville-barcelona"
+    ),
+    Route(
+        origin=SEVILLE,
+        destination=ZARAGOZA,
+        operators=["ouigo_es"],
+        description="Seville-Zaragoza (Ouigo)",
+        route_id="seville-zaragoza"
+    ),
 
-    # ── France: Ouigo vs. SNCF (TGV) ───────────────────────────────
+    # ── France: Ouigo Grande Vitesse (OGV) ────────────────────────
     Route(
         origin=PARIS,
         destination=LYON,
@@ -442,7 +781,6 @@ ROUTES = [
         description="Paris-Lyon (Ouigo vs. SNCF)",
         route_id="paris-lyon"
     ),
-
     Route(
         origin=PARIS,
         destination=MARSEILLE,
@@ -450,13 +788,96 @@ ROUTES = [
         description="Paris-Marseille (Ouigo vs. SNCF)",
         route_id="paris-marseille"
     ),
-
     Route(
         origin=PARIS,
         destination=NANTES,
         operators=["ouigo_fr", "SNCF"],
         description="Paris-Nantes (Ouigo vs. SNCF)",
         route_id="paris-nantes"
+    ),
+    Route(
+        origin=PARIS,
+        destination=MONTPELLIER,
+        operators=["ouigo_fr"],
+        description="Paris-Montpellier (Ouigo OGV)",
+        route_id="paris-montpellier"
+    ),
+    Route(
+        origin=PARIS,
+        destination=NICE,
+        operators=["ouigo_fr"],
+        description="Paris-Nice (Ouigo OGV)",
+        route_id="paris-nice"
+    ),
+    Route(
+        origin=PARIS,
+        destination=TOULOUSE,
+        operators=["ouigo_fr"],
+        description="Paris-Toulouse (Ouigo OGV)",
+        route_id="paris-toulouse"
+    ),
+    Route(
+        origin=PARIS,
+        destination=BORDEAUX,
+        operators=["ouigo_fr"],
+        description="Paris-Bordeaux (Ouigo OGV/OTC)",
+        route_id="paris-bordeaux"
+    ),
+    Route(
+        origin=PARIS,
+        destination=HENDAYE,
+        operators=["ouigo_fr"],
+        description="Paris-Hendaye (Ouigo OGV)",
+        route_id="paris-hendaye"
+    ),
+    Route(
+        origin=PARIS,
+        destination=PERPIGNAN,
+        operators=["ouigo_fr"],
+        description="Paris-Perpignan (Ouigo OGV)",
+        route_id="paris-perpignan"
+    ),
+    Route(
+        origin=PARIS,
+        destination=RENNES,
+        operators=["ouigo_fr"],
+        description="Paris-Rennes (Ouigo OGV)",
+        route_id="paris-rennes"
+    ),
+    Route(
+        origin=PARIS,
+        destination=STRASBOURG,
+        operators=["ouigo_fr"],
+        description="Paris-Strasbourg (Ouigo OGV)",
+        route_id="paris-strasbourg"
+    ),
+    Route(
+        origin=PARIS,
+        destination=COLMAR,
+        operators=["ouigo_fr"],
+        description="Paris-Colmar (Ouigo OGV)",
+        route_id="paris-colmar"
+    ),
+    Route(
+        origin=PARIS,
+        destination=BREST,
+        operators=["ouigo_fr"],
+        description="Paris-Brest (Ouigo OGV)",
+        route_id="paris-brest"
+    ),
+    Route(
+        origin=PARIS,
+        destination=BOURG_ST_MAURICE,
+        operators=["ouigo_fr"],
+        description="Paris-Bourg-Saint-Maurice (Ouigo OGV, seasonal)",
+        route_id="paris-bourg-st-maurice"
+    ),
+    Route(
+        origin=PARIS,
+        destination=BRUSSELS,
+        operators=["ouigo_fr"],
+        description="Paris-Brussels (Ouigo OGV)",
+        route_id="paris-brussels-ouigo"
     ),
 
     # ── International ──────────────────────────────────────────
@@ -501,19 +922,19 @@ ROUTES = [
 
     # ── DB ICE / ECE domestic routes ───────────────────────────
 
-    # ICE 2 / 10 / 14 / 19: Berlin ↔ Köln corridor
+    # ICE 2 / 10 / 14 / 19: Berlin ↔ Cologne corridor
     Route(
         origin=BERLIN,
         destination=COLOGNE,
         operators=["db"],
-        description="Berlin-Köln (DB ICE)",
+        description="Berlin-Cologne (DB ICE)",
         route_id="berlin-cologne"
     ),
     Route(
         origin=BERLIN,
         destination=DUSSELDORF,
         operators=["db"],
-        description="Berlin-Düsseldorf (DB ICE 10)",
+        description="Berlin-Dusseldorf (DB ICE 10)",
         route_id="berlin-dusseldorf"
     ),
     Route(
@@ -531,21 +952,21 @@ ROUTES = [
         route_id="berlin-koblenz"
     ),
 
-    # ICE 11 / 18 / 24 / 25 / 28 / 29 / 42: Hamburg–München
+    # ICE 11 / 18 / 24 / 25 / 28 / 29 / 42: Hamburg–Munich
     Route(
         origin=HAMBURG,
         destination=MUNICH,
         operators=["db"],
-        description="Hamburg-München (DB ICE)",
+        description="Hamburg-Munich (DB ICE)",
         route_id="hamburg-munich"
     ),
 
-    # ICE 12: Berlin–Zürich
+    # ICE 12: Berlin–Zurich
     Route(
         origin=BERLIN,
         destination=ZURICH,
         operators=["db"],
-        description="Berlin-Zürich (DB ICE 12)",
+        description="Berlin-Zurich (DB ICE 12)",
         route_id="berlin-zurich"
     ),
 
@@ -567,25 +988,25 @@ ROUTES = [
         route_id="hamburg-stuttgart"
     ),
 
-    # ICE 15: Hamburg–Saarbrücken
+    # ICE 15: Hamburg–Saarbrucken
     Route(
         origin=HAMBURG,
         destination=SAARBRUCKEN,
         operators=["db"],
-        description="Hamburg-Saarbrücken (DB ICE 15)",
+        description="Hamburg-Saarbrucken (DB ICE 15)",
         route_id="hamburg-saarbrucken"
     ),
 
-    # ICE 16: Berlin–Saarbrücken
+    # ICE 16: Berlin–Saarbrucken
     Route(
         origin=BERLIN,
         destination=SAARBRUCKEN,
         operators=["db"],
-        description="Berlin-Saarbrücken (DB ICE 16)",
+        description="Berlin-Saarbrucken (DB ICE 16)",
         route_id="berlin-saarbrucken"
     ),
 
-    # ICE 20 / 43: Hamburg–Basel / Hamburg–Zürich
+    # ICE 20 / 43: Hamburg–Basel / Hamburg–Zurich
     Route(
         origin=HAMBURG,
         destination=BASEL,
@@ -597,7 +1018,7 @@ ROUTES = [
         origin=HAMBURG,
         destination=ZURICH,
         operators=["db"],
-        description="Hamburg-Zürich (DB ICE 20)",
+        description="Hamburg-Zurich (DB ICE 20)",
         route_id="hamburg-zurich"
     ),
 
@@ -610,7 +1031,7 @@ ROUTES = [
         route_id="berlin-binz"
     ),
 
-    # ICE 22 / 42: Kiel–Stuttgart / Kiel–München
+    # ICE 22 / 42: Kiel–Stuttgart / Kiel–Munich
     Route(
         origin=KIEL,
         destination=STUTTGART,
@@ -622,16 +1043,16 @@ ROUTES = [
         origin=KIEL,
         destination=MUNICH,
         operators=["db"],
-        description="Kiel-München (DB ICE 42)",
+        description="Kiel-Munich (DB ICE 42)",
         route_id="kiel-munich"
     ),
 
-    # ICE 25: Bremen–München
+    # ICE 25: Bremen–Munich
     Route(
         origin=BREMEN,
         destination=MUNICH,
         operators=["db"],
-        description="Bremen-München (DB ICE 25)",
+        description="Bremen-Munich (DB ICE 25)",
         route_id="bremen-munich"
     ),
 
@@ -660,16 +1081,16 @@ ROUTES = [
         route_id="hamburg-graz"
     ),
 
-    # ICE 29: Lübeck–München
+    # ICE 29: Lubeck–Munich
     Route(
         origin=LUBECK,
         destination=MUNICH,
         operators=["db"],
-        description="Lübeck-München (DB ICE 29)",
+        description="Lubeck-Munich (DB ICE 29)",
         route_id="lubeck-munich"
     ),
 
-   
+    # ICE 39: Hamburg–Passau
     Route(
         origin=HAMBURG,
         destination=PASSAU,
@@ -678,25 +1099,25 @@ ROUTES = [
         route_id="hamburg-passau"
     ),
 
-   
+    # ICE 41 / 47: Dortmund–Munich
     Route(
         origin=DORTMUND,
         destination=MUNICH,
         operators=["db"],
-        description="Dortmund-München (DB ICE 41/47)",
+        description="Dortmund-Munich (DB ICE 41/47)",
         route_id="dortmund-munich"
     ),
 
-   
+    # ICE 49: Cologne–Frankfurt
     Route(
         origin=COLOGNE,
         destination=FRANKFURT,
         operators=["db"],
-        description="Köln-Frankfurt (DB ICE 49)",
+        description="Cologne-Frankfurt (DB ICE 49)",
         route_id="cologne-frankfurt"
     ),
 
-    
+    # ICE 50: Dresden–Wiesbaden
     Route(
         origin=DRESDEN,
         destination=WIESBADEN,
@@ -705,7 +1126,7 @@ ROUTES = [
         route_id="dresden-wiesbaden"
     ),
 
-    
+    # ICE 55: Dortmund–Stuttgart
     Route(
         origin=DORTMUND,
         destination=STUTTGART,
@@ -714,34 +1135,34 @@ ROUTES = [
         route_id="dortmund-stuttgart"
     ),
 
-    
+    # ICE 60: Karlsruhe–Munich
     Route(
         origin=KARLSRUHE,
         destination=MUNICH,
         operators=["db"],
-        description="Karlsruhe-München (DB ICE 60)",
+        description="Karlsruhe-Munich (DB ICE 60)",
         route_id="karlsruhe-munich"
     ),
 
-    
+    # ICE 91: Dortmund–Vienna
     Route(
         origin=DORTMUND,
         destination=VIENNA,
         operators=["db"],
-        description="Dortmund-Wien (DB ICE 91)",
+        description="Dortmund-Vienna (DB ICE 91)",
         route_id="dortmund-vienna"
     ),
 
-    
+    # ICE 90: Munich–Budapest
     Route(
         origin=MUNICH,
         destination=BUDAPEST,
         operators=["db"],
-        description="München-Budapest (DB ICE 90)",
+        description="Munich-Budapest (DB ICE 90)",
         route_id="munich-budapest"
     ),
 
-    # ── DB ICE international routes ──────────────────────
+    # ── DB ICE / ECE international routes ──────────────────────
 
     # ICE 77: Berlin–Amsterdam
     Route(
@@ -761,12 +1182,12 @@ ROUTES = [
         route_id="frankfurt-amsterdam"
     ),
 
-    # ICE 79: Frankfurt–Brüssel
+    # ICE 79: Frankfurt–Brussels
     Route(
         origin=FRANKFURT,
         destination=BRUSSELS,
         operators=["db"],
-        description="Frankfurt-Brüssel (DB ICE 79)",
+        description="Frankfurt-Brussels (DB ICE 79)",
         route_id="frankfurt-brussels"
     ),
 
@@ -797,21 +1218,21 @@ ROUTES = [
         route_id="frankfurt-marseille"
     ),
 
-    # ECE 85: Frankfurt–Mailand
+    # ECE 85: Frankfurt–Milan
     Route(
         origin=FRANKFURT,
         destination=MILAN,
         operators=["db"],
-        description="Frankfurt-Mailand (DB ECE 85)",
+        description="Frankfurt-Milan (DB ECE 85)",
         route_id="frankfurt-milan"
     ),
 
-    # ECE 88: München–Zürich
+    # ECE 88: Munich–Zurich
     Route(
         origin=MUNICH,
         destination=ZURICH,
         operators=["db"],
-        description="München-Zürich (DB ECE 88)",
+        description="Munich-Zurich (DB ECE 88)",
         route_id="munich-zurich"
     ),
 ]
