@@ -208,11 +208,13 @@ MILAN = Station(
     name="Milano Centrale",
     trenitalia_id=830001700,
     db_id="8300017",
+    italo_id="MC_",
 )
 
 ROME = Station(
     name="Roma Termini",
     trenitalia_id=830008409,
+    italo_id="RMT",
 )
 
 NAPLES = Station(
