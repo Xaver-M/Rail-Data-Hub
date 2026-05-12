@@ -25,6 +25,9 @@ CREATE TABLE IF NOT EXISTS price_observations (
 SELECT create_hypertable('price_observations', 'collected_at',
     if_not_exists => TRUE);
 
+CREATE UNIQUE INDEX IF NOT EXISTS uq_price_observation
+    ON price_observations (operator, origin_id, destination_id, departure_at, fare_class, collected_at);
+
 CREATE INDEX IF NOT EXISTS idx_operator
     ON price_observations (operator, collected_at DESC);
 
