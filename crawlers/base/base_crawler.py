@@ -343,7 +343,7 @@ class BaseCrawler(ABC):
         )
 
     # ──────────────────────────────────────────────
-    # ABSTRACT METHODS – must be implemented
+    # ABSTRACT METHODS 
     # ──────────────────────────────────────────────
 
     @abstractmethod

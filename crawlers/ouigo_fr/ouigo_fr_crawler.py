@@ -16,11 +16,11 @@ from crawlers.base.base_crawler import BaseCrawler
 from config.routes import Route
 
 
-class OuigoEsCrawler(BaseCrawler):
+class OuigoFrCrawler(BaseCrawler):
 
-    OPERATOR_NAME = "ouigo_es"
-    BASE_URL = "https://mdw02.api-es.ouigo.com/api/Sale/journeysearch"
-    TOKEN_URL = "https://mdw02.api-es.ouigo.com/api/Token/login"
+    OPERATOR_NAME = "ouigo_fr"
+    BASE_URL = "https://mdw.api-fr.ouigo.com/api/Sale/journeysearch"
+    TOKEN_URL = "https://mdw.api-fr.ouigo.com/api/Token/login"
 
     HEADERS = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
@@ -33,13 +33,13 @@ class OuigoEsCrawler(BaseCrawler):
         super().__init__()
         self._token = None
         self._token_expiry = None
-        username = os.getenv("OUIGO_ES_USERNAME")
-        password = os.getenv("OUIGO_ES_PASSWORD")
+        username = os.getenv("OUIGO_FR_USERNAME")
+        password = os.getenv("OUIGO_FR_PASSWORD")
         if not username or not password:
-            raise ValueError("OUIGO_ES_USERNAME and OUIGO_ES_PASSWORD must be set in .env")
+            raise ValueError("OUIGO_FR_USERNAME and OUIGO_FR_PASSWORD must be set in .env")
         self._username = username
         self._password = password
-        self.logger.info("Ouigo España Crawler ready")
+        self.logger.info("Ouigo France Crawler ready")
 
     def _get_token(self) -> str:
         """Fetch or renew the token if expired."""
@@ -47,7 +47,7 @@ class OuigoEsCrawler(BaseCrawler):
         if self._token and self._token_expiry and now < self._token_expiry:
             return self._token
 
-        self.logger.info("Fetching Ouigo España token...")
+        self.logger.info("Fetching Ouigo France token...")
         r = self.session.post(
             self.TOKEN_URL,
             json={"username": self._username, "password": self._password},
@@ -72,13 +72,13 @@ class OuigoEsCrawler(BaseCrawler):
         return self.BASE_URL
 
     def get_params(self, route: Route, date: str) -> dict:
-        origin_id = route.origin.ouigo_es_id
-        destination_id = route.destination.ouigo_es_id
+        origin_id = route.origin.ouigo_fr_id
+        destination_id = route.destination.ouigo_fr_id
 
         if not origin_id:
-            raise ValueError(f"No ouigo_es_id for {route.origin.name}")
+            raise ValueError(f"No ouigo_fr_id for {route.origin.name}")
         if not destination_id:
-            raise ValueError(f"No ouigo_es_id for {route.destination.name}")
+            raise ValueError(f"No ouigo_fr_id for {route.destination.name}")
 
         return {
             "origin": origin_id,
@@ -168,8 +168,8 @@ class OuigoEsCrawler(BaseCrawler):
             "operator":        self.OPERATOR_NAME,
             "origin":          route.origin.name if route else "unknown",
             "destination":     route.destination.name if route else "unknown",
-            "origin_id":       str(route.origin.ouigo_es_id) if route else None,
-            "destination_id":  str(route.destination.ouigo_es_id) if route else None,
+            "origin_id":       str(route.origin.ouigo_fr_id) if route else None,
+            "destination_id":  str(route.destination.ouigo_fr_id) if route else None,
             "departure_time":  departure_time,
             "arrival_time":    arrival_time,
             "price_eur":       float(price) if price is not None else None,
@@ -191,11 +191,11 @@ if __name__ == "__main__":
 
     load_dotenv()
 
-    print("Ouigo España Crawler Test")
+    print("Ouigo France Crawler Test")
     print("=" * 50)
 
-    crawler = OuigoEsCrawler()
-    routes = get_routes_for_operator("ouigo_es")
+    crawler = OuigoFrCrawler()
+    routes = get_routes_for_operator("ouigo_fr")
 
     print(f"{len(routes)} Ouigo routes, {len(BOOKING_HORIZONS)} horizons\n")
 

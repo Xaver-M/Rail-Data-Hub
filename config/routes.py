@@ -1,6 +1,10 @@
 # config/routes.py
 # Central route configuration for Rail Data Hub
 # Only routes with at least 2 operators (competitive routes)
+<<<<<<< HEAD
+=======
+# Only routes served by at least 2 operators (competitive routes)
+>>>>>>> 190adc9cf4edcf83a264b2b3b0e9c784c93c4449
 
 from dataclasses import dataclass
 from typing import Optional
@@ -16,11 +20,12 @@ class Station:
     italo_id: Optional[int] = None
     db_id: Optional[str] = None
     oebb_id: Optional[str] = None
-    ouigo_es_id: Optional[str] = None          # UIC code for Ouigo España
+    ouigo_es_id: Optional[str] = None   
+    ouigo_fr_id: Optional[str] = None       
     renfe_id: Optional[str] = None
     iryo_id: Optional[str] = None
-    regiojet_station_id: Optional[str] = None  # RegioJet station ID
-    regiojet_city_id: Optional[str] = None     # RegioJet city ID
+    regiojet_station_id: Optional[str] = None  
+    regiojet_city_id: Optional[str] = None     
 
 
 @dataclass
@@ -35,6 +40,8 @@ class Route:
 # ─────────────────────────────────────────────────────────────
 # STATIONS
 # ─────────────────────────────────────────────────────────────
+
+# ── Germany ─────────────────────────────────────────────────── 
 
 BERLIN = Station(
     name="Berlin Hbf",
@@ -129,6 +136,8 @@ BUDAPEST = Station(
     regiojet_city_id="10202091",
 )
 
+# ── Italy ───────────────────────────────────────────────────── 
+
 MILAN = Station(
     name="Milano Centrale",
     trenitalia_id=830001700,
@@ -182,6 +191,36 @@ ZARAGOZA = Station(
     ouigo_es_id="7104040",
 )
 
+# ── France ──────────────────────────────────────────────────────
+PARIS = Station(
+    name="Paris - Toutes les gares",
+    ouigo_fr_id="PT1",
+)
+
+NANTES = Station(
+    name="Nantes",
+    ouigo_fr_id="87481002",
+)
+
+MONTPELLIER = Station(
+    name="Montpellier toutes gares",
+    ouigo_fr_id="MP1",
+)
+
+MARSEILLE = Station(
+    name="Marseille St Charles",
+    ouigo_fr_id="87751008",
+)
+
+LYON = Station(
+    name="Lyon toutes gares",
+    ouigo_fr_id="LY1",
+)
+
+BORDEAUX = Station(
+    name="Bordeaux St Jean",
+    ouigo_fr_id="87581009",
+)
 
 # ─────────────────────────────────────────────────────────────
 # ROUTES
@@ -306,6 +345,31 @@ ROUTES = [
         operators=["renfe", "ouigo_es"],
         description="Madrid-Seville (Renfe vs. Ouigo)",
         route_id="madrid-seville"
+    ),
+
+    # ── France: Ouigo vs. SNCF (TGV) ───────────────────────────────
+    Route(
+        origin=PARIS,
+        destination=LYON,
+        operators=["ouigo_fr", "SNCF"],
+        description="Paris-Lyon (Ouigo vs. SNCF)",
+        route_id="paris-lyon"
+    ),
+
+    Route(
+        origin=PARIS,
+        destination=MARSEILLE,
+        operators=["ouigo_fr", "SNCF"],
+        description="Paris-Marseille (Ouigo vs. SNCF)",
+        route_id="paris-marseille"
+    ),
+
+    Route(
+        origin=PARIS,
+        destination=NANTES,
+        operators=["ouigo_fr", "SNCF"],
+        description="Paris-Nantes (Ouigo vs. SNCF)",
+        route_id="paris-nantes"
     ),
 
     # ── International ──────────────────────────────────────────
