@@ -1,6 +1,5 @@
 # config/routes.py
 # Central route configuration for Rail Data Hub
-# Only routes with at least 2 operators (competitive routes)
 
 from dataclasses import dataclass
 from typing import Optional
@@ -109,12 +108,82 @@ BASEL = Station(
     db_id="8000026",
 )
 
+DUSSELDORF = Station(
+    name="Düsseldorf Hbf",
+    db_id="8000085",
+)
+
+AACHEN = Station(
+    name="Aachen Hbf",
+    db_id="8000001",
+)
+
+KOBLENZ = Station(
+    name="Koblenz Hbf",
+    db_id="8000206",
+)
+
+SAARBRUCKEN = Station(
+    name="Saarbrücken Hbf",
+    db_id="8000323",
+)
+
+DORTMUND = Station(
+    name="Dortmund Hbf",
+    db_id="8000080",
+)
+
+BREMEN = Station(
+    name="Bremen Hbf",
+    db_id="8000050",
+)
+
+KIEL = Station(
+    name="Kiel Hbf",
+    db_id="8000199",
+)
+
+LUBECK = Station(
+    name="Lübeck Hbf",
+    db_id="8000237",
+)
+
+DRESDEN = Station(
+    name="Dresden Hbf",
+    db_id="8010085",
+)
+
+WIESBADEN = Station(
+    name="Wiesbaden Hbf",
+    db_id="8000250",
+)
+
+PASSAU = Station(
+    name="Passau Hbf",
+    db_id="8000298",
+)
+
+BINZ = Station(
+    name="Ostseebad Binz",
+    db_id="8010032",
+)
+
 VIENNA = Station(
     name="Wien Hbf",
     db_id="8100003",
     oebb_id="1190100",
     regiojet_station_id="372825000",
     regiojet_city_id="10202052",
+)
+
+GRAZ = Station(
+    name="Graz Hbf",
+    db_id="8100173",
+)
+
+ZURICH = Station(
+    name="Zürich HB",
+    db_id="8503000",
 )
 
 PRAGUE = Station(
@@ -129,6 +198,7 @@ BRATISLAVA = Station(
 
 BUDAPEST = Station(
     name="Budapest-Keleti",
+    db_id="5510017",
     regiojet_city_id="10202091",
 )
 
@@ -137,6 +207,7 @@ BUDAPEST = Station(
 MILAN = Station(
     name="Milano Centrale",
     trenitalia_id=830001700,
+    db_id="8300017",
 )
 
 ROME = Station(
@@ -206,6 +277,7 @@ MONTPELLIER = Station(
 MARSEILLE = Station(
     name="Marseille St Charles",
     ouigo_fr_id="87751008",
+    db_id="8775100",
 )
 
 LYON = Station(
@@ -216,6 +288,23 @@ LYON = Station(
 BORDEAUX = Station(
     name="Bordeaux St Jean",
     ouigo_fr_id="87581009",
+)
+
+PARIS_EST = Station(
+    name="Paris Est",
+    db_id="8796066",
+)
+
+# ── Netherlands ──────────────────────────────────────────────
+AMSTERDAM = Station(
+    name="Amsterdam Centraal",
+    db_id="8400058",
+)
+
+# ── Belgium ──────────────────────────────────────────────────
+BRUSSELS = Station(
+    name="Brüssel-Midi",
+    db_id="8814001",
 )
 
 # ─────────────────────────────────────────────────────────────
@@ -406,6 +495,322 @@ ROUTES = [
         operators=["regiojet"],
         description="Prague-Budapest (RegioJet)",
         route_id="prague-budapest"
+    ),
+
+    # ── DB ICE / ECE domestic routes ───────────────────────────
+
+    # ICE 2 / 10 / 14 / 19: Berlin ↔ Köln corridor
+    Route(
+        origin=BERLIN,
+        destination=COLOGNE,
+        operators=["db"],
+        description="Berlin-Köln (DB ICE)",
+        route_id="berlin-cologne"
+    ),
+    Route(
+        origin=BERLIN,
+        destination=DUSSELDORF,
+        operators=["db"],
+        description="Berlin-Düsseldorf (DB ICE 10)",
+        route_id="berlin-dusseldorf"
+    ),
+    Route(
+        origin=BERLIN,
+        destination=AACHEN,
+        operators=["db"],
+        description="Berlin-Aachen (DB ICE 14)",
+        route_id="berlin-aachen"
+    ),
+    Route(
+        origin=BERLIN,
+        destination=KOBLENZ,
+        operators=["db"],
+        description="Berlin-Koblenz (DB ICE 19)",
+        route_id="berlin-koblenz"
+    ),
+
+    # ICE 11 / 18 / 24 / 25 / 28 / 29 / 42: Hamburg–München
+    Route(
+        origin=HAMBURG,
+        destination=MUNICH,
+        operators=["db"],
+        description="Hamburg-München (DB ICE)",
+        route_id="hamburg-munich"
+    ),
+
+    # ICE 12: Berlin–Zürich
+    Route(
+        origin=BERLIN,
+        destination=ZURICH,
+        operators=["db"],
+        description="Berlin-Zürich (DB ICE 12)",
+        route_id="berlin-zurich"
+    ),
+
+    # ICE 13: Berlin–Frankfurt
+    Route(
+        origin=BERLIN,
+        destination=FRANKFURT,
+        operators=["db", "flixtrain"],
+        description="Berlin-Frankfurt (DB ICE 13 vs. Flixtrain)",
+        route_id="berlin-frankfurt"
+    ),
+
+    # ICE 15 / 22: Hamburg–Stuttgart
+    Route(
+        origin=HAMBURG,
+        destination=STUTTGART,
+        operators=["db"],
+        description="Hamburg-Stuttgart (DB ICE 15/22)",
+        route_id="hamburg-stuttgart"
+    ),
+
+    # ICE 15: Hamburg–Saarbrücken
+    Route(
+        origin=HAMBURG,
+        destination=SAARBRUCKEN,
+        operators=["db"],
+        description="Hamburg-Saarbrücken (DB ICE 15)",
+        route_id="hamburg-saarbrucken"
+    ),
+
+    # ICE 16: Berlin–Saarbrücken
+    Route(
+        origin=BERLIN,
+        destination=SAARBRUCKEN,
+        operators=["db"],
+        description="Berlin-Saarbrücken (DB ICE 16)",
+        route_id="berlin-saarbrucken"
+    ),
+
+    # ICE 20 / 43: Hamburg–Basel / Hamburg–Zürich
+    Route(
+        origin=HAMBURG,
+        destination=BASEL,
+        operators=["db"],
+        description="Hamburg-Basel (DB ICE 20/43)",
+        route_id="hamburg-basel"
+    ),
+    Route(
+        origin=HAMBURG,
+        destination=ZURICH,
+        operators=["db"],
+        description="Hamburg-Zürich (DB ICE 20)",
+        route_id="hamburg-zurich"
+    ),
+
+    # ICE 21: Berlin–Ostseebad Binz
+    Route(
+        origin=BERLIN,
+        destination=BINZ,
+        operators=["db"],
+        description="Berlin-Ostseebad Binz (DB ICE 21)",
+        route_id="berlin-binz"
+    ),
+
+    # ICE 22 / 42: Kiel–Stuttgart / Kiel–München
+    Route(
+        origin=KIEL,
+        destination=STUTTGART,
+        operators=["db"],
+        description="Kiel-Stuttgart (DB ICE 22)",
+        route_id="kiel-stuttgart"
+    ),
+    Route(
+        origin=KIEL,
+        destination=MUNICH,
+        operators=["db"],
+        description="Kiel-München (DB ICE 42)",
+        route_id="kiel-munich"
+    ),
+
+    # ICE 25: Bremen–München
+    Route(
+        origin=BREMEN,
+        destination=MUNICH,
+        operators=["db"],
+        description="Bremen-München (DB ICE 25)",
+        route_id="bremen-munich"
+    ),
+
+    # ICE 26: Hamburg–Karlsruhe
+    Route(
+        origin=HAMBURG,
+        destination=KARLSRUHE,
+        operators=["db"],
+        description="Hamburg-Karlsruhe (DB ICE 26)",
+        route_id="hamburg-karlsruhe"
+    ),
+
+    # ICE 27: Hamburg–Dresden / Hamburg–Graz
+    Route(
+        origin=HAMBURG,
+        destination=DRESDEN,
+        operators=["db"],
+        description="Hamburg-Dresden (DB ICE 27)",
+        route_id="hamburg-dresden"
+    ),
+    Route(
+        origin=HAMBURG,
+        destination=GRAZ,
+        operators=["db"],
+        description="Hamburg-Graz (DB ICE 27)",
+        route_id="hamburg-graz"
+    ),
+
+    # ICE 29: Lübeck–München
+    Route(
+        origin=LUBECK,
+        destination=MUNICH,
+        operators=["db"],
+        description="Lübeck-München (DB ICE 29)",
+        route_id="lubeck-munich"
+    ),
+
+   
+    Route(
+        origin=HAMBURG,
+        destination=PASSAU,
+        operators=["db"],
+        description="Hamburg-Passau (DB ICE 39)",
+        route_id="hamburg-passau"
+    ),
+
+   
+    Route(
+        origin=DORTMUND,
+        destination=MUNICH,
+        operators=["db"],
+        description="Dortmund-München (DB ICE 41/47)",
+        route_id="dortmund-munich"
+    ),
+
+   
+    Route(
+        origin=COLOGNE,
+        destination=FRANKFURT,
+        operators=["db"],
+        description="Köln-Frankfurt (DB ICE 49)",
+        route_id="cologne-frankfurt"
+    ),
+
+    
+    Route(
+        origin=DRESDEN,
+        destination=WIESBADEN,
+        operators=["db"],
+        description="Dresden-Wiesbaden (DB ICE 50)",
+        route_id="dresden-wiesbaden"
+    ),
+
+    
+    Route(
+        origin=DORTMUND,
+        destination=STUTTGART,
+        operators=["db"],
+        description="Dortmund-Stuttgart (DB ICE 55)",
+        route_id="dortmund-stuttgart"
+    ),
+
+    
+    Route(
+        origin=KARLSRUHE,
+        destination=MUNICH,
+        operators=["db"],
+        description="Karlsruhe-München (DB ICE 60)",
+        route_id="karlsruhe-munich"
+    ),
+
+    
+    Route(
+        origin=DORTMUND,
+        destination=VIENNA,
+        operators=["db"],
+        description="Dortmund-Wien (DB ICE 91)",
+        route_id="dortmund-vienna"
+    ),
+
+    
+    Route(
+        origin=MUNICH,
+        destination=BUDAPEST,
+        operators=["db"],
+        description="München-Budapest (DB ICE 90)",
+        route_id="munich-budapest"
+    ),
+
+    # ── DB ICE international routes ──────────────────────
+
+    # ICE 77: Berlin–Amsterdam
+    Route(
+        origin=BERLIN,
+        destination=AMSTERDAM,
+        operators=["db"],
+        description="Berlin-Amsterdam (DB ICE 77)",
+        route_id="berlin-amsterdam"
+    ),
+
+    # ICE 78: Frankfurt–Amsterdam
+    Route(
+        origin=FRANKFURT,
+        destination=AMSTERDAM,
+        operators=["db"],
+        description="Frankfurt-Amsterdam (DB ICE 78)",
+        route_id="frankfurt-amsterdam"
+    ),
+
+    # ICE 79: Frankfurt–Brüssel
+    Route(
+        origin=FRANKFURT,
+        destination=BRUSSELS,
+        operators=["db"],
+        description="Frankfurt-Brüssel (DB ICE 79)",
+        route_id="frankfurt-brussels"
+    ),
+
+    # ICE 82: Frankfurt–Paris Est
+    Route(
+        origin=FRANKFURT,
+        destination=PARIS_EST,
+        operators=["db"],
+        description="Frankfurt-Paris Est (DB ICE 82)",
+        route_id="frankfurt-paris"
+    ),
+
+    # ICE 83: Stuttgart–Paris Est
+    Route(
+        origin=STUTTGART,
+        destination=PARIS_EST,
+        operators=["db"],
+        description="Stuttgart-Paris Est (DB ICE 83)",
+        route_id="stuttgart-paris"
+    ),
+
+    # ICE 84: Frankfurt–Marseille
+    Route(
+        origin=FRANKFURT,
+        destination=MARSEILLE,
+        operators=["db"],
+        description="Frankfurt-Marseille (DB ICE 84)",
+        route_id="frankfurt-marseille"
+    ),
+
+    # ECE 85: Frankfurt–Mailand
+    Route(
+        origin=FRANKFURT,
+        destination=MILAN,
+        operators=["db"],
+        description="Frankfurt-Mailand (DB ECE 85)",
+        route_id="frankfurt-milan"
+    ),
+
+    # ECE 88: München–Zürich
+    Route(
+        origin=MUNICH,
+        destination=ZURICH,
+        operators=["db"],
+        description="München-Zürich (DB ECE 88)",
+        route_id="munich-zurich"
     ),
 ]
 
