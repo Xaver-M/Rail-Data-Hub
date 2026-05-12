@@ -25,6 +25,7 @@ from crawlers.ouigo_es.ougio_es_crawler import OuigoEsCrawler
 from crawlers.db.db_crawler import DBCrawler
 from crawlers.regiojet.regiojet_crawler import RegioJetCrawler
 from crawlers.ouigo_fr.ouigo_fr_crawler import OuigoFrCrawler
+from crawlers.italo.italo_crawler import ItaloCrawler
 
 
 def run_all_crawlers():
@@ -37,6 +38,7 @@ def run_all_crawlers():
         DBCrawler(),
         RegioJetCrawler(),
         OuigoFrCrawler(),
+        ItaloCrawler(),
     ]
 
     for crawler in crawlers:
@@ -44,7 +46,9 @@ def run_all_crawlers():
             crawler.run(ROUTES, BOOKING_HORIZONS)
         except Exception as e:
             logger.error(f"Crawler {crawler.OPERATOR_NAME} failed: {e}")
-            continue
+        finally:
+            if hasattr(crawler, "close"):
+                crawler.close()
 
     logger.info("=== Crawler run completed ===")
 
