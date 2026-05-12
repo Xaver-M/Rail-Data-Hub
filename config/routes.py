@@ -217,17 +217,73 @@ ROME = Station(
 
 NAPLES = Station(
     name="Napoli Centrale",
-    trenitalia_id=830000219,
+    trenitalia_id=830009218,
 )
 
 TURIN = Station(
     name="Torino Porta Nuova",
     trenitalia_id=830000219,
+    db_id="8000096",
 )
 
 VENICE = Station(
     name="Venezia Santa Lucia",
     trenitalia_id=830002593,
+)
+
+SALERNO = Station(
+    name="Salerno",
+    trenitalia_id=830009818,
+)
+
+BERGAMO = Station(
+    name="Bergamo",
+    trenitalia_id=830001529,
+)
+
+BRESCIA = Station(
+    name="Brescia",
+    trenitalia_id=830001717,
+)
+
+UDINE = Station(
+    name="Udine",
+    trenitalia_id=830003026,
+)
+
+TRIESTE = Station(
+    name="Trieste Centrale",
+    trenitalia_id=830003317,
+)
+
+LECCE = Station(
+    name="Lecce",
+    trenitalia_id=830013555,
+)
+
+REGGIO_CALABRIA = Station(
+    name="Reggio di Calabria Centrale",
+    trenitalia_id=830011781,
+)
+
+TARANTO = Station(
+    name="Taranto",
+    trenitalia_id=830013554,
+)
+
+BOLZANO = Station(
+    name="Bolzano",
+    trenitalia_id=830002026,
+)
+
+GENOA = Station(
+    name="Genova Piazza Principe",
+    trenitalia_id=830004700,
+)
+
+RAVENNA = Station(
+    name="Ravenna",
+    trenitalia_id=830005811,
 )
 
 # ── Spain ──────────────────────────────────────────────────────
@@ -262,6 +318,7 @@ ZARAGOZA = Station(
 PARIS = Station(
     name="Paris - Toutes les gares",
     ouigo_fr_id="PT1",
+    trenitalia_id=870075890,
 )
 
 NANTES = Station(
@@ -283,6 +340,7 @@ MARSEILLE = Station(
 LYON = Station(
     name="Lyon toutes gares",
     ouigo_fr_id="LY1",
+    trenitalia_id=870076291,
 )
 
 BORDEAUX = Station(
@@ -407,6 +465,166 @@ ROUTES = [
         operators=["trenitalia", "italo"],
         description="Milan-Venice (Trenitalia vs. Italo)",
         route_id="milan-venice"
+    ),
+
+    # ── Italy: Trenitalia Frecciarossa (FR) ────────────────────
+    Route(
+        origin=TURIN,
+        destination=SALERNO,
+        operators=["trenitalia"],
+        description="Turin-Salerno (FR)",
+        route_id="turin-salerno"
+    ),
+    Route(
+        origin=BERGAMO,
+        destination=SALERNO,
+        operators=["trenitalia"],
+        description="Bergamo-Salerno (FR)",
+        route_id="bergamo-salerno"
+    ),
+    Route(
+        origin=BRESCIA,
+        destination=SALERNO,
+        operators=["trenitalia"],
+        description="Brescia-Salerno (FR)",
+        route_id="brescia-salerno"
+    ),
+    Route(
+        origin=VENICE,
+        destination=SALERNO,
+        operators=["trenitalia"],
+        description="Venice-Salerno (FR)",
+        route_id="venice-salerno"
+    ),
+    Route(
+        origin=UDINE,
+        destination=SALERNO,
+        operators=["trenitalia"],
+        description="Udine-Salerno (FR)",
+        route_id="udine-salerno"
+    ),
+    Route(
+        origin=TRIESTE,
+        destination=SALERNO,
+        operators=["trenitalia"],
+        description="Trieste-Salerno (FR)",
+        route_id="trieste-salerno"
+    ),
+    Route(
+        origin=MILAN,
+        destination=LECCE,
+        operators=["trenitalia"],
+        description="Milan-Lecce (FR)",
+        route_id="milan-lecce"
+    ),
+    Route(
+        origin=MILAN,
+        destination=REGGIO_CALABRIA,
+        operators=["trenitalia"],
+        description="Milan-Reggio Calabria (FR)",
+        route_id="milan-reggio-calabria"
+    ),
+    Route(
+        origin=MILAN,
+        destination=TARANTO,
+        operators=["trenitalia"],
+        description="Milan-Taranto (FR)",
+        route_id="milan-taranto"
+    ),
+    Route(
+        origin=PARIS,
+        destination=MILAN,
+        operators=["trenitalia"],
+        description="Paris-Milan (FR international)",
+        route_id="paris-milan"
+    ),
+    Route(
+        origin=PARIS,
+        destination=TURIN,
+        operators=["trenitalia"],
+        description="Paris-Turin (FR international)",
+        route_id="paris-turin"
+    ),
+    Route(
+        origin=LYON,
+        destination=MILAN,
+        operators=["trenitalia"],
+        description="Lyon-Milan (FR international)",
+        route_id="lyon-milan"
+    ),
+    Route(
+        origin=LYON,
+        destination=TURIN,
+        operators=["trenitalia"],
+        description="Lyon-Turin (FR international)",
+        route_id="lyon-turin"
+    ),
+
+    # ── Italy: Trenitalia Frecciargento (FA) ───────────────────
+    Route(
+        origin=TRIESTE,
+        destination=ROME,
+        operators=["trenitalia"],
+        description="Trieste-Rome (FA)",
+        route_id="trieste-rome"
+    ),
+    Route(
+        origin=UDINE,
+        destination=ROME,
+        operators=["trenitalia"],
+        description="Udine-Rome (FA)",
+        route_id="udine-rome"
+    ),
+    Route(
+        origin=BOLZANO,
+        destination=ROME,
+        operators=["trenitalia"],
+        description="Bolzano-Rome (FA)",
+        route_id="bolzano-rome"
+    ),
+    Route(
+        origin=BRESCIA,
+        destination=ROME,
+        operators=["trenitalia"],
+        description="Brescia-Rome (FA)",
+        route_id="brescia-rome"
+    ),
+    Route(
+        origin=GENOA,
+        destination=ROME,
+        operators=["trenitalia"],
+        description="Genoa-Rome (FA)",
+        route_id="genoa-rome"
+    ),
+    Route(
+        origin=ROME,
+        destination=LECCE,
+        operators=["trenitalia"],
+        description="Rome-Lecce (FA)",
+        route_id="rome-lecce"
+    ),
+    Route(
+        origin=ROME,
+        destination=REGGIO_CALABRIA,
+        operators=["trenitalia"],
+        description="Rome-Reggio Calabria (FA)",
+        route_id="rome-reggio-calabria"
+    ),
+
+    # ── Italy: Trenitalia Frecciabianca (FB) ───────────────────
+    Route(
+        origin=MILAN,
+        destination=GENOA,
+        operators=["trenitalia"],
+        description="Milan-Genoa (FB)",
+        route_id="milan-genoa"
+    ),
+    Route(
+        origin=ROME,
+        destination=RAVENNA,
+        operators=["trenitalia"],
+        description="Rome-Ravenna (FB)",
+        route_id="rome-ravenna"
     ),
 
     # ── Spain: Renfe vs. Ouigo España vs. Iryo ─────────────────
