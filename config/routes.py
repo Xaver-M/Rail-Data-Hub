@@ -12,7 +12,7 @@ class Station:
     flixtrain_city_id: Optional[str] = None
     flixbus_id: Optional[str] = None
     trenitalia_id: Optional[int] = None
-    italo_id: Optional[int] = None
+    italo_id: Optional[str] = None
     db_id: Optional[str] = None
     oebb_id: Optional[str] = None
     ouigo_es_id: Optional[str] = None   
@@ -214,12 +214,13 @@ MILAN = Station(
 ROME = Station(
     name="Roma Termini",
     trenitalia_id=830008409,
-    italo_id="RMT",
+    italo_id="RRO",
 )
 
 NAPLES = Station(
     name="Napoli Centrale",
     trenitalia_id=830009218,
+    italo_id="NAP",
 )
 
 TURIN = Station(
@@ -231,11 +232,13 @@ TURIN = Station(
 VENICE = Station(
     name="Venezia Santa Lucia",
     trenitalia_id=830002593,
+    italo_id="VEN",
 )
 
 SALERNO = Station(
     name="Salerno",
     trenitalia_id=830009818,
+    italo_id="SAL",
 )
 
 BERGAMO = Station(
@@ -261,6 +264,7 @@ TRIESTE = Station(
 LECCE = Station(
     name="Lecce",
     trenitalia_id=830013555,
+    italo_id="LCC",
 )
 
 REGGIO_CALABRIA = Station(
@@ -276,16 +280,33 @@ TARANTO = Station(
 BOLZANO = Station(
     name="Bolzano",
     trenitalia_id=830002026,
+    italo_id="BLZ",
 )
 
 GENOA = Station(
     name="Genova Piazza Principe",
     trenitalia_id=830004700,
+    italo_id="G__",
 )
 
 RAVENNA = Station(
     name="Ravenna",
     trenitalia_id=830005811,
+)
+
+TURIN_PS = Station(
+    name="Torino Porta Susa",
+    italo_id="TPS",
+)
+
+BARI = Station(
+    name="Bari Centrale",
+    italo_id="BAC",
+)
+
+ANCONA = Station(
+    name="Ancona",
+    italo_id="FF_",
 )
 
 # ── Spain ──────────────────────────────────────────────────────
@@ -545,8 +566,8 @@ ROUTES = [
     Route(
         origin=VENICE,
         destination=SALERNO,
-        operators=["trenitalia"],
-        description="Venice-Salerno (FR)",
+        operators=["trenitalia", "italo"],
+        description="Venice-Salerno (FR vs. Italo)",
         route_id="venice-salerno"
     ),
     Route(
@@ -566,8 +587,8 @@ ROUTES = [
     Route(
         origin=MILAN,
         destination=LECCE,
-        operators=["trenitalia"],
-        description="Milan-Lecce (FR)",
+        operators=["trenitalia", "italo"],
+        description="Milan-Lecce (FR vs. Italo)",
         route_id="milan-lecce"
     ),
     Route(
@@ -652,8 +673,8 @@ ROUTES = [
     Route(
         origin=ROME,
         destination=LECCE,
-        operators=["trenitalia"],
-        description="Rome-Lecce (FA)",
+        operators=["trenitalia", "italo"],
+        description="Rome-Lecce (FA vs. Italo)",
         route_id="rome-lecce"
     ),
     Route(
@@ -668,8 +689,8 @@ ROUTES = [
     Route(
         origin=MILAN,
         destination=GENOA,
-        operators=["trenitalia"],
-        description="Milan-Genoa (FB)",
+        operators=["trenitalia", "italo"],
+        description="Milan-Genoa (FB vs. Italo)",
         route_id="milan-genoa"
     ),
     Route(
@@ -678,6 +699,125 @@ ROUTES = [
         operators=["trenitalia"],
         description="Rome-Ravenna (FB)",
         route_id="rome-ravenna"
+    ),
+
+    # ── Italy: Italo-exclusive routes ──────────────────────────
+
+    # Torino Porta Susa corridors
+    Route(
+        origin=TURIN_PS,
+        destination=ROME,
+        operators=["italo"],
+        description="Turin Porta Susa-Rome (Italo)",
+        route_id="turin-ps-rome"
+    ),
+    Route(
+        origin=TURIN_PS,
+        destination=NAPLES,
+        operators=["italo"],
+        description="Turin Porta Susa-Naples (Italo)",
+        route_id="turin-ps-naples"
+    ),
+    Route(
+        origin=TURIN_PS,
+        destination=SALERNO,
+        operators=["italo"],
+        description="Turin Porta Susa-Salerno (Italo)",
+        route_id="turin-ps-salerno"
+    ),
+
+    # Milan corridors (Italo-only)
+    Route(
+        origin=MILAN,
+        destination=SALERNO,
+        operators=["italo"],
+        description="Milan-Salerno (Italo)",
+        route_id="milan-salerno"
+    ),
+    Route(
+        origin=MILAN,
+        destination=BARI,
+        operators=["italo"],
+        description="Milan-Bari (Italo)",
+        route_id="milan-bari"
+    ),
+    Route(
+        origin=MILAN,
+        destination=BOLZANO,
+        operators=["italo"],
+        description="Milan-Bolzano (Italo)",
+        route_id="milan-bolzano"
+    ),
+
+    # Venice corridors (Italo-only)
+    Route(
+        origin=VENICE,
+        destination=ROME,
+        operators=["italo"],
+        description="Venice-Rome (Italo)",
+        route_id="venice-rome"
+    ),
+    Route(
+        origin=VENICE,
+        destination=NAPLES,
+        operators=["italo"],
+        description="Venice-Naples (Italo)",
+        route_id="venice-naples"
+    ),
+    Route(
+        origin=VENICE,
+        destination=TURIN_PS,
+        operators=["italo"],
+        description="Venice-Turin Porta Susa (Italo)",
+        route_id="venice-turin-ps"
+    ),
+
+    # Rome corridors (Italo-only)
+    Route(
+        origin=ROME,
+        destination=SALERNO,
+        operators=["italo"],
+        description="Rome-Salerno (Italo)",
+        route_id="rome-salerno"
+    ),
+    Route(
+        origin=ROME,
+        destination=BARI,
+        operators=["italo"],
+        description="Rome-Bari (Italo)",
+        route_id="rome-bari"
+    ),
+
+    # Naples corridors (Italo-only)
+    Route(
+        origin=NAPLES,
+        destination=BARI,
+        operators=["italo"],
+        description="Naples-Bari (Italo)",
+        route_id="naples-bari"
+    ),
+    Route(
+        origin=NAPLES,
+        destination=LECCE,
+        operators=["italo"],
+        description="Naples-Lecce (Italo)",
+        route_id="naples-lecce"
+    ),
+
+    # Ancona corridors
+    Route(
+        origin=ANCONA,
+        destination=MILAN,
+        operators=["italo"],
+        description="Ancona-Milan (Italo)",
+        route_id="ancona-milan"
+    ),
+    Route(
+        origin=ANCONA,
+        destination=ROME,
+        operators=["italo"],
+        description="Ancona-Rome (Italo)",
+        route_id="ancona-rome"
     ),
 
     # ── Spain: Renfe vs. Ouigo España vs. Iryo ─────────────────
