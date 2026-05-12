@@ -24,6 +24,7 @@ from crawlers.trenitalia.trenitalia_crawler import TrenitaliaCrawler
 from crawlers.ouigo_es.ougio_es_crawler import OuigoEsCrawler
 from crawlers.db.db_crawler import DBCrawler
 from crawlers.regiojet.regiojet_crawler import RegioJetCrawler
+from crawlers.ouigo_fr.ouigo_fr_crawler import OuigoFrCrawler
 
 
 def run_all_crawlers():
@@ -35,6 +36,7 @@ def run_all_crawlers():
         OuigoEsCrawler(),
         DBCrawler(),
         RegioJetCrawler(),
+        OuigoFrCrawler(),
     ]
 
     for crawler in crawlers:

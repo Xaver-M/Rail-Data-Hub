@@ -1,10 +1,6 @@
 # config/routes.py
 # Central route configuration for Rail Data Hub
 # Only routes with at least 2 operators (competitive routes)
-<<<<<<< HEAD
-=======
-# Only routes served by at least 2 operators (competitive routes)
->>>>>>> 190adc9cf4edcf83a264b2b3b0e9c784c93c4449
 
 from dataclasses import dataclass
 from typing import Optional
