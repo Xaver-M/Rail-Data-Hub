@@ -314,6 +314,11 @@ ZARAGOZA = Station(
     ouigo_es_id="7104040",
 )
 
+ALBACETE = Station(
+    name="Albacete - Los Llanos",
+    ouigo_es_id="7160600",
+)
+
 # ── France ──────────────────────────────────────────────────────
 PARIS = Station(
     name="Paris - Toutes les gares",
@@ -682,6 +687,13 @@ ROUTES = [
         route_id="madrid-barcelona"
     ),
     Route(
+        origin=BARCELONA,
+        destination=MADRID,
+        operators=["renfe", "ouigo_es", "iryo"],
+        description="Barcelona-Madrid (Renfe vs. Ouigo vs. Iryo)",
+        route_id="barcelona-madrid"
+    ),
+    Route(
         origin=MADRID,
         destination=VALENCIA,
         operators=["renfe", "ouigo_es"],
@@ -689,11 +701,74 @@ ROUTES = [
         route_id="madrid-valencia"
     ),
     Route(
+        origin=VALENCIA,
+        destination=MADRID,
+        operators=["renfe", "ouigo_es"],
+        description="Valencia-Madrid (Renfe vs. Ouigo)",
+        route_id="valencia-madrid"
+    ),
+    Route(
         origin=MADRID,
         destination=SEVILLE,
         operators=["renfe", "ouigo_es"],
         description="Madrid-Seville (Renfe vs. Ouigo)",
         route_id="madrid-seville"
+    ),
+    Route(
+        origin=SEVILLE,
+        destination=MADRID,
+        operators=["renfe", "ouigo_es"],
+        description="Seville-Madrid (Renfe vs. Ouigo)",
+        route_id="seville-madrid"
+    ),
+    Route(
+        origin=MADRID,
+        destination=ZARAGOZA,
+        operators=["renfe", "ouigo_es"],
+        description="Madrid-Zaragoza (Renfe vs. Ouigo)",
+        route_id="madrid-zaragoza"
+    ),
+    Route(
+        origin=ZARAGOZA,
+        destination=MADRID,
+        operators=["renfe", "ouigo_es"],
+        description="Zaragoza-Madrid (Renfe vs. Ouigo)",
+        route_id="zaragoza-madrid"
+    ),
+    Route(
+        origin=MADRID,
+        destination=ALBACETE,
+        operators=["ouigo_es"],
+        description="Madrid-Albacete (Ouigo)",
+        route_id="madrid-albacete"
+    ),
+    Route(
+        origin=BARCELONA,
+        destination=ZARAGOZA,
+        operators=["renfe", "ouigo_es"],
+        description="Barcelona-Zaragoza (Renfe vs. Ouigo)",
+        route_id="barcelona-zaragoza"
+    ),
+    Route(
+        origin=ZARAGOZA,
+        destination=BARCELONA,
+        operators=["renfe", "ouigo_es"],
+        description="Zaragoza-Barcelona (Renfe vs. Ouigo)",
+        route_id="zaragoza-barcelona"
+    ),
+    Route(
+        origin=SEVILLE,
+        destination=BARCELONA,
+        operators=["renfe", "ouigo_es"],
+        description="Seville-Barcelona (Renfe vs. Ouigo)",
+        route_id="seville-barcelona"
+    ),
+    Route(
+        origin=SEVILLE,
+        destination=ZARAGOZA,
+        operators=["ouigo_es"],
+        description="Seville-Zaragoza (Ouigo)",
+        route_id="seville-zaragoza"
     ),
 
     # ── France: Ouigo Grande Vitesse (OGV) ────────────────────────
