@@ -348,6 +348,51 @@ BORDEAUX = Station(
     ouigo_fr_id="87581009",
 )
 
+NICE = Station(
+    name="Nice Ville",
+    ouigo_fr_id="87756056",
+)
+
+TOULOUSE = Station(
+    name="Toulouse Matabiau",
+    ouigo_fr_id="87611004",
+)
+
+HENDAYE = Station(
+    name="Hendaye",
+    ouigo_fr_id="87600007",
+)
+
+PERPIGNAN = Station(
+    name="Perpignan",
+    ouigo_fr_id="87696005",
+)
+
+RENNES = Station(
+    name="Rennes",
+    ouigo_fr_id="87471003",
+)
+
+STRASBOURG = Station(
+    name="Strasbourg Ville",
+    ouigo_fr_id="87212027",
+)
+
+COLMAR = Station(
+    name="Colmar",
+    ouigo_fr_id="87213645",
+)
+
+BREST = Station(
+    name="Brest",
+    ouigo_fr_id="87474007",
+)
+
+BOURG_ST_MAURICE = Station(
+    name="Bourg-Saint-Maurice",
+    ouigo_fr_id="87749093",
+)
+
 PARIS_EST = Station(
     name="Paris Est",
     db_id="8796066",
@@ -361,8 +406,9 @@ AMSTERDAM = Station(
 
 # ── Belgium ──────────────────────────────────────────────────
 BRUSSELS = Station(
-    name="Brüssel-Midi",
+    name="Brussels-Midi",
     db_id="8814001",
+    ouigo_fr_id="88140010",
 )
 
 # ─────────────────────────────────────────────────────────────
@@ -650,7 +696,7 @@ ROUTES = [
         route_id="madrid-seville"
     ),
 
-    # ── France: Ouigo vs. SNCF (TGV) ───────────────────────────────
+    # ── France: Ouigo Grande Vitesse (OGV) ────────────────────────
     Route(
         origin=PARIS,
         destination=LYON,
@@ -658,7 +704,6 @@ ROUTES = [
         description="Paris-Lyon (Ouigo vs. SNCF)",
         route_id="paris-lyon"
     ),
-
     Route(
         origin=PARIS,
         destination=MARSEILLE,
@@ -666,13 +711,96 @@ ROUTES = [
         description="Paris-Marseille (Ouigo vs. SNCF)",
         route_id="paris-marseille"
     ),
-
     Route(
         origin=PARIS,
         destination=NANTES,
         operators=["ouigo_fr", "SNCF"],
         description="Paris-Nantes (Ouigo vs. SNCF)",
         route_id="paris-nantes"
+    ),
+    Route(
+        origin=PARIS,
+        destination=MONTPELLIER,
+        operators=["ouigo_fr"],
+        description="Paris-Montpellier (Ouigo OGV)",
+        route_id="paris-montpellier"
+    ),
+    Route(
+        origin=PARIS,
+        destination=NICE,
+        operators=["ouigo_fr"],
+        description="Paris-Nice (Ouigo OGV)",
+        route_id="paris-nice"
+    ),
+    Route(
+        origin=PARIS,
+        destination=TOULOUSE,
+        operators=["ouigo_fr"],
+        description="Paris-Toulouse (Ouigo OGV)",
+        route_id="paris-toulouse"
+    ),
+    Route(
+        origin=PARIS,
+        destination=BORDEAUX,
+        operators=["ouigo_fr"],
+        description="Paris-Bordeaux (Ouigo OGV/OTC)",
+        route_id="paris-bordeaux"
+    ),
+    Route(
+        origin=PARIS,
+        destination=HENDAYE,
+        operators=["ouigo_fr"],
+        description="Paris-Hendaye (Ouigo OGV)",
+        route_id="paris-hendaye"
+    ),
+    Route(
+        origin=PARIS,
+        destination=PERPIGNAN,
+        operators=["ouigo_fr"],
+        description="Paris-Perpignan (Ouigo OGV)",
+        route_id="paris-perpignan"
+    ),
+    Route(
+        origin=PARIS,
+        destination=RENNES,
+        operators=["ouigo_fr"],
+        description="Paris-Rennes (Ouigo OGV)",
+        route_id="paris-rennes"
+    ),
+    Route(
+        origin=PARIS,
+        destination=STRASBOURG,
+        operators=["ouigo_fr"],
+        description="Paris-Strasbourg (Ouigo OGV)",
+        route_id="paris-strasbourg"
+    ),
+    Route(
+        origin=PARIS,
+        destination=COLMAR,
+        operators=["ouigo_fr"],
+        description="Paris-Colmar (Ouigo OGV)",
+        route_id="paris-colmar"
+    ),
+    Route(
+        origin=PARIS,
+        destination=BREST,
+        operators=["ouigo_fr"],
+        description="Paris-Brest (Ouigo OGV)",
+        route_id="paris-brest"
+    ),
+    Route(
+        origin=PARIS,
+        destination=BOURG_ST_MAURICE,
+        operators=["ouigo_fr"],
+        description="Paris-Bourg-Saint-Maurice (Ouigo OGV, seasonal)",
+        route_id="paris-bourg-st-maurice"
+    ),
+    Route(
+        origin=PARIS,
+        destination=BRUSSELS,
+        operators=["ouigo_fr"],
+        description="Paris-Brussels (Ouigo OGV)",
+        route_id="paris-brussels-ouigo"
     ),
 
     # ── International ──────────────────────────────────────────
