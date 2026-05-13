@@ -10,6 +10,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 
 import time
 import requests
+import uuid
 from datetime import datetime, timedelta
 
 from crawlers.base.base_crawler import BaseCrawler
@@ -62,7 +63,18 @@ class ItaloCrawler(BaseCrawler):
         }
 
     def fetch(self, url: str, params: dict = None, headers: dict = None) -> requests.Response:
+        # Neue Working Session fuer jeden einzelnen Booking-Request erstellen,
+        # damit der Server die Operation-IDs nicht kreuzweise invalidiert.
+        new_session_id = str(uuid.uuid4())
+
+        self.session.post(
+            f"{self.API_BASE}/working-sessions",
+            headers={**self.headers, "x-big-working-session-id": new_session_id},
+            json={}
+        )
+
         merged_headers = dict(self.headers)
+        merged_headers["x-big-working-session-id"] = new_session_id
         if headers:
             merged_headers.update(headers)
 
@@ -206,7 +218,7 @@ if __name__ == "__main__":
                     for r in valid[:3]:
                         seats = r.get("seats_available")
                         print(
-                            f"   {r['departure_time'].strftime('%H:%M')} → "
+                            f"   {r['departure_time'].strftime('%H:%M')} -> "
                             f"{r['arrival_time'].strftime('%H:%M')} | "
                             f"{r['price_eur']:.2f} EUR | "
                             f"{str(seats) if seats is not None else '-'} seats | "

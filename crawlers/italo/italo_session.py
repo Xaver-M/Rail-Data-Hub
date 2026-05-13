@@ -26,10 +26,6 @@ class ItaloSessionManager:
 
         self.token = None
 
-        self.working_session_id = (
-            str(uuid.uuid4())
-        )
-
         self.headers = {}
 
     def bootstrap(self):
@@ -111,23 +107,12 @@ class ItaloSessionManager:
             "Content-Type":
                 "application/json",
 
-            "x-big-working-session-id":
-                self.working_session_id,
+            # x-big-working-session-id wird NICHT mehr hier gesetzt.
+            # Stattdessen erstellt ItaloCrawler.fetch() fuer jeden
+            # Booking-Request eine eigene UUID und registriert sie
+            # separat, damit der Server die Operation-IDs nicht
+            # session-uebergreifend invalidiert.
         }
-
-        r = self.session.post(
-            f"{self.API_BASE}/working-sessions",
-            headers=self.headers,
-            json={}
-        )
-
-        print("\nWORKING SESSION STATUS:")
-        print(r.status_code)
-
-        print("\nWORKING SESSION RESPONSE:")
-        print(r.text[:1000])
-
-        r.raise_for_status()
 
     def close(self):
 
