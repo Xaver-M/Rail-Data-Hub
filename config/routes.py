@@ -36,7 +36,19 @@ class Route:
 # STATIONS
 # ─────────────────────────────────────────────────────────────
 
-# ── Germany ─────────────────────────────────────────────────── 
+# ── Germany ───────────────────────────────────────────────────
+
+AACHEN = Station(
+    name="Aachen Hbf",
+    db_id="8000001",
+)
+
+BASEL = Station(
+    name="Basel Bad Bf",
+    flixtrain_id="086064da-8914-415f-83cc-8d6a087f5ed2",
+    flixtrain_city_id="40de3026-8646-11e6-9066-549f350fcb0c",
+    db_id="8000026",
+)
 
 BERLIN = Station(
     name="Berlin Hbf",
@@ -45,18 +57,35 @@ BERLIN = Station(
     db_id="8011160",
 )
 
-HAMBURG = Station(
-    name="Hamburg Hbf",
-    flixtrain_id="38c4c04e-e957-4115-ac23-6fa87012bde4",
-    flixtrain_city_id="40d91e53-8646-11e6-9066-549f350fcb0c",
-    db_id="8002549",
+BRATISLAVA = Station(
+    name="Bratislava hlavná stanica",
+    regiojet_city_id="10202001",
 )
 
-MUNICH = Station(
-    name="München Hbf",
-    flixtrain_id="dcbabbfa-9603-11e6-9066-549f350fcb0c",
-    flixtrain_city_id="40d901a5-8646-11e6-9066-549f350fcb0c",
-    db_id="8000261",
+BREMEN = Station(
+    name="Bremen Hbf",
+    db_id="8000050",
+)
+
+BUDAPEST = Station(
+    name="Budapest-Keleti",
+    db_id="5510017",
+    regiojet_city_id="10202091",
+)
+
+DORTMUND = Station(
+    name="Dortmund Hbf",
+    db_id="8000080",
+)
+
+DRESDEN = Station(
+    name="Dresden Hbf",
+    db_id="8010085",
+)
+
+DUSSELDORF = Station(
+    name="Düsseldorf Hbf",
+    db_id="8000085",
 )
 
 FRANKFURT = Station(
@@ -66,25 +95,16 @@ FRANKFURT = Station(
     db_id="8000105",
 )
 
-COLOGNE = Station(
-    name="Köln Hbf",
-    flixtrain_id="5e24b585-a2eb-42ea-acf5-b1063555f002",
-    flixtrain_city_id="40d91025-8646-11e6-9066-549f350fcb0c",
-    db_id="8000207",
+GRAZ = Station(
+    name="Graz Hbf",
+    db_id="8100173",
 )
 
-STUTTGART = Station(
-    name="Stuttgart Hbf",
-    flixtrain_id="f6d07c4e-fa7e-4ab6-86bc-71b34ffb8cca",
-    flixtrain_city_id="40d90995-8646-11e6-9066-549f350fcb0c",
-    db_id="8000096",
-)
-
-LEIPZIG = Station(
-    name="Leipzig Hbf",
-    flixtrain_id="206a3e42-ff08-4902-b26c-fb192c94048e",
-    flixtrain_city_id="40d917f9-8646-11e6-9066-549f350fcb0c",
-    db_id="8010205",
+HAMBURG = Station(
+    name="Hamburg Hbf",
+    flixtrain_id="38c4c04e-e957-4115-ac23-6fa87012bde4",
+    flixtrain_city_id="40d91e53-8646-11e6-9066-549f350fcb0c",
+    db_id="8002549",
 )
 
 HANOVER = Station(
@@ -101,21 +121,9 @@ KARLSRUHE = Station(
     db_id="8000191",
 )
 
-BASEL = Station(
-    name="Basel Bad Bf",
-    flixtrain_id="086064da-8914-415f-83cc-8d6a087f5ed2",
-    flixtrain_city_id="40de3026-8646-11e6-9066-549f350fcb0c",
-    db_id="8000026",
-)
-
-DUSSELDORF = Station(
-    name="Düsseldorf Hbf",
-    db_id="8000085",
-)
-
-AACHEN = Station(
-    name="Aachen Hbf",
-    db_id="8000001",
+KIEL = Station(
+    name="Kiel Hbf",
+    db_id="8000199",
 )
 
 KOBLENZ = Station(
@@ -123,24 +131,18 @@ KOBLENZ = Station(
     db_id="8000206",
 )
 
-SAARBRUCKEN = Station(
-    name="Saarbrücken Hbf",
-    db_id="8000323",
+COLOGNE = Station(
+    name="Köln Hbf",
+    flixtrain_id="5e24b585-a2eb-42ea-acf5-b1063555f002",
+    flixtrain_city_id="40d91025-8646-11e6-9066-549f350fcb0c",
+    db_id="8000207",
 )
 
-DORTMUND = Station(
-    name="Dortmund Hbf",
-    db_id="8000080",
-)
-
-BREMEN = Station(
-    name="Bremen Hbf",
-    db_id="8000050",
-)
-
-KIEL = Station(
-    name="Kiel Hbf",
-    db_id="8000199",
+LEIPZIG = Station(
+    name="Leipzig Hbf",
+    flixtrain_id="206a3e42-ff08-4902-b26c-fb192c94048e",
+    flixtrain_city_id="40d917f9-8646-11e6-9066-549f350fcb0c",
+    db_id="8010205",
 )
 
 LUBECK = Station(
@@ -148,14 +150,16 @@ LUBECK = Station(
     db_id="8000237",
 )
 
-DRESDEN = Station(
-    name="Dresden Hbf",
-    db_id="8010085",
+MUNICH = Station(
+    name="München Hbf",
+    flixtrain_id="dcbabbfa-9603-11e6-9066-549f350fcb0c",
+    flixtrain_city_id="40d901a5-8646-11e6-9066-549f350fcb0c",
+    db_id="8000261",
 )
 
-WIESBADEN = Station(
-    name="Wiesbaden Hbf",
-    db_id="8000250",
+BINZ = Station(
+    name="Ostseebad Binz",
+    db_id="8010032",
 )
 
 PASSAU = Station(
@@ -163,9 +167,26 @@ PASSAU = Station(
     db_id="8000298",
 )
 
-BINZ = Station(
-    name="Ostseebad Binz",
-    db_id="8010032",
+PRAGUE = Station(
+    name="Praha hlavní nádraží",
+    regiojet_city_id="10202003",
+)
+
+SAARBRUCKEN = Station(
+    name="Saarbrücken Hbf",
+    db_id="8000323",
+)
+
+STUTTGART = Station(
+    name="Stuttgart Hbf",
+    flixtrain_id="f6d07c4e-fa7e-4ab6-86bc-71b34ffb8cca",
+    flixtrain_city_id="40d90995-8646-11e6-9066-549f350fcb0c",
+    db_id="8000096",
+)
+
+WIESBADEN = Station(
+    name="Wiesbaden Hbf",
+    db_id="8000250",
 )
 
 VIENNA = Station(
@@ -176,106 +197,56 @@ VIENNA = Station(
     regiojet_city_id="10202052",
 )
 
-GRAZ = Station(
-    name="Graz Hbf",
-    db_id="8100173",
-)
-
 ZURICH = Station(
     name="Zürich HB",
     db_id="8503000",
 )
 
-PRAGUE = Station(
-    name="Praha hlavní nádraží",
-    regiojet_city_id="10202003",
+# ── Italy ─────────────────────────────────────────────────────
+
+AGROPOLI = Station(
+    name="Agropoli",
+    italo_id="AGR",
 )
 
-BRATISLAVA = Station(
-    name="Bratislava hlavná stanica",
-    regiojet_city_id="10202001",
+ANCONA = Station(
+    name="Ancona",
+    trenitalia_id=830006003,
+    italo_id="FF_",
 )
 
-BUDAPEST = Station(
-    name="Budapest-Keleti",
-    db_id="5510017",
-    regiojet_city_id="10202091",
+BARI = Station(
+    name="Bari Centrale",
+    italo_id="BAC",
 )
 
-# ── Italy ───────────────────────────────────────────────────── 
-
-MILAN = Station(
-    name="Milano Centrale",
-    trenitalia_id=830001700,
-    db_id="8300017",
-    italo_id="MC_",
+BARLETTA = Station(
+    name="Barletta",
+    trenitalia_id=830013300,
+    italo_id="BLT",
 )
 
-ROME = Station(
-    name="Roma Termini",
-    trenitalia_id=830008409,
-    italo_id="RRO",
-)
-
-NAPLES = Station(
-    name="Napoli Centrale",
-    trenitalia_id=830009218,
-    italo_id="NAP",
-)
-
-TURIN = Station(
-    name="Torino Porta Nuova",
-    trenitalia_id=830000219,
-    db_id="8000096",
-)
-
-VENICE = Station(
-    name="Venezia Santa Lucia",
-    trenitalia_id=830002593,
-    italo_id="VEN",
-)
-
-SALERNO = Station(
-    name="Salerno",
-    trenitalia_id=830009818,
-    italo_id="SAL",
+BENEVENTO = Station(
+    name="Benevento",
+    trenitalia_id=830009300,
+    italo_id="BEN",
 )
 
 BERGAMO = Station(
     name="Bergamo",
     trenitalia_id=830001529,
+    italo_id="BGM",
 )
 
-BRESCIA = Station(
-    name="Brescia",
-    trenitalia_id=830001717,
+BISCEGLIE = Station(
+    name="Bisceglie",
+    italo_id="BIG",
 )
 
-UDINE = Station(
-    name="Udine",
-    trenitalia_id=830003026,
-)
-
-TRIESTE = Station(
-    name="Trieste Centrale",
-    trenitalia_id=830003317,
-    italo_id=""
-)
-
-LECCE = Station(
-    name="Lecce",
-    trenitalia_id=830013555,
-    italo_id="LCC",
-)
-
-REGGIO_CALABRIA = Station(
-    name="Reggio di Calabria Centrale",
-    trenitalia_id=830011781,
-)
-
-TARANTO = Station(
-    name="Taranto",
-    trenitalia_id=830013554,
+BOLOGNA = Station(
+    name="Bologna Centrale",
+    trenitalia_id=830002700,
+    italo_id="BC_",
 )
 
 BOLZANO = Station(
@@ -284,10 +255,105 @@ BOLZANO = Station(
     italo_id="BLZ",
 )
 
+BRESCIA = Station(
+    name="Brescia",
+    trenitalia_id=830001717,
+    italo_id="BSC",
+)
+
+CASERTA = Station(
+    name="Caserta",
+    trenitalia_id=830009600,
+    italo_id="CEA",
+)
+
+CONEGLIANO = Station(
+    name="Conegliano",
+    italo_id="CON",
+)
+
+DESENZANO = Station(
+    name="Desenzano",
+    italo_id="DSG",
+)
+
+FERRARA = Station(
+    name="Ferrara",
+    italo_id="F__",
+)
+
+FLORENCE = Station(
+    name="Firenze Santa Maria Novella",
+    trenitalia_id=830005240,
+    italo_id="SMN",
+)
+
+FOGGIA = Station(
+    name="Foggia",
+    trenitalia_id=830013200,
+    italo_id="FG_",
+)
+
+GENOVA_BRIGNOLE = Station(
+    name="Genova Brignole",
+    italo_id="GB_",
+)
+
 GENOA = Station(
     name="Genova Piazza Principe",
     trenitalia_id=830004700,
     italo_id="G__",
+)
+
+LAMEZIA_TERME = Station(
+    name="Lamezia Terme",
+    trenitalia_id=830011400,
+    italo_id="LON",
+)
+
+LATISANA = Station(
+    name="Latisana Lignano Bibione",
+    italo_id="LTL",
+)
+
+LECCE = Station(
+    name="Lecce",
+    trenitalia_id=830013555,
+    italo_id="LCC",
+)
+
+MARATEA = Station(
+    name="Maratea",
+    italo_id="MRT",
+)
+
+MILAN = Station(
+    name="Milano Centrale",
+    trenitalia_id=830001700,
+    db_id="8300017",
+    italo_id="MC_",
+)
+
+MILAN_RHO_FIERA = Station(
+    name="Milano Rho Fiera",
+    italo_id="RRO",
+)
+
+MILAN_ROGOREDO = Station(
+    name="Milano Rogoredo",
+    italo_id="RG_",
+)
+
+NAPLES = Station(
+    name="Napoli Centrale",
+    trenitalia_id=830009218,
+    italo_id="NAC",
+)
+
+PADOVA = Station(
+    name="Padova",
+    trenitalia_id=830002312,
+    italo_id="PD_",
 )
 
 RAVENNA = Station(
@@ -295,26 +361,87 @@ RAVENNA = Station(
     trenitalia_id=830005811,
 )
 
+REGGIO_CALABRIA = Station(
+    name="Reggio di Calabria Centrale",
+    trenitalia_id=830011781,
+    italo_id="RCA",
+)
+
+REGGIO_EMILIA_AV = Station(
+    name="Reggio Emilia AV",
+    trenitalia_id=830003100,
+    italo_id="AAV",
+)
+
+ROME = Station(
+    name="Roma Termini",
+    trenitalia_id=830008409,
+    italo_id="RMT",
+)
+
+ROMA_TIBURTINA = Station(
+    name="Roma Tiburtina",
+    italo_id="RTB",
+)
+
+SALERNO = Station(
+    name="Salerno",
+    trenitalia_id=830009818,
+    italo_id="SAL",
+)
+
+TARANTO = Station(
+    name="Taranto",
+    trenitalia_id=830013554,
+)
+
+TURIN = Station(
+    name="Torino Porta Nuova",
+    trenitalia_id=830000219,
+    db_id="8000096",
+    italo_id="TOP",
+)
+
 TURIN_PS = Station(
     name="Torino Porta Susa",
-    italo_id="TPS",
+    italo_id="OUE",
 )
 
-BARI = Station(
-    name="Bari Centrale",
-    italo_id="BAC",
+TRIESTE = Station(
+    name="Trieste Centrale",
+    trenitalia_id=830003317,
+    italo_id="TSC",
 )
 
-ANCONA = Station(
-    name="Ancona",
-    italo_id="FF_",
+UDINE = Station(
+    name="Udine",
+    trenitalia_id=830003026,
+    italo_id="UDN",
 )
 
-# ── Spain ──────────────────────────────────────────────────────
-MADRID = Station(
-    name="Madrid - Todas las estaciones",
-    ouigo_es_id="MT1",
-    renfe_id="0071,MADRI,null",
+VENEZIA_MESTRE = Station(
+    name="Venezia Mestre",
+    trenitalia_id=830002560,
+    italo_id="VEM",
+)
+
+VENICE = Station(
+    name="Venezia Santa Lucia",
+    trenitalia_id=830002593,
+    italo_id="VSL",
+)
+
+VERONA = Station(
+    name="Verona Porta Nuova",
+    trenitalia_id=830002600,
+    italo_id="VPN",
+)
+
+# ── Spain ─────────────────────────────────────────────────────
+
+ALBACETE = Station(
+    name="Albacete - Los Llanos",
+    ouigo_es_id="7160600",
 )
 
 BARCELONA = Station(
@@ -323,9 +450,10 @@ BARCELONA = Station(
     renfe_id="0071,BARCE,null",
 )
 
-VALENCIA = Station(
-    name="Valencia - Joaquín Sorolla",
-    ouigo_es_id="7103216",
+MADRID = Station(
+    name="Madrid - Todas las estaciones",
+    ouigo_es_id="MT1",
+    renfe_id="0071,MADRI,null",
 )
 
 SEVILLE = Station(
@@ -333,37 +461,41 @@ SEVILLE = Station(
     ouigo_es_id="7151003",
 )
 
+VALENCIA = Station(
+    name="Valencia - Joaquín Sorolla",
+    ouigo_es_id="7103216",
+)
+
 ZARAGOZA = Station(
     name="Zaragoza - Delicias",
     ouigo_es_id="7104040",
 )
 
-ALBACETE = Station(
-    name="Albacete - Los Llanos",
-    ouigo_es_id="7160600",
+# ── France ────────────────────────────────────────────────────
+
+BORDEAUX = Station(
+    name="Bordeaux St Jean",
+    ouigo_fr_id="87581009",
 )
 
-# ── France ──────────────────────────────────────────────────────
-PARIS = Station(
-    name="Paris - Toutes les gares",
-    ouigo_fr_id="PT1",
-    trenitalia_id=870075890,
+BOURG_ST_MAURICE = Station(
+    name="Bourg-Saint-Maurice",
+    ouigo_fr_id="87749093",
 )
 
-NANTES = Station(
-    name="Nantes",
-    ouigo_fr_id="87481002",
+BREST = Station(
+    name="Brest",
+    ouigo_fr_id="87474007",
 )
 
-MONTPELLIER = Station(
-    name="Montpellier toutes gares",
-    ouigo_fr_id="MP1",
+COLMAR = Station(
+    name="Colmar",
+    ouigo_fr_id="87213645",
 )
 
-MARSEILLE = Station(
-    name="Marseille St Charles",
-    ouigo_fr_id="87751008",
-    db_id="8775100",
+HENDAYE = Station(
+    name="Hendaye",
+    ouigo_fr_id="87600007",
 )
 
 LYON = Station(
@@ -372,9 +504,20 @@ LYON = Station(
     trenitalia_id=870076291,
 )
 
-BORDEAUX = Station(
-    name="Bordeaux St Jean",
-    ouigo_fr_id="87581009",
+MARSEILLE = Station(
+    name="Marseille St Charles",
+    ouigo_fr_id="87751008",
+    db_id="8775100",
+)
+
+MONTPELLIER = Station(
+    name="Montpellier toutes gares",
+    ouigo_fr_id="MP1",
+)
+
+NANTES = Station(
+    name="Nantes",
+    ouigo_fr_id="87481002",
 )
 
 NICE = Station(
@@ -382,14 +525,15 @@ NICE = Station(
     ouigo_fr_id="87756056",
 )
 
-TOULOUSE = Station(
-    name="Toulouse Matabiau",
-    ouigo_fr_id="87611004",
+PARIS = Station(
+    name="Paris - Toutes les gares",
+    ouigo_fr_id="PT1",
+    trenitalia_id=870075890,
 )
 
-HENDAYE = Station(
-    name="Hendaye",
-    ouigo_fr_id="87600007",
+PARIS_EST = Station(
+    name="Paris Est",
+    db_id="8796066",
 )
 
 PERPIGNAN = Station(
@@ -407,33 +551,20 @@ STRASBOURG = Station(
     ouigo_fr_id="87212027",
 )
 
-COLMAR = Station(
-    name="Colmar",
-    ouigo_fr_id="87213645",
-)
-
-BREST = Station(
-    name="Brest",
-    ouigo_fr_id="87474007",
-)
-
-BOURG_ST_MAURICE = Station(
-    name="Bourg-Saint-Maurice",
-    ouigo_fr_id="87749093",
-)
-
-PARIS_EST = Station(
-    name="Paris Est",
-    db_id="8796066",
+TOULOUSE = Station(
+    name="Toulouse Matabiau",
+    ouigo_fr_id="87611004",
 )
 
 # ── Netherlands ──────────────────────────────────────────────
+
 AMSTERDAM = Station(
     name="Amsterdam Centraal",
     db_id="8400058",
 )
 
 # ── Belgium ──────────────────────────────────────────────────
+
 BRUSSELS = Station(
     name="Brussels-Midi",
     db_id="8814001",
@@ -751,7 +882,6 @@ ROUTES = [
         route_id="milan-bolzano"
     ),
 
-    # Venice corridors (Italo-only)
     Route(
         origin=VENICE,
         destination=ROME,
@@ -774,7 +904,6 @@ ROUTES = [
         route_id="venice-turin-ps"
     ),
 
-    # Rome corridors (Italo-only)
     Route(
         origin=ROME,
         destination=SALERNO,
@@ -790,7 +919,6 @@ ROUTES = [
         route_id="rome-bari"
     ),
 
-    # Naples corridors (Italo-only)
     Route(
         origin=NAPLES,
         destination=BARI,
@@ -806,7 +934,6 @@ ROUTES = [
         route_id="naples-lecce"
     ),
 
-    # Ancona corridors
     Route(
         origin=ANCONA,
         destination=MILAN,
