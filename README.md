@@ -53,11 +53,12 @@ rail-data-hub/
 |-----------------|-------------------------------|----------------------|-----------------------------|
 | Flixtrain       | global.api.flixbus.com        | Unofficial API       | Production                  |
 | Trenitalia      | lefrecce.it BFF               | Unofficial API       | Production                  |
-| OUIGO           | mdw02.api-es.ouigo.com        | Unofficial API       | Production                  |
-| Italo           | Pending                       | Pending              | WIP                         |
-| Deutsche Bahn   | -                             | Unofficial API         | Production                |
+| OUIGO-Spain     | mdw02.api-es.ouigo.com        | Unofficial API       | Production                  |
+| OUIGO-France    | -                             | Unofficial API       | Production                  |
+| Italo           | -                             | Unofficial API       | Production                  |
+| Deutsche Bahn   | -                             | Unofficial API       | Production                  |
 | SNCF            | data.sncf.com (static)        | Open Data (ODbL)     | Ingestion planned           |
-| OBB             | HAFAS mgate                   | Semi-public          | Deprioritised               |
+| Regiojet        | -                             | Unofficial API       | Production                  |
 
 ## Booking Horizons
 
