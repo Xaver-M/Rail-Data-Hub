@@ -259,6 +259,7 @@ UDINE = Station(
 TRIESTE = Station(
     name="Trieste Centrale",
     trenitalia_id=830003317,
+    italo_id=""
 )
 
 LECCE = Station(
@@ -541,6 +542,14 @@ ROUTES = [
         route_id="milan-venice"
     ),
 
+     Route(
+        origin=TRIESTE,
+        destination=ROME,
+        operators=["trenitalia", "italo"],
+        description="Trieste-Rome (FA)",
+        route_id="trieste-rome"
+    ),
+
     # ── Italy: Trenitalia Frecciarossa (FR) ────────────────────
     Route(
         origin=TURIN,
@@ -635,13 +644,6 @@ ROUTES = [
     ),
 
     # ── Italy: Trenitalia Frecciargento (FA) ───────────────────
-    Route(
-        origin=TRIESTE,
-        destination=ROME,
-        operators=["trenitalia"],
-        description="Trieste-Rome (FA)",
-        route_id="trieste-rome"
-    ),
     Route(
         origin=UDINE,
         destination=ROME,
