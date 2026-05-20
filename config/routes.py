@@ -212,7 +212,6 @@ AGROPOLI = Station(
 ANCONA = Station(
     name="Ancona",
     trenitalia_id=830006003,
-    italo_id="FF_",
 )
 
 BARI = Station(
@@ -240,7 +239,7 @@ BERGAMO = Station(
 
 BISCEGLIE = Station(
     name="Bisceglie",
-    italo_id="BIG",
+    italo_id="BIG",   
 )
 
 BOLOGNA = Station(
@@ -636,7 +635,7 @@ ROUTES = [
         route_id="hamburg-leipzig"
     ),
 
-    # ── Italy: Trenitalia vs. Italo ────────────────────────────
+    # ── Italy: selected routes Trenitalia vs. Italo ────────────────────────────
     Route(
         origin=MILAN,
         destination=ROME,
@@ -690,20 +689,6 @@ ROUTES = [
         route_id="turin-salerno"
     ),
     Route(
-        origin=BERGAMO,
-        destination=SALERNO,
-        operators=["trenitalia"],
-        description="Bergamo-Salerno (FR)",
-        route_id="bergamo-salerno"
-    ),
-    Route(
-        origin=BRESCIA,
-        destination=SALERNO,
-        operators=["trenitalia"],
-        description="Brescia-Salerno (FR)",
-        route_id="brescia-salerno"
-    ),
-    Route(
         origin=VENICE,
         destination=SALERNO,
         operators=["trenitalia", "italo"],
@@ -725,25 +710,18 @@ ROUTES = [
         route_id="trieste-salerno"
     ),
     Route(
-        origin=MILAN,
+        origin=TURIN,
         destination=LECCE,
         operators=["trenitalia", "italo"],
-        description="Milan-Lecce (FR vs. Italo)",
-        route_id="milan-lecce"
+        description="Turin-Lecce (Trenitalia vs. Italo)",
+        route_id="turin-lecce"
     ),
     Route(
-        origin=MILAN,
+        origin=TURIN,
         destination=REGGIO_CALABRIA,
         operators=["trenitalia"],
-        description="Milan-Reggio Calabria (FR)",
-        route_id="milan-reggio-calabria"
-    ),
-    Route(
-        origin=MILAN,
-        destination=TARANTO,
-        operators=["trenitalia"],
-        description="Milan-Taranto (FR)",
-        route_id="milan-taranto"
+        description="Turin-Reggio Calabria (FR)",
+        route_id="turin-reggio-calabria"
     ),
     Route(
         origin=PARIS,
@@ -752,53 +730,12 @@ ROUTES = [
         description="Paris-Milan (FR international)",
         route_id="paris-milan"
     ),
-    Route(
-        origin=PARIS,
-        destination=TURIN,
-        operators=["trenitalia"],
-        description="Paris-Turin (FR international)",
-        route_id="paris-turin"
-    ),
-    Route(
-        origin=LYON,
-        destination=MILAN,
-        operators=["trenitalia"],
-        description="Lyon-Milan (FR international)",
-        route_id="lyon-milan"
-    ),
-    Route(
-        origin=LYON,
-        destination=TURIN,
-        operators=["trenitalia"],
-        description="Lyon-Turin (FR international)",
-        route_id="lyon-turin"
-    ),
 
     # ── Italy: Trenitalia Frecciargento (FA) ───────────────────
+
     Route(
-        origin=UDINE,
-        destination=ROME,
-        operators=["trenitalia"],
-        description="Udine-Rome (FA)",
-        route_id="udine-rome"
-    ),
-    Route(
-        origin=BOLZANO,
-        destination=ROME,
-        operators=["trenitalia"],
-        description="Bolzano-Rome (FA)",
-        route_id="bolzano-rome"
-    ),
-    Route(
-        origin=BRESCIA,
-        destination=ROME,
-        operators=["trenitalia"],
-        description="Brescia-Rome (FA)",
-        route_id="brescia-rome"
-    ),
-    Route(
-        origin=GENOA,
-        destination=ROME,
+        origin=ROME,
+        destination=GENOA,
         operators=["trenitalia"],
         description="Genoa-Rome (FA)",
         route_id="genoa-rome"
@@ -833,10 +770,16 @@ ROUTES = [
         description="Rome-Ravenna (FB)",
         route_id="rome-ravenna"
     ),
+    Route(
+        origin=TURIN,
+        destination=ROME,
+        operators=["trenitalia"],
+        description="Turin-Rome (FB)",
+        route_id="turin-rome-fb"   
+    ),
 
     # ── Italy: Italo-exclusive routes ──────────────────────────
 
-    # Torino Porta Susa corridors
     Route(
         origin=TURIN_PS,
         destination=ROME,
@@ -1046,15 +989,15 @@ ROUTES = [
     Route(
         origin=PARIS,
         destination=LYON,
-        operators=["ouigo_fr", "SNCF"],
-        description="Paris-Lyon (Ouigo vs. SNCF)",
+        operators=["ouigo_fr", "SNCF", "trenitalia"],
+        description="Paris-Lyon (Ouigo vs. SNCF vs. Trenitalia)",
         route_id="paris-lyon"
     ),
     Route(
         origin=PARIS,
         destination=MARSEILLE,
-        operators=["ouigo_fr", "SNCF"],
-        description="Paris-Marseille (Ouigo vs. SNCF)",
+        operators=["ouigo_fr", "SNCF", "trenitalia"],
+        description="Paris-Marseille (Ouigo vs. SNCF vs. Trenitalia)",
         route_id="paris-marseille"
     ),
     Route(

@@ -48,7 +48,7 @@ class DBCrawler(BaseCrawler):
             "from":            from_id,
             "to":              to_id,
             "departure":       departure,
-            "results":         10,
+            "results":         250,
             "tickets":         "true",
             "nationalExpress": "true",
             "national":        "true",

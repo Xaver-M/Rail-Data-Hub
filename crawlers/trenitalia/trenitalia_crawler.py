@@ -58,7 +58,7 @@ class TrenitaliaCrawler(BaseCrawler):
                 "regionalOnly": False,
                 "noChanges": True,
                 "order": "DEPARTURE_DATE",
-                "limit": 10,
+                "limit": 250,
                 "offset": 0
             },
             "advancedSearchRequest": {
