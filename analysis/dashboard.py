@@ -192,8 +192,9 @@ if "initialized" not in st.session_state:
         st.session_state.running = True
     st.session_state.initialized = True
 
-df_all    = load_all_data()
-routes_df = load_routes(df_all)
+with st.spinner("Daten werden geladen..."):
+    df_all    = load_all_data()
+    routes_df = load_routes(df_all)
 CRAWLER_CLASSES, CRAWLER_IMPORT_ERRORS = _import_crawlers()
 
 DOW_LABELS = {0: "Mo", 1: "Di", 2: "Mi", 3: "Do", 4: "Fr", 5: "Sa", 6: "So"}
@@ -231,16 +232,29 @@ with st.sidebar:
         st.error("Keine Daten gefunden.")
         st.stop()
 
-    st.markdown("**Strecke wählen**")
-    search_term = st.text_input("Suche", placeholder="z.B. Berlin, Madrid, Roma...",
-                                label_visibility="collapsed", key="route_search")
+    st.markdown("**Strecke eingeben**")
 
-    all_route_labels = routes_df["label"].tolist()
-    filtered_labels  = ([l for l in all_route_labels if search_term.lower() in l.lower()]
-                        if search_term else all_route_labels)
-    if not filtered_labels:
-        st.warning("Keine Strecke gefunden.")
-        filtered_labels = all_route_labels
+    all_origins_set = sorted(df_all["origin_name"].dropna().unique().tolist())
+    all_dests_set   = sorted(df_all["destination_name"].dropna().unique().tolist())
+
+    c_from, c_to = st.columns(2)
+    origin_input = c_from.text_input("Von", placeholder="Start...", key="origin_input")
+    dest_input   = c_to.text_input("Nach", placeholder="Ziel...", key="dest_input")
+
+    orig_hits = [o for o in all_origins_set if origin_input.strip().lower() in o.lower()] if origin_input.strip() else all_origins_set
+    dest_hits  = [d for d in all_dests_set  if dest_input.strip().lower()  in d.lower()]  if dest_input.strip()  else all_dests_set
+
+    filtered_routes = routes_df[
+        routes_df["origin_name"].isin(orig_hits) &
+        routes_df["destination_name"].isin(dest_hits)
+    ]
+
+    route_not_found = bool(origin_input.strip() and dest_input.strip() and filtered_routes.empty)
+    if route_not_found:
+        st.warning(f"Keine Strecke gefunden: **{origin_input.strip()} → {dest_input.strip()}**")
+        filtered_routes = routes_df
+
+    display_labels = filtered_routes["label"].tolist()
 
     def route_region(label: str) -> str:
         DE  = ["Berlin","Hamburg","München","Frankfurt","Köln","Stuttgart","Leipzig","Hannover",
@@ -263,13 +277,6 @@ with st.sidebar:
             if city in label: return "🌍 International"
         return "🌐 Sonstige"
 
-    grouped: dict = defaultdict(list)
-    for lbl in filtered_labels:
-        grouped[route_region(lbl)].append(lbl)
-
-    group_order    = ["🇩🇪 Deutschland","🇮🇹 Italien","🇪🇸 Spanien","🇫🇷 Frankreich","🌍 International","🌐 Sonstige"]
-    display_labels = [lbl for g in group_order for lbl in grouped.get(g, [])]
-
     if "selected_label" not in st.session_state:
         st.session_state.selected_label = display_labels[0]
     if st.session_state.selected_label not in display_labels:
@@ -282,7 +289,8 @@ with st.sidebar:
         label_visibility="collapsed", key="route_selector",
     )
     st.session_state.selected_label = selected_label
-    st.caption(f"{route_region(selected_label)} · {len(filtered_labels)} Strecken verfügbar")
+    n = len(display_labels)
+    st.caption(f"{route_region(selected_label)} · {n} Strecke{'n' if n != 1 else ''} gefunden")
 
     sel         = routes_df[routes_df["label"] == selected_label].iloc[0]
     origin      = sel["origin_name"]
@@ -658,7 +666,7 @@ with tab5:
     )
 
     if len(sel_routes_compare) >= 2:
-        frames, frames_freq = [], []
+        frames, frames_freq, summary_rows = [], [], []
         for rl in sel_routes_compare:
             r_row   = routes_df[routes_df["label"] == rl].iloc[0]
             df_r    = filter_route(df_all, r_row["origin_name"], r_row["destination_name"])
@@ -674,6 +682,30 @@ with tab5:
             df_fq["route"]              = rl
             df_fq["booking_horizon_days"] = df_fq["booking_horizon_days"].astype(int)
             frames_freq.append(df_fq)
+
+            summary_rows.append({
+                "route": rl,
+                "tiefstpreis": float(df_r["price_eur"].min()),
+                "avg_preis":   float(df_r["price_eur"].mean()),
+                "operator":    int(df_r["operator"].nunique()),
+                "datenpunkte": len(df_r),
+            })
+
+        # Summary cards
+        cheapest_route = min(summary_rows, key=lambda x: x["tiefstpreis"])
+        cols_s = st.columns(len(summary_rows))
+        for i, row in enumerate(summary_rows):
+            is_best = row["route"] == cheapest_route["route"]
+            border  = "2px solid #a8e44a" if is_best else "1px solid #333"
+            badge   = " 🏆 Günstigste" if is_best else ""
+            cols_s[i].markdown(
+                f'<div style="border:{border};border-radius:8px;padding:10px 12px;background:#111;">'
+                f'<div style="font-size:12px;color:#888;margin-bottom:4px;">{row["route"]}{badge}</div>'
+                f'<div style="font-size:22px;font-weight:700;color:#fff;">{row["tiefstpreis"]:.2f} €</div>'
+                f'<div style="font-size:12px;color:#aaa;">Ø {row["avg_preis"]:.2f} € · {row["operator"]} Operator · {row["datenpunkte"]:,} Datenpunkte</div>'
+                f'</div>', unsafe_allow_html=True
+            )
+        st.write("")
 
         df_routes_hz = pd.concat(frames, ignore_index=True)
         fig_rc = px.line(df_routes_hz, x="booking_horizon_days", y="price_avg", color="route", markers=True,
@@ -750,6 +782,50 @@ with tab5:
             fig2.update_traces(texttemplate="+%{text:.1f}%", textposition="outside")
             fig2.update_coloraxes(showscale=False)
             st.plotly_chart(fig2, use_container_width=True)
+
+        # Radar chart
+        if len(df_cp) >= 2:
+            st.markdown("#### Operator-Profil im Vergleich")
+            price_spread = df_cp["price_max"].astype(float) - df_cp["price_min"].astype(float)
+            max_pm       = df_cp["price_min"].astype(float).max()
+            min_pm       = df_cp["price_min"].astype(float).min()
+            max_spread   = price_spread.max()
+            max_obs      = float(df_cp["observations"].max())
+            max_seats    = float(df_cp["seats_avg"].fillna(0).max())
+
+            radar_cats = ["Günstiger Preis", "Preis-Stabilität", "Verfügbarkeit", "Datendichte"]
+            fig_radar  = go.Figure()
+            for _, row in df_cp.iterrows():
+                denom_p = (max_pm - min_pm) if (max_pm - min_pm) > 0 else 1
+                s_price   = 1 - (float(row["price_min"]) - min_pm) / denom_p
+                s_stable  = 1 - (float(row["price_max"]) - float(row["price_min"])) / (max_spread if max_spread > 0 else 1)
+                s_seats   = float(row["seats_avg"] or 0) / (max_seats if max_seats > 0 else 1)
+                s_density = float(row["observations"]) / (max_obs if max_obs > 0 else 1)
+                vals = [s_price, s_stable, s_seats, s_density]
+                fig_radar.add_trace(go.Scatterpolar(
+                    r=vals + [vals[0]],
+                    theta=radar_cats + [radar_cats[0]],
+                    fill="toself",
+                    name=row["op_label"],
+                    line_color=op_color(row["operator"]),
+                    fillcolor=hex_to_rgba(op_color(row["operator"]), 0.18),
+                ))
+            fig_radar.update_layout(
+                polar=dict(radialaxis=dict(
+                    visible=True, range=[0, 1],
+                    tickvals=[0.25, 0.5, 0.75, 1.0],
+                    ticktext=["25 %", "50 %", "75 %", "100 %"],
+                )),
+                title=f"Operator-Profil bei +{horizon_val} Tagen Buchungshorizont",
+                legend=dict(orientation="h", yanchor="bottom", y=-0.25),
+            )
+            st.plotly_chart(fig_radar, use_container_width=True)
+            st.caption(
+                "Günstiger Preis: niedriger Tiefstpreis = besser · "
+                "Preis-Stabilität: geringe Preisspanne = besser · "
+                "Verfügbarkeit: mehr freie Sitze = besser · "
+                "Datendichte: mehr Datenpunkte = besser"
+            )
 
         df_seats = df_cp[df_cp["seats_avg"].notna()].copy()
         if not df_seats.empty:
