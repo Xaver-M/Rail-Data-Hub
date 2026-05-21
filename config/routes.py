@@ -617,65 +617,6 @@ ZURICH = Station(
 
 ROUTES = [
 
-    # ── FLX 10: Stuttgart–Frankfurt–Berlin ─────────────────────
-    Route(
-        origin=STUTTGART,
-        destination=BERLIN,
-        operators=["db", "flixtrain"],
-        description="Stuttgart-Berlin (FLX10 vs. DB)",
-        route_id="stuttgart-berlin"
-    ),
-    Route(
-        origin=FRANKFURT,
-        destination=BERLIN,
-        operators=["db", "flixtrain"],
-        description="Frankfurt-Berlin (FLX10 vs. DB)",
-        route_id="frankfurt-berlin"
-    ),
-
-    # ── FLX 10: Basel–Frankfurt–Berlin ─────────────────────────
-    Route(
-        origin=BASEL,
-        destination=BERLIN,
-        operators=["db", "flixtrain"],
-        description="Basel-Berlin (FLX10 vs. DB)",
-        route_id="basel-berlin"
-    ),
-
-    # ── FLX 20: Hamburg–Cologne ────────────────────────────────
-    Route(
-        origin=HAMBURG,
-        destination=COLOGNE,
-        operators=["db", "flixtrain"],
-        description="Hamburg-Cologne (FLX20 vs. DB)",
-        route_id="hamburg-cologne"
-    ),
-
-    # ── FLX 30: Cologne–Berlin ─────────────────────────────────
-    Route(
-        origin=COLOGNE,
-        destination=BERLIN,
-        operators=["db", "flixtrain"],
-        description="Cologne-Berlin (FLX30 vs. DB)",
-        route_id="cologne-berlin"
-    ),
-
-    # ── FLX 35: Hamburg–Berlin, Hamburg–Leipzig ────────────────
-    Route(
-        origin=HAMBURG,
-        destination=BERLIN,
-        operators=["db", "flixtrain"],
-        description="Hamburg-Berlin (FLX35 vs. DB)",
-        route_id="hamburg-berlin"
-    ),
-    Route(
-        origin=HAMBURG,
-        destination=LEIPZIG,
-        operators=["db", "flixtrain"],
-        description="Hamburg-Leipzig (FLX35 vs. DB)",
-        route_id="hamburg-leipzig"
-    ),
-
     # ── Italy: selected routes Trenitalia vs. Italo ────────────────────────────
     Route(
         origin=MILAN,
@@ -1145,18 +1086,18 @@ ROUTES = [
 
     # ── RegioJet: Czech Republic / Austria ─────────────────────
     Route(
-        origin=VIENNA,
-        destination=PRAGUE,
-        operators=["regiojet"],
-        description="Vienna-Prague (RegioJet)",
-        route_id="vienna-prague"
-    ),
-    Route(
         origin=PRAGUE,
         destination=VIENNA,
         operators=["regiojet"],
         description="Prague-Vienna (RegioJet)",
         route_id="prague-vienna"
+    ),
+    Route(
+        origin=VIENNA,
+        destination=PRAGUE,
+        operators=["regiojet"],
+        description="Vienna-Prague (RegioJet)",
+        route_id="vienna-prague"
     ),
     Route(
         origin=PRAGUE,
@@ -1166,32 +1107,18 @@ ROUTES = [
         route_id="prague-bratislava"
     ),
     Route(
-        origin=PRAGUE,
-        destination=BUDAPEST,
-        operators=["regiojet"],
-        description="Prague-Budapest (RegioJet)",
-        route_id="prague-budapest"
-    ),
-    Route(
-        origin=PRAGUE,
-        destination=OSTRAVA,
-        operators=["regiojet", "ceske-drahy"],
-        description="Prague-Ostrava (RegioJet)",
-        route_id="prague-ostrava"
-    ),
-    Route(
-        origin=PRAGUE,
-        destination=BRNO,
-        operators=["regiojet", "ceske-drahy"],
-        description="Prague-Brno (RegioJet)",
-        route_id="prague-brno",
-    ),
-    Route(
         origin=BRATISLAVA,
         destination=PRAGUE,
         operators=["regiojet"],
         description="Bratislava-Prague (RegioJet)",
         route_id="bratislava-prague"
+    ),
+    Route(
+        origin=PRAGUE,
+        destination=BUDAPEST,
+        operators=["regiojet"],
+        description="Prague-Budapest (RegioJet)",
+        route_id="prague-budapest"
     ),
     Route(
         origin=BUDAPEST,
@@ -1201,11 +1128,25 @@ ROUTES = [
         route_id="budapest-prague"
     ),
     Route(
+        origin=PRAGUE,
+        destination=OSTRAVA,
+        operators=["regiojet", "ceske-drahy"],
+        description="Prague-Ostrava (RegioJet)",
+        route_id="prague-ostrava"
+    ),
+    Route(
         origin=OSTRAVA,
         destination=PRAGUE,
         operators=["regiojet", "ceske-drahy"],
         description="Ostrava-Prague (RegioJet)",
         route_id="ostrava-prague"
+    ),
+    Route(
+        origin=PRAGUE,
+        destination=BRNO,
+        operators=["regiojet", "ceske-drahy"],
+        description="Prague-Brno (RegioJet)",
+        route_id="prague-brno",
     ),
     Route(
         origin=BRNO,
@@ -1273,22 +1214,115 @@ ROUTES = [
         route_id="gdansk-prague"
     ),
 
-    # ── DB domestic ────────────────────────────────────────────
-
+    # ── FLX 10: Stuttgart–Frankfurt–Berlin ─────────────────────
+    Route(
+        origin=STUTTGART,
+        destination=BERLIN,
+        operators=["db", "flixtrain"],
+        description="Stuttgart-Berlin (FLX10 vs. DB)",
+        route_id="stuttgart-berlin"
+    ),
     Route(
         origin=BERLIN,
+        destination=STUTTGART,
+        operators=["db", "flixtrain"],
+        description="Berlin-Stuttgart (FLX10 vs. DB)",
+        route_id="berlin-stuttgart"
+    ),
+    Route(
+        origin=FRANKFURT,
+        destination=BERLIN,
+        operators=["db", "flixtrain"],
+        description="Frankfurt-Berlin (FLX10 vs. DB)",
+        route_id="frankfurt-berlin"
+    ),
+    Route(
+        origin=BERLIN,
+        destination=FRANKFURT,
+        operators=["db", "flixtrain"],
+        description="Berlin-Frankfurt (FLX10 vs. DB)",
+        route_id="berlin-frankfurt"
+    ),
+
+    # ── FLX 10: Basel–Frankfurt–Berlin ─────────────────────────
+    Route(
+        origin=BASEL,
+        destination=BERLIN,
+        operators=["db", "flixtrain"],
+        description="Basel-Berlin (FLX10 vs. DB)",
+        route_id="basel-berlin"
+    ),
+    Route(
+        origin=BERLIN,
+        destination=BASEL,
+        operators=["db", "flixtrain"],
+        description="Berlin-Basel (FLX10 vs. DB)",
+        route_id="berlin-basel"
+    ),
+
+    # ── FLX 20: Hamburg–Cologne ────────────────────────────────
+    Route(
+        origin=HAMBURG,
         destination=COLOGNE,
-        operators=["db"],
-        description="Berlin-Cologne (DB)",
-        route_id="berlin-cologne"
+        operators=["db", "flixtrain"],
+        description="Hamburg-Cologne (FLX20 vs. DB)",
+        route_id="hamburg-cologne"
     ),
     Route(
         origin=COLOGNE,
-        destination=BERLIN,
-        operators=["db"],
-        description="Cologne-Berlin (DB)",
-        route_id="cologne-berlin-db"
+        destination=HAMBURG,
+        operators=["db", "flixtrain"],
+        description="Cologne-Hamburg (FLX20 vs. DB)",
+        route_id="cologne-hamburg"
     ),
+
+    # ── FLX 30: Cologne–Berlin ─────────────────────────────────
+    Route(
+        origin=COLOGNE,
+        destination=BERLIN,
+        operators=["db", "flixtrain"],
+        description="Cologne-Berlin (FLX30 vs. DB)",
+        route_id="cologne-berlin"
+    ),
+    Route(
+        origin=BERLIN,
+        destination=COLOGNE,
+        operators=["db", "flixtrain"],
+        description="Berlin-Cologne (FLX30 vs. DB)",
+        route_id="berlin-cologne"
+    ),
+
+    # ── FLX 35: Hamburg–Berlin, Hamburg–Leipzig ────────────────
+    Route(
+        origin=HAMBURG,
+        destination=BERLIN,
+        operators=["db", "flixtrain"],
+        description="Hamburg-Berlin (FLX35 vs. DB)",
+        route_id="hamburg-berlin"
+    ),
+    Route(
+        origin=BERLIN,
+        destination=HAMBURG,
+        operators=["db", "flixtrain"],
+        description="Berlin-Hamburg (FLX35 vs. DB)",
+        route_id="berlin-hamburg"
+    ),
+    Route(
+        origin=HAMBURG,
+        destination=LEIPZIG,
+        operators=["db", "flixtrain"],
+        description="Hamburg-Leipzig (FLX35 vs. DB)",
+        route_id="hamburg-leipzig"
+    ),
+    Route(
+        origin=LEIPZIG,
+        destination=HAMBURG,
+        operators=["db", "flixtrain"],
+        description="Leipzig-Hamburg (FLX35 vs. DB)",
+        route_id="leipzig-hamburg"
+    ),
+
+    # ── DB domestic ────────────────────────────────────────────
     Route(
         origin=BERLIN,
         destination=DUSSELDORF,
@@ -1358,20 +1392,6 @@ ROUTES = [
         operators=["db"],
         description="Zurich-Berlin (DB)",
         route_id="zurich-berlin"
-    ),
-    Route(
-        origin=BERLIN,
-        destination=FRANKFURT,
-        operators=["db", "flixtrain"],
-        description="Berlin-Frankfurt (DB vs. Flixtrain)",
-        route_id="berlin-frankfurt"
-    ),
-    Route(
-        origin=FRANKFURT,
-        destination=BERLIN,
-        operators=["db", "flixtrain"],
-        description="Frankfurt-Berlin (DB vs. Flixtrain)",
-        route_id="frankfurt-berlin-db"
     ),
     Route(
         origin=HAMBURG,
