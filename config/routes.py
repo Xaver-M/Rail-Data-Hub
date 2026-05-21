@@ -182,6 +182,7 @@ BERLIN = Station(
     name="Berlin Hbf",
     flixtrain_id="394a5408-d778-4959-a63e-973253443ed2",
     flixtrain_city_id="40d8f682-8646-11e6-9066-549f350fcb0c",
+    flixbus_id="40d8f682-8646-11e6-9066-549f350fcb0c",
     db_id="8011160",
 )
 
@@ -199,6 +200,7 @@ COLOGNE = Station(
     name="Köln Hbf",
     flixtrain_id="5e24b585-a2eb-42ea-acf5-b1063555f002",
     flixtrain_city_id="40d91025-8646-11e6-9066-549f350fcb0c",
+    flixbus_id="40d91025-8646-11e6-9066-549f350fcb0c",
     db_id="8000207",
 )
 
@@ -221,6 +223,7 @@ FRANKFURT = Station(
     name="Frankfurt(Main)Hbf",
     flixtrain_id="344886ff-4616-48b4-b476-98f0adcb907a",
     flixtrain_city_id="40d90407-8646-11e6-9066-549f350fcb0c",
+    flixbus_id="40d90407-8646-11e6-9066-549f350fcb0c",
     db_id="8000105",
 )
 
@@ -228,6 +231,7 @@ HAMBURG = Station(
     name="Hamburg Hbf",
     flixtrain_id="38c4c04e-e957-4115-ac23-6fa87012bde4",
     flixtrain_city_id="40d91e53-8646-11e6-9066-549f350fcb0c",
+    flixbus_id="40d91e53-8646-11e6-9066-549f350fcb0c",
     db_id="8002549",
 )
 
@@ -259,6 +263,7 @@ LEIPZIG = Station(
     name="Leipzig Hbf",
     flixtrain_id="206a3e42-ff08-4902-b26c-fb192c94048e",
     flixtrain_city_id="40d917f9-8646-11e6-9066-549f350fcb0c",
+    flixbus_id="40d917f9-8646-11e6-9066-549f350fcb0c",
     db_id="8010205",
 )
 
@@ -288,6 +293,7 @@ STUTTGART = Station(
     name="Stuttgart Hbf",
     flixtrain_id="f6d07c4e-fa7e-4ab6-86bc-71b34ffb8cca",
     flixtrain_city_id="40d90995-8646-11e6-9066-549f350fcb0c",
+    flixbus_id="40d90995-8646-11e6-9066-549f350fcb0c",
     db_id="8000096",
 )
 
@@ -1218,28 +1224,28 @@ ROUTES = [
     Route(
         origin=STUTTGART,
         destination=BERLIN,
-        operators=["db", "flixtrain"],
+        operators=["db", "flixtrain", "flixbus"],
         description="Stuttgart-Berlin (FLX10 vs. DB)",
         route_id="stuttgart-berlin"
     ),
     Route(
         origin=BERLIN,
         destination=STUTTGART,
-        operators=["db", "flixtrain"],
+        operators=["db", "flixtrain", "flixbus"],
         description="Berlin-Stuttgart (FLX10 vs. DB)",
         route_id="berlin-stuttgart"
     ),
     Route(
         origin=FRANKFURT,
         destination=BERLIN,
-        operators=["db", "flixtrain"],
+        operators=["db", "flixtrain", "flixbus"],
         description="Frankfurt-Berlin (FLX10 vs. DB)",
         route_id="frankfurt-berlin"
     ),
     Route(
         origin=BERLIN,
         destination=FRANKFURT,
-        operators=["db", "flixtrain"],
+        operators=["db", "flixtrain", "flixbus"],
         description="Berlin-Frankfurt (FLX10 vs. DB)",
         route_id="berlin-frankfurt"
     ),
@@ -1264,14 +1270,14 @@ ROUTES = [
     Route(
         origin=HAMBURG,
         destination=COLOGNE,
-        operators=["db", "flixtrain"],
+        operators=["db", "flixtrain", "flixbus"],
         description="Hamburg-Cologne (FLX20 vs. DB)",
         route_id="hamburg-cologne"
     ),
     Route(
         origin=COLOGNE,
         destination=HAMBURG,
-        operators=["db", "flixtrain"],
+        operators=["db", "flixtrain", "flixbus"],
         description="Cologne-Hamburg (FLX20 vs. DB)",
         route_id="cologne-hamburg"
     ),
@@ -1280,14 +1286,14 @@ ROUTES = [
     Route(
         origin=COLOGNE,
         destination=BERLIN,
-        operators=["db", "flixtrain"],
+        operators=["db", "flixtrain", "flixbus"],
         description="Cologne-Berlin (FLX30 vs. DB)",
         route_id="cologne-berlin"
     ),
     Route(
         origin=BERLIN,
         destination=COLOGNE,
-        operators=["db", "flixtrain"],
+        operators=["db", "flixtrain", "flixbus"],
         description="Berlin-Cologne (FLX30 vs. DB)",
         route_id="berlin-cologne"
     ),
@@ -1296,28 +1302,28 @@ ROUTES = [
     Route(
         origin=HAMBURG,
         destination=BERLIN,
-        operators=["db", "flixtrain"],
+        operators=["db", "flixtrain", "flixbus"],
         description="Hamburg-Berlin (FLX35 vs. DB)",
         route_id="hamburg-berlin"
     ),
     Route(
         origin=BERLIN,
         destination=HAMBURG,
-        operators=["db", "flixtrain"],
+        operators=["db", "flixtrain", "flixbus"],
         description="Berlin-Hamburg (FLX35 vs. DB)",
         route_id="berlin-hamburg"
     ),
     Route(
         origin=HAMBURG,
         destination=LEIPZIG,
-        operators=["db", "flixtrain"],
+        operators=["db", "flixtrain", "flixbus"],
         description="Hamburg-Leipzig (FLX35 vs. DB)",
         route_id="hamburg-leipzig"
     ),
     Route(
         origin=LEIPZIG,
         destination=HAMBURG,
-        operators=["db", "flixtrain"],
+        operators=["db", "flixtrain", "flixbus"],
         description="Leipzig-Hamburg (FLX35 vs. DB)",
         route_id="leipzig-hamburg"
     ),
