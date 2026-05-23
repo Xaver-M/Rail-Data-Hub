@@ -35,7 +35,7 @@ def run_all_crawlers():
         FlixtrainCrawler(),
         TrenitaliaCrawler(),
         OuigoEsCrawler(),
-        DBCrawler(),
+#        DBCrawler(),
         RegioJetCrawler(),
         OuigoFrCrawler(),
         ItaloCrawler(),
