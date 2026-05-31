@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 load_dotenv()
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-DATA_SOURCE = "csv"
+DATA_SOURCE = "db"
 CSV_PATH    = os.path.join(os.path.dirname(os.path.abspath(__file__)), "export.csv")
 
 st.set_page_config(page_title="RailDataHub", page_icon="🚄", layout="wide", initial_sidebar_state="expanded")
@@ -30,7 +30,6 @@ OPERATOR_LABELS = {
 # ── translations ──────────────────────────────────────────────────────────────
 EN = {
     "csv_mode": "📁 CSV Mode", "db_mode": "🗄️ DB Mode",
-    "sched_active": "⚙️ Scheduler active — daily at 03:00",
     "crawlers_running": "🔄 Crawlers running...", "no_data": "No data found.",
     "enter_route": "**Enter route**", "from_label": "From", "origin_ph": "Origin...",
     "to_label": "To", "dest_ph": "Destination...", "route_not_found": "Route not found:",
@@ -45,7 +44,6 @@ EN = {
     "tab_horizon": "⏱ Booking Horizon", "tab_daytime": "🕐 Time of Day",
     "tab_operator": "⚖️ Operator Comparison", "tab_crawler": "🤖 Crawler Status",
     "dow": {0: "Mon", 1: "Tue", 2: "Wed", 3: "Thu", 4: "Fri", 5: "Sat", 6: "Sun"},
-    # overview
     "ov_time_range": "Time range (days back)", "ov_no_data": "No data in the selected time range.",
     "ov_lowest_price": "Overall lowest price", "ov_avg_price": "Avg. price overall",
     "ov_trend": "Trend (last 7d)", "ov_operators": "Operators",
@@ -58,7 +56,6 @@ EN = {
     "ov_c3": "Number of connections per departure hour and operator",
     "ov_c4": "Number of recorded connections per booking horizon",
     "ov_c5": "Avg. price per fare class and operator",
-    # individual train
     "tr_head": "Individual Train — {orig} → {dest}",
     "tr_no_data": "No data with train number for this route.",
     "tr_op": "Operator", "tr_sel": "Select train",
@@ -75,7 +72,6 @@ EN = {
         "**{price:.2f} €** ({obs} observations). Latest booking (+{worst}d) costs **{pct:.1f}% more**."
     ),
     "tr_no_hz": "No horizon data for this train.",
-    # booking horizon
     "bh_head": "Booking Horizon — {orig} → {dest}", "bh_no": "No horizon data.",
     "bh_c1": "Avg. price per operator by booking horizon",
     "bh_avg": "Avg. price (€)",
@@ -85,7 +81,6 @@ EN = {
     "bh_opt": "Optimal booking time per operator",
     "bh_cheap": "Cheapest at", "bh_saves": "saves {pct:.0f}%",
     "bh_cap": "Avg. {price:.2f} € ({obs} obs.)",
-    # time of day
     "dt_head": "Time of Day Analysis — {orig} → {dest}",
     "dt_op": "Operator", "dt_no": "No data for this operator.",
     "dt_c1": "Avg. price by departure hour — {op}",
@@ -94,7 +89,6 @@ EN = {
     "dt_seats": "Avg. seats",
     "dt_ch_h": "Cheapest hour", "dt_ex_h": "Most expensive hour",
     "dt_ch_d": "Cheapest day", "dt_ex_d": "Most expensive day",
-    # operator comparison
     "op_head": "Operator Comparison & Route Comparison",
     "op_comp": "#### ⚖️ Operator Comparison — {orig} → {dest}",
     "op_hz": "Booking horizon",
@@ -121,19 +115,10 @@ EN = {
     "op_hz_t": "Avg. price by booking horizon",
     "op_low_rt": "Lowest price per route",
     "op_conn": "Connections per horizon",
-    # crawler
     "cr_head": "Crawler Status & Control",
     "cr_ctrl": "#### 🤖 Crawler Control",
-    "cr_csv": (
-        "Currently in **CSV mode**. Crawlers write to the database.\n\n"
-        "To activate: set `DATA_SOURCE = 'db'` at the top and configure the DB."
-    ),
     "cr_err": "⚠️ {n} import errors",
     "cr_sel": "Select crawlers", "cr_start": "▶ Start now",
-    "cr_auto": (
-        "**Automatic daily run:** every day at 03:00 — all crawlers. "
-        "Active once `DATA_SOURCE = 'db'` is set."
-    ),
     "cr_on": "✅ Active", "cr_off": "⚠️ Inactive",
     "cr_status": "#### 📋 Status per Crawler",
     "cr_stat_cap": "Crawler · Last collected · Records · Routes · Avg. price",
@@ -148,7 +133,6 @@ EN = {
 
 DE = {
     "csv_mode": "📁 CSV-Modus", "db_mode": "🗄️ DB-Modus",
-    "sched_active": "⚙️ Scheduler aktiv — täglich um 03:00",
     "crawlers_running": "🔄 Crawler laufen...", "no_data": "Keine Daten gefunden.",
     "enter_route": "**Route eingeben**", "from_label": "Von", "origin_ph": "Herkunft...",
     "to_label": "Nach", "dest_ph": "Ziel...", "route_not_found": "Route nicht gefunden:",
@@ -237,16 +221,8 @@ DE = {
     "op_conn": "Verbindungen pro Horizont",
     "cr_head": "Crawler-Status & Steuerung",
     "cr_ctrl": "#### 🤖 Crawler-Steuerung",
-    "cr_csv": (
-        "Aktuell im **CSV-Modus**. Crawler schreiben in die Datenbank.\n\n"
-        "Zum Aktivieren: `DATA_SOURCE = 'db'` oben setzen und DB konfigurieren."
-    ),
     "cr_err": "⚠️ {n} Importfehler",
     "cr_sel": "Crawler auswählen", "cr_start": "▶ Jetzt starten",
-    "cr_auto": (
-        "**Automatischer Tagesrun:** täglich um 03:00 — alle Crawler. "
-        "Aktiv wenn `DATA_SOURCE = 'db'` gesetzt ist."
-    ),
     "cr_on": "✅ Aktiv", "cr_off": "⚠️ Inaktiv",
     "cr_status": "#### 📋 Status pro Crawler",
     "cr_stat_cap": "Crawler · Zuletzt · Einträge · Strecken · Durchschnittspreis",
@@ -274,7 +250,7 @@ def make_color_map(ops) -> dict:
 
 def time_since(dt, T) -> str:
     try:
-        diff = (datetime.now() - pd.to_datetime(dt)).total_seconds()
+        diff = (datetime.utcnow() - pd.to_datetime(dt).replace(tzinfo=None)).total_seconds()
         if diff < 60:    return T["just_now"]
         if diff < 3600:  return T["min_ago"].format(m=int(diff/60))
         if diff < 86400: return T["h_ago"].format(h=int(diff/3600))
@@ -374,29 +350,9 @@ def _run_crawlers_thread(log_queue, ops_to_run=None):
             log_queue.append(f"[{_ts()}] ✗  {op_label(op)} error: {e}")
     log_queue.append(f"[{_ts()}] === All crawlers completed ===")
 
-@st.cache_resource
-def _start_scheduler():
-    try:
-        from apscheduler.schedulers.background import BackgroundScheduler
-    except Exception as e:
-        return None, str(e)
-    s = BackgroundScheduler()
-    s.add_job(_run_crawlers_thread, args=[[], None], trigger="cron", hour=3, minute=0,
-              id="daily_crawl", replace_existing=True, misfire_grace_time=3600)
-    s.start(); return s, None
-
 # ── session state ─────────────────────────────────────────────────────────────
 for k, v in [("log",[]),("running",False),("lang_code","en"),("page","main")]:
     if k not in st.session_state: st.session_state[k] = v
-if "initialized" not in st.session_state:
-    scheduler, sched_err = _start_scheduler()
-    st.session_state.sched_ok  = scheduler is not None
-    st.session_state.sched_err = sched_err
-    if DATA_SOURCE == "db" and scheduler is not None:
-        st.session_state.log.append(f"[{_ts()}] Dashboard started — initial crawler run beginning...")
-        threading.Thread(target=_run_crawlers_thread, args=(st.session_state.log, None), daemon=True).start()
-        st.session_state.running = True
-    st.session_state.initialized = True
 
 with st.spinner("Loading data..."):
     df_all    = load_all_data()
@@ -420,10 +376,7 @@ with st.sidebar:
     T = TEXTS[st.session_state.lang_code]
     st.caption(T["csv_mode"] if DATA_SOURCE=="csv" else T["db_mode"])
 
-    if DATA_SOURCE == "db":
-        if st.session_state.sched_ok: st.success(T["sched_active"])
-        else: st.warning(f"⚠️ Scheduler: {st.session_state.sched_err}")
-        if st.session_state.running: st.info(T["crawlers_running"])
+    if st.session_state.running: st.info(T["crawlers_running"])
 
     st.divider()
     if routes_df.empty: st.error(T["no_data"]); st.stop()
@@ -507,7 +460,6 @@ _page     = st.session_state.page
 if _page == "operator":
     st.subheader(T["op_head"])
 
-    # Route Comparison
     with st.container(border=True):
         st.markdown(T["op_route_head"])
         all_routes = routes_df["label"].tolist()
@@ -564,7 +516,6 @@ if _page == "operator":
 
     st.divider()
 
-    # Operator Comparison
     with st.container(border=True):
         st.markdown(T["op_comp"].format(orig=origin, dest=destination))
         hz_val = st.select_slider(T["op_hz"], options=[1,2,3,4,5,6,7,10,14,21,30,45,60,90], value=14, key="cp_h")
@@ -665,7 +616,6 @@ if _page == "crawler":
                      avg_price=("price_eur","mean"))
                 .reset_index().sort_values("records", ascending=False))
 
-    # Data Overview
     with st.container(border=True):
         st.markdown(T["cr_data"])
         c1,c2,c3,c4 = st.columns(4)
@@ -688,10 +638,8 @@ if _page == "crawler":
                       labels={"col_date":T["cr_date"],"records":T["cr_rec"],"op_label":T["cr_cr"]})
         fig2.update_layout(barmode="stack"); st.plotly_chart(fig2, use_container_width=True)
 
-    # Crawler Control
     with st.container(border=True):
         st.markdown(T["cr_ctrl"])
-        if DATA_SOURCE == "csv": st.info(T["cr_csv"])
         available = [op for op, cls in CRAWLER_CLASSES.items() if cls]
         if CRAWLER_IMPORT_ERRORS:
             with st.expander(T["cr_err"].format(n=len(CRAWLER_IMPORT_ERRORS))):
@@ -716,11 +664,7 @@ if _page == "crawler":
                     st.session_state.running = False; st.cache_data.clear()
             if st.session_state.running:
                 st.button(T["cr_refresh"], on_click=st.rerun)
-        ci, cs2 = st.columns([3,1])
-        with ci: st.caption(T["cr_auto"])
-        with cs2: st.success(T["cr_on"] if st.session_state.sched_ok else T["cr_off"])
 
-    # Status per Crawler
     with st.container(border=True):
         st.markdown(T["cr_status"])
         st.caption(T["cr_stat_cap"])

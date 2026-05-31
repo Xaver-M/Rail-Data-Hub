@@ -9,7 +9,7 @@
     "dev": "node --watch server.mjs"
   },
   "dependencies": {
-    "db-vendo-client": "^6.10.8",
+    "db-vendo-client": "^6.10.11",
     "hafas-rest-api": "*"
   }
 }

@@ -4,13 +4,14 @@ Trenitalia Crawler - Price data via the lefrecce.it BFF API.
 No API key required, no rate limit.
 Returns prices and seat availability for Frecciarossa/Frecciargento.
 Price, seat count and fare info always come from the same cheapest offer.
+Paginates through all solutions of a given day (limit=10, offset increments).
 """
 
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 
 import time
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 import requests
 
 from crawlers.base.base_crawler import BaseCrawler
@@ -35,18 +36,15 @@ class TrenitaliaCrawler(BaseCrawler):
     def get_url(self) -> str:
         return self.BASE_URL
 
-    def get_params(self, route: Route, date: str) -> dict:
+    def get_params(self, route: Route, date: str, offset: int = 0) -> dict:
         origin_id = route.origin.trenitalia_id
         destination_id = route.destination.trenitalia_id
-
         if not origin_id:
             raise ValueError(f"No trenitalia_id for {route.origin.name}")
         if not destination_id:
             raise ValueError(f"No trenitalia_id for {route.destination.name}")
-
         date_obj = datetime.strptime(date, "%Y-%m-%d")
-        departure_time = date_obj.strftime("%Y-%m-%dT06:00:00.000+01:00")
-
+        departure_time = date_obj.strftime("%Y-%m-%dT05:00:00.000+01:00")
         return {
             "departureLocationId": origin_id,
             "arrivalLocationId": destination_id,
@@ -56,14 +54,14 @@ class TrenitaliaCrawler(BaseCrawler):
             "criteria": {
                 "frecceOnly": False,
                 "regionalOnly": False,
+                "intercityOnly": False,
+                "tourismOnly": False,
                 "noChanges": True,
                 "order": "DEPARTURE_DATE",
-                "limit": 250,
-                "offset": 0
+                "limit": 10,
+                "offset": offset,
             },
-            "advancedSearchRequest": {
-                "bestFare": False
-            }
+            "advancedSearchRequest": {"bestFare": False, "bikeFilter": False, "forwardDiscountCodes": []}
         }
 
     def fetch(self, url: str, params: dict = None, headers: dict = None) -> requests.Response:
@@ -79,7 +77,6 @@ class TrenitaliaCrawler(BaseCrawler):
                 response.raise_for_status()
                 self.logger.info(f"HTTP {response.status_code} – {len(response.content)} bytes")
                 return response
-
             except requests.exceptions.Timeout:
                 self.logger.warning(f"Timeout on attempt {attempt}")
             except requests.exceptions.HTTPError as e:
@@ -90,23 +87,39 @@ class TrenitaliaCrawler(BaseCrawler):
                 self.logger.warning(f"Connection error on attempt {attempt}")
             except Exception as e:
                 self.logger.warning(f"Unknown error on attempt {attempt}: {e}")
-
             if attempt < self.MAX_RETRIES:
                 time.sleep(self.RETRY_DELAY)
-
         raise Exception(f"All {self.MAX_RETRIES} attempts failed for {url}")
 
-    def parse(self, response: requests.Response, route: Route = None) -> list[dict]:
+    def _fetch_all_solutions(self, url: str, route: Route, date: str) -> list:
+        all_solutions = []
+        offset = 0
+        target_date = datetime.strptime(date, "%Y-%m-%d").date()
+        while True:
+            params = self.get_params(route, date, offset=offset)
+            response = self.fetch(url, params)
+            solutions = response.json().get("solutions", [])
+            if not solutions:
+                break
+            reached_next_day = False
+            for s in solutions:
+                dep_str = s.get("solution", {}).get("departureTime", "")
+                if not dep_str:
+                    continue
+                dep_date = datetime.fromisoformat(dep_str).date()
+                if dep_date == target_date:
+                    all_solutions.append(s)
+                elif dep_date > target_date:
+                    reached_next_day = True
+            if reached_next_day:
+                break
+            offset += 10
+        self.logger.info(f"Pagination complete: {len(all_solutions)} solutions for {date}")
+        return all_solutions
+
+
+    def _parse_solutions(self, solutions: list, route: Route) -> list[dict]:
         records = []
-        try:
-            data = response.json()
-        except Exception as e:
-            self.logger.error(f"JSON parse error: {e}")
-            return records
-
-        solutions = data.get("solutions", [])
-        self.logger.info(f"{len(solutions)} connections in API response")
-
         for item in solutions:
             try:
                 record = self._parse_solution(item, route)
@@ -114,28 +127,32 @@ class TrenitaliaCrawler(BaseCrawler):
                     records.append(record)
             except Exception as e:
                 self.logger.warning(f"Parse error: {e}")
-                continue
-
         self.logger.info(f"{len(records)} Trenitalia connections parsed")
         return records
+
+    def parse(self, response: requests.Response, route=None) -> list[dict]:
+        try:
+            data = response.json()
+        except Exception as e:
+            self.logger.error(f"JSON parse error: {e}")
+            return []
+        solutions = data.get("solutions", [])
+        self.logger.info(f"{len(solutions)} connections in API response")
+        return self._parse_solutions(solutions, route)
 
     def _parse_solution(self, item: dict, route: Route = None) -> dict | None:
         sol = item.get("solution")
         if sol is None:
             return None
-
         if sol.get("status", "") == "SOLD_OUT":
             return None
-
         dep_str = sol.get("departureTime", "")
         arr_str = sol.get("arrivalTime", "")
         if not dep_str or not arr_str:
             return None
-
         departure_time = datetime.fromisoformat(dep_str)
         arrival_time = datetime.fromisoformat(arr_str)
 
-        # Train number
         nodes = sol.get("nodes", [])
         train_number = None
         if nodes:
@@ -144,12 +161,10 @@ class TrenitaliaCrawler(BaseCrawler):
             name = train.get("name", "")
             train_number = f"{category} {name}".strip() if category or name else None
 
-        # Find cheapest offer — price, seat count and fare info from the same source
         cheapest_price = None
         cheapest_seats = None
         cheapest_fare_class = None
         cheapest_service_name = None
-
         for grid in item.get("grids", []):
             for service in grid.get("services", []):
                 for offer in service.get("offers", []):
@@ -165,7 +180,6 @@ class TrenitaliaCrawler(BaseCrawler):
                             cheapest_fare_class = offer.get("name")
                             cheapest_service_name = offer.get("serviceName")
 
-        # Fallback: price from solution level if grids are empty
         if cheapest_price is None:
             price_obj = sol.get("price", {})
             cheapest_price = price_obj.get("amount") if price_obj else None
@@ -185,13 +199,49 @@ class TrenitaliaCrawler(BaseCrawler):
             "train_number":     train_number,
         }
 
+    def run(self, routes: list, horizons: list[int]):
+        self.logger.info(f"Crawler started – {len(routes)} routes, {len(horizons)} horizons")
+        start_time = datetime.now(timezone.utc)
+        total_saved = 0
+        errors = 0
+        try:
+            self._connect_db()
+            for route in routes:
+                if self.OPERATOR_NAME not in route.operators:
+                    continue
+                for horizon in horizons:
+                    date = (datetime.now() + timedelta(days=horizon)).strftime("%Y-%m-%d")
+                    try:
+                        url = self.get_url()
+                        solutions = self._fetch_all_solutions(url, route, date)
+                        records = self._parse_solutions(solutions, route)
+                        for r in records:
+                            r["booking_horizon_days"] = horizon
+                            r["route_id"] = route.route_id
+                        valid_records = self.validate(records)
+                        saved = self.save(valid_records)
+                        total_saved += saved
+                        self.logger.info(f"{route.description} +{horizon}d: {saved} saved")
+                    except Exception as e:
+                        errors += 1
+                        self.logger.error(f"Error on {route.description} +{horizon}d: {e}")
+                        continue
+            self.log_run("success" if errors == 0 else "partial_error", total_saved)
+        except Exception as e:
+            self.logger.error(f"Critical error: {e}")
+            self.log_run("error", total_saved, str(e))
+            raise
+        finally:
+            self._close_db()
+        duration = (datetime.now(timezone.utc) - start_time).seconds
+        self.logger.info(f"Crawler finished – {total_saved} records saved, {errors} errors, {duration}s")
+
 
 # ──────────────────────────────────────────────
 # DIRECT TEST
 # ──────────────────────────────────────────────
 
 if __name__ == "__main__":
-    from datetime import timedelta
     from dotenv import load_dotenv
     from config.routes import get_routes_for_operator, BOOKING_HORIZONS
 
@@ -206,39 +256,28 @@ if __name__ == "__main__":
     print(f"{len(routes)} Trenitalia routes, {len(BOOKING_HORIZONS)} horizons\n")
 
     for route in routes[:1]:
-        for horizon in BOOKING_HORIZONS[:3]:
+        for horizon in BOOKING_HORIZONS[:1]:
             date = (datetime.now() + timedelta(days=horizon)).strftime("%Y-%m-%d")
             print(f"── {route.description} | +{horizon} days ({date})")
-
             try:
                 url = crawler.get_url()
-                params = crawler.get_params(route, date)
-                response = crawler.fetch(url, params)
-                records = crawler.parse(response, route)
+                solutions = crawler._fetch_all_solutions(url, route, date)
+                records = crawler._parse_solutions(solutions, route)
                 valid = crawler.validate(records)
-
                 if valid:
                     print(f"   {len(valid)} trains found:")
-                    for r in valid[:3]:
+                    for r in valid:
                         seats = r.get("seats_available")
-                        seats_str = str(seats) if seats is not None else "-"
-                        train = r.get("train_number") or "-"
-                        fare = r.get("fare_class") or "-"
-                        offer = r.get("offer_type") or "-"
                         print(
                             f"   {r['departure_time'].strftime('%H:%M')} -> "
                             f"{r['arrival_time'].strftime('%H:%M')} | "
                             f"{r['price_eur']:.2f} EUR | "
-                            f"{seats_str} seats | "
-                            f"{fare} / {offer} | "
-                            f"{train}"
+                            f"{str(seats) if seats is not None else '-'} seats | "
+                            f"{r.get('fare_class') or '-'} | "
+                            f"{r.get('train_number') or '-'}"
                         )
-                    if len(valid) > 3:
-                        print(f"   ... and {len(valid) - 3} more")
                 else:
-                    print(f"   No connections found")
-
+                    print("   No connections found")
             except Exception as e:
                 print(f"   ERROR: {e}")
-
             print()
