@@ -1,5 +1,5 @@
 """
-Flixbus Crawler – Price data via the public Flixbus/Flix API.
+Flixbus Crawler - Price data via the public Flixbus/Flix API.
 
 Same endpoint as the Flixtrain crawler; bus journeys are identified by
 filtering out any result where all legs have operator_id == "train".
