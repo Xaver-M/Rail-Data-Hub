@@ -27,6 +27,7 @@ from crawlers.regiojet.regiojet_crawler import RegioJetCrawler
 from crawlers.ouigo_fr.ouigo_fr_crawler import OuigoFrCrawler
 from crawlers.italo.italo_crawler import ItaloCrawler
 from crawlers.flixbus.flixbus_crawler import FlixbusCrawler
+from crawlers.ceske_drahy.ceske_drahy_crawler import CeskeDrahyCrawler
 
 
 def run_all_crawlers():
@@ -41,7 +42,7 @@ def run_all_crawlers():
         OuigoFrCrawler(),
         ItaloCrawler(),
         FlixbusCrawler(),
-
+        CeskeDrahyCrawler(),
     ]
 
     for crawler in crawlers:

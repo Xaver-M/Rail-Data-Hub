@@ -19,8 +19,9 @@ class Station:
     ouigo_fr_id: Optional[str] = None       
     renfe_id: Optional[str] = None
     iryo_id: Optional[str] = None
-    regiojet_station_id: Optional[str] = None  
-    regiojet_city_id: Optional[str] = None     
+    regiojet_station_id: Optional[str] = None
+    regiojet_city_id: Optional[str] = None
+    cd_station_name: Optional[str] = None      # Name for CD CDIS API (Czech spelling)
 
 
 @dataclass
@@ -41,6 +42,12 @@ class Route:
 GRAZ = Station(
     name="Graz Hbf",
     db_id="8100173",
+    cd_station_name="Graz Hbf",
+)
+
+LINZ = Station(
+    name="Linz Hbf",
+    cd_station_name="Linz Hbf",
 )
 
 VIENNA = Station(
@@ -49,6 +56,7 @@ VIENNA = Station(
     oebb_id="1190100",
     regiojet_city_id="10202052",
     regiojet_station_id="4218903000",
+    cd_station_name="Wien Hbf",
 )
 
 # ── Belgium ───────────────────────────────────────────────────
@@ -65,18 +73,21 @@ BRNO = Station(
     name="Brno hlavní nádraží",
     regiojet_city_id="10202002",
     regiojet_station_id="3088864001",
+    cd_station_name="Brno hl.n.",
 )
 
 OSTRAVA = Station(
     name="Ostrava hlavní nádraží",
     regiojet_city_id="10202000",
     regiojet_station_id="372825008",
+    cd_station_name="Ostrava hl.n.",
 )
 
 PRAGUE = Station(
     name="Praha hlavní nádraží",
     regiojet_city_id="10202003",
     regiojet_station_id="372825000",
+    cd_station_name="Praha hl.n.",
 )
 
 # ── France ────────────────────────────────────────────────────
@@ -184,6 +195,7 @@ BERLIN = Station(
     flixtrain_city_id="40d8f682-8646-11e6-9066-549f350fcb0c",
     flixbus_id="40d8f682-8646-11e6-9066-549f350fcb0c",
     db_id="8011160",
+    cd_station_name="Berlin Hbf",
 )
 
 BINZ = Station(
@@ -212,6 +224,7 @@ DORTMUND = Station(
 DRESDEN = Station(
     name="Dresden Hbf",
     db_id="8010085",
+    cd_station_name="Dresden Hbf",
 )
 
 DUSSELDORF = Station(
@@ -225,6 +238,7 @@ FRANKFURT = Station(
     flixtrain_city_id="40d90407-8646-11e6-9066-549f350fcb0c",
     flixbus_id="40d90407-8646-11e6-9066-549f350fcb0c",
     db_id="8000105",
+    cd_station_name="Frankfurt(Main)Hbf",
 )
 
 HAMBURG = Station(
@@ -233,6 +247,7 @@ HAMBURG = Station(
     flixtrain_city_id="40d91e53-8646-11e6-9066-549f350fcb0c",
     flixbus_id="40d91e53-8646-11e6-9066-549f350fcb0c",
     db_id="8002549",
+    cd_station_name="Hamburg Hbf",
 )
 
 HANOVER = Station(
@@ -277,6 +292,7 @@ MUNICH = Station(
     flixtrain_id="dcbabbfa-9603-11e6-9066-549f350fcb0c",
     flixtrain_city_id="40d901a5-8646-11e6-9066-549f350fcb0c",
     db_id="8000261",
+    cd_station_name="München Hbf",
 )
 
 PASSAU = Station(
@@ -309,6 +325,7 @@ BUDAPEST = Station(
     db_id="5510017",
     regiojet_city_id="10202091",
     regiojet_station_id="7063331001",
+    cd_station_name="Budapest-Keleti pu",
 )
 
 # ── Italy ─────────────────────────────────────────────────────
@@ -560,6 +577,7 @@ WARSAW = Station(
     name="Warszawa Centralna",
     regiojet_city_id="2737640000",
     regiojet_station_id="7998876003",
+    cd_station_name="Warszawa Centralna",
 )
 
 WROCLAW = Station(
@@ -574,6 +592,7 @@ BRATISLAVA = Station(
     name="Bratislava hlavná stanica",
     regiojet_city_id="10202001",
     regiojet_station_id="1841058000",
+    cd_station_name="Bratislava hl.st.",
 )
 
 # ── Spain ─────────────────────────────────────────────────────
@@ -615,6 +634,7 @@ ZARAGOZA = Station(
 ZURICH = Station(
     name="Zürich HB",
     db_id="8503000",
+    cd_station_name="Zürich HB",
 )
 
 # ─────────────────────────────────────────────────────────────
@@ -1090,47 +1110,47 @@ ROUTES = [
         route_id="munich-vienna"
     ),
 
-    # ── RegioJet: Czech Republic / Austria ─────────────────────
+    # ── RegioJet + České dráhy: Czech Republic / Austria / Slovakia / Hungary ──
     Route(
         origin=PRAGUE,
         destination=VIENNA,
-        operators=["regiojet"],
-        description="Prague-Vienna (RegioJet)",
+        operators=["regiojet", "ceske-drahy"],
+        description="Prague-Vienna (RegioJet vs. CD)",
         route_id="prague-vienna"
     ),
     Route(
         origin=VIENNA,
         destination=PRAGUE,
-        operators=["regiojet"],
-        description="Vienna-Prague (RegioJet)",
+        operators=["regiojet", "ceske-drahy"],
+        description="Vienna-Prague (RegioJet vs. CD)",
         route_id="vienna-prague"
     ),
     Route(
         origin=PRAGUE,
         destination=BRATISLAVA,
-        operators=["regiojet"],
-        description="Prague-Bratislava (RegioJet)",
+        operators=["regiojet", "ceske-drahy"],
+        description="Prague-Bratislava (RegioJet vs. CD)",
         route_id="prague-bratislava"
     ),
     Route(
         origin=BRATISLAVA,
         destination=PRAGUE,
-        operators=["regiojet"],
-        description="Bratislava-Prague (RegioJet)",
+        operators=["regiojet", "ceske-drahy"],
+        description="Bratislava-Prague (RegioJet vs. CD)",
         route_id="bratislava-prague"
     ),
     Route(
         origin=PRAGUE,
         destination=BUDAPEST,
-        operators=["regiojet"],
-        description="Prague-Budapest (RegioJet)",
+        operators=["regiojet", "ceske-drahy"],
+        description="Prague-Budapest (RegioJet vs. CD)",
         route_id="prague-budapest"
     ),
     Route(
         origin=BUDAPEST,
         destination=PRAGUE,
-        operators=["regiojet"],
-        description="Budapest-Prague (RegioJet)",
+        operators=["regiojet", "ceske-drahy"],
+        description="Budapest-Prague (RegioJet vs. CD)",
         route_id="budapest-prague"
     ),
     Route(
@@ -1162,19 +1182,19 @@ ROUTES = [
         route_id="brno-prague"
     ),
 
-    # ── RegioJet: Poland ───────────────────────────────────────
+    # ── RegioJet + CD: Poland ──────────────────────────────────
     Route(
         origin=PRAGUE,
         destination=WARSAW,
-        operators=["regiojet"],
-        description="Prague-Warsaw (RegioJet)",
+        operators=["regiojet", "ceske-drahy"],
+        description="Prague-Warsaw (RegioJet vs. CD)",
         route_id="prague-warsaw"
     ),
     Route(
         origin=WARSAW,
         destination=PRAGUE,
-        operators=["regiojet"],
-        description="Warsaw-Prague (RegioJet)",
+        operators=["regiojet", "ceske-drahy"],
+        description="Warsaw-Prague (RegioJet vs. CD)",
         route_id="warsaw-prague"
     ),
     Route(
@@ -1218,6 +1238,106 @@ ROUTES = [
         operators=["regiojet"],
         description="Gdansk-Prague (RegioJet)",
         route_id="gdansk-prague"
+    ),
+
+    # ── České dráhy: Praha international ──────────────────────
+    Route(
+        origin=PRAGUE,
+        destination=BERLIN,
+        operators=["ceske-drahy"],
+        description="Prague-Berlin (CD EC)",
+        route_id="prague-berlin"
+    ),
+    Route(
+        origin=BERLIN,
+        destination=PRAGUE,
+        operators=["ceske-drahy"],
+        description="Berlin-Prague (CD EC)",
+        route_id="berlin-prague"
+    ),
+    Route(
+        origin=PRAGUE,
+        destination=MUNICH,
+        operators=["ceske-drahy"],
+        description="Prague-Munich (CD EC)",
+        route_id="prague-munich"
+    ),
+    Route(
+        origin=MUNICH,
+        destination=PRAGUE,
+        operators=["ceske-drahy"],
+        description="Munich-Prague (CD EC)",
+        route_id="munich-prague"
+    ),
+    Route(
+        origin=PRAGUE,
+        destination=FRANKFURT,
+        operators=["ceske-drahy"],
+        description="Prague-Frankfurt (CD)",
+        route_id="prague-frankfurt"
+    ),
+    Route(
+        origin=FRANKFURT,
+        destination=PRAGUE,
+        operators=["ceske-drahy"],
+        description="Frankfurt-Prague (CD)",
+        route_id="frankfurt-prague"
+    ),
+    Route(
+        origin=PRAGUE,
+        destination=HAMBURG,
+        operators=["ceske-drahy"],
+        description="Prague-Hamburg (CD)",
+        route_id="prague-hamburg"
+    ),
+    Route(
+        origin=HAMBURG,
+        destination=PRAGUE,
+        operators=["ceske-drahy"],
+        description="Hamburg-Prague (CD)",
+        route_id="hamburg-prague"
+    ),
+    Route(
+        origin=PRAGUE,
+        destination=ZURICH,
+        operators=["ceske-drahy"],
+        description="Prague-Zurich (CD)",
+        route_id="prague-zurich"
+    ),
+    Route(
+        origin=ZURICH,
+        destination=PRAGUE,
+        operators=["ceske-drahy"],
+        description="Zurich-Prague (CD)",
+        route_id="zurich-prague"
+    ),
+    Route(
+        origin=PRAGUE,
+        destination=GRAZ,
+        operators=["ceske-drahy"],
+        description="Prague-Graz (CD)",
+        route_id="prague-graz"
+    ),
+    Route(
+        origin=GRAZ,
+        destination=PRAGUE,
+        operators=["ceske-drahy"],
+        description="Graz-Prague (CD)",
+        route_id="graz-prague"
+    ),
+    Route(
+        origin=PRAGUE,
+        destination=LINZ,
+        operators=["ceske-drahy"],
+        description="Prague-Linz (CD)",
+        route_id="prague-linz"
+    ),
+    Route(
+        origin=LINZ,
+        destination=PRAGUE,
+        operators=["ceske-drahy"],
+        description="Linz-Prague (CD)",
+        route_id="linz-prague"
     ),
 
     # ── FLX 10: Stuttgart–Frankfurt–Berlin ─────────────────────
