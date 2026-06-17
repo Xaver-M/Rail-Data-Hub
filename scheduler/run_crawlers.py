@@ -18,7 +18,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from datetime import datetime
-from config.routes import ROUTES, BOOKING_HORIZONS
+from config.routes import ROUTES, BOOKING_HORIZONS, DB_PARSEBOT_HORIZONS
 from crawlers.flixtrain.flixtrain_crawler import FlixtrainCrawler
 from crawlers.trenitalia.trenitalia_crawler import TrenitaliaCrawler
 from crawlers.ouigo_es.ougio_es_crawler import OuigoEsCrawler
@@ -28,6 +28,7 @@ from crawlers.ouigo_fr.ouigo_fr_crawler import OuigoFrCrawler
 from crawlers.italo.italo_crawler import ItaloCrawler
 from crawlers.flixbus.flixbus_crawler import FlixbusCrawler
 from crawlers.ceske_drahy.ceske_drahy_crawler import CeskeDrahyCrawler
+from crawlers.db_parsebot.db_parsebot_crawler import DBParseBotCrawler
 
 
 def run_all_crawlers():
@@ -53,6 +54,12 @@ def run_all_crawlers():
         finally:
             if hasattr(crawler, "close"):
                 crawler.close()
+
+    # DB Parsebot uses a trimmed horizon list to stay within API credit budget (~126/day)
+    try:
+        DBParseBotCrawler().run(ROUTES, DB_PARSEBOT_HORIZONS)
+    except Exception as e:
+        logger.error(f"Crawler db_parsebot failed: {e}")
 
     logger.info("=== Crawler run completed ===")
 

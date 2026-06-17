@@ -1344,28 +1344,28 @@ ROUTES = [
     Route(
         origin=STUTTGART,
         destination=BERLIN,
-        operators=["db", "flixtrain", "flixbus"],
+        operators=["db", "flixtrain", "flixbus", "db_parsebot"],
         description="Stuttgart-Berlin (FLX10 vs. DB)",
         route_id="stuttgart-berlin"
     ),
     Route(
         origin=BERLIN,
         destination=STUTTGART,
-        operators=["db", "flixtrain", "flixbus"],
+        operators=["db", "flixtrain", "flixbus", "db_parsebot"],
         description="Berlin-Stuttgart (FLX10 vs. DB)",
         route_id="berlin-stuttgart"
     ),
     Route(
         origin=FRANKFURT,
         destination=BERLIN,
-        operators=["db", "flixtrain", "flixbus"],
+        operators=["db", "flixtrain", "flixbus", "db_parsebot"],
         description="Frankfurt-Berlin (FLX10 vs. DB)",
         route_id="frankfurt-berlin"
     ),
     Route(
         origin=BERLIN,
         destination=FRANKFURT,
-        operators=["db", "flixtrain", "flixbus"],
+        operators=["db", "flixtrain", "flixbus", "db_parsebot"],
         description="Berlin-Frankfurt (FLX10 vs. DB)",
         route_id="berlin-frankfurt"
     ),
@@ -1374,14 +1374,14 @@ ROUTES = [
     Route(
         origin=BASEL,
         destination=BERLIN,
-        operators=["db", "flixtrain"],
+        operators=["db", "flixtrain", "db_parsebot"],
         description="Basel-Berlin (FLX10 vs. DB)",
         route_id="basel-berlin"
     ),
     Route(
         origin=BERLIN,
         destination=BASEL,
-        operators=["db", "flixtrain"],
+        operators=["db", "flixtrain", "db_parsebot"],
         description="Berlin-Basel (FLX10 vs. DB)",
         route_id="berlin-basel"
     ),
@@ -1390,14 +1390,14 @@ ROUTES = [
     Route(
         origin=HAMBURG,
         destination=COLOGNE,
-        operators=["db", "flixtrain", "flixbus"],
+        operators=["db", "flixtrain", "flixbus", "db_parsebot"],
         description="Hamburg-Cologne (FLX20 vs. DB)",
         route_id="hamburg-cologne"
     ),
     Route(
         origin=COLOGNE,
         destination=HAMBURG,
-        operators=["db", "flixtrain", "flixbus"],
+        operators=["db", "flixtrain", "flixbus", "db_parsebot"],
         description="Cologne-Hamburg (FLX20 vs. DB)",
         route_id="cologne-hamburg"
     ),
@@ -1406,14 +1406,14 @@ ROUTES = [
     Route(
         origin=COLOGNE,
         destination=BERLIN,
-        operators=["db", "flixtrain", "flixbus"],
+        operators=["db", "flixtrain", "flixbus", "db_parsebot"],
         description="Cologne-Berlin (FLX30 vs. DB)",
         route_id="cologne-berlin"
     ),
     Route(
         origin=BERLIN,
         destination=COLOGNE,
-        operators=["db", "flixtrain", "flixbus"],
+        operators=["db", "flixtrain", "flixbus", "db_parsebot"],
         description="Berlin-Cologne (FLX30 vs. DB)",
         route_id="berlin-cologne"
     ),
@@ -1422,28 +1422,28 @@ ROUTES = [
     Route(
         origin=HAMBURG,
         destination=BERLIN,
-        operators=["db", "flixtrain", "flixbus"],
+        operators=["db", "flixtrain", "flixbus", "db_parsebot"],
         description="Hamburg-Berlin (FLX35 vs. DB)",
         route_id="hamburg-berlin"
     ),
     Route(
         origin=BERLIN,
         destination=HAMBURG,
-        operators=["db", "flixtrain", "flixbus"],
+        operators=["db", "flixtrain", "flixbus", "db_parsebot"],
         description="Berlin-Hamburg (FLX35 vs. DB)",
         route_id="berlin-hamburg"
     ),
     Route(
         origin=HAMBURG,
         destination=LEIPZIG,
-        operators=["db", "flixtrain", "flixbus"],
+        operators=["db", "flixtrain", "flixbus", "db_parsebot"],
         description="Hamburg-Leipzig (FLX35 vs. DB)",
         route_id="hamburg-leipzig"
     ),
     Route(
         origin=LEIPZIG,
         destination=HAMBURG,
-        operators=["db", "flixtrain", "flixbus"],
+        operators=["db", "flixtrain", "flixbus", "db_parsebot"],
         description="Leipzig-Hamburg (FLX35 vs. DB)",
         route_id="leipzig-hamburg"
     ),
@@ -1492,16 +1492,30 @@ ROUTES = [
         route_id="koblenz-berlin"
     ),
     Route(
+        origin=BERLIN,
+        destination=MUNICH,
+        operators=["db", "db_parsebot"],
+        description="Berlin-Munich (DB)",
+        route_id="berlin-munich"
+    ),
+    Route(
+        origin=MUNICH,
+        destination=BERLIN,
+        operators=["db", "db_parsebot"],
+        description="Munich-Berlin (DB)",
+        route_id="munich-berlin"
+    ),
+    Route(
         origin=HAMBURG,
         destination=MUNICH,
-        operators=["db"],
+        operators=["db", "db_parsebot"],
         description="Hamburg-Munich (DB)",
         route_id="hamburg-munich"
     ),
     Route(
         origin=MUNICH,
         destination=HAMBURG,
-        operators=["db"],
+        operators=["db", "db_parsebot"],
         description="Munich-Hamburg (DB)",
         route_id="munich-hamburg"
     ),
@@ -1953,11 +1967,15 @@ BOOKING_HORIZONS = [
     45, 60, 90,
 ]
 
+# Trimmed horizon set for credit-limited crawlers (e.g. db_parsebot ~167 credits/day)
+# Covers the booking curve without redundant adjacent days: ~126 credits/day
+DB_PARSEBOT_HORIZONS = [1, 2, 3, 7, 14, 21, 30, 60, 90]
+
 
 if __name__ == "__main__":
     print(f"Total routes: {len(ROUTES)}")
     print()
-    for op in ["db", "flixtrain", "trenitalia", "italo", "oebb", "ouigo_es", "renfe", "iryo", "regiojet"]:
+    for op in ["db", "db_parsebot", "flixtrain", "trenitalia", "italo", "oebb", "ouigo_es", "renfe", "iryo", "regiojet"]:
         routes = get_routes_for_operator(op)
         if routes:
             print(f"{op.upper():<12} {len(routes)} routes:")

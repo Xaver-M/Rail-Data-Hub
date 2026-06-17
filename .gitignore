@@ -1,3 +1,6 @@
+# DB ParseBot cache
+crawlers/db_parsebot/cache/*.json
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
