@@ -1968,8 +1968,8 @@ BOOKING_HORIZONS = [
 ]
 
 # Trimmed horizon set for credit-limited crawlers (e.g. db_parsebot ~167 credits/day)
-# Covers the booking curve without redundant adjacent days: ~126 credits/day
-DB_PARSEBOT_HORIZONS = [1, 2, 3, 7, 14, 21, 30, 60, 90]
+# 18 routes x 6 horizons = 108 requests/day, leaves headroom under the daily credit cap
+DB_PARSEBOT_HORIZONS = [1, 2, 3, 7, 14, 21]
 
 
 if __name__ == "__main__":

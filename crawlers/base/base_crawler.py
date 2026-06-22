@@ -124,7 +124,7 @@ class BaseCrawler(ABC):
                 self.logger.warning(f"Timeout on attempt {attempt}")
             except requests.exceptions.HTTPError as e:
                 self.logger.warning(f"HTTP error {e.response.status_code} on attempt {attempt}")
-                if e.response.status_code in (400, 404):
+                if e.response.status_code in (400, 402, 404):
                     raise
             except requests.exceptions.ConnectionError:
                 self.logger.warning(f"Connection error on attempt {attempt}")
