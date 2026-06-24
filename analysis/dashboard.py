@@ -56,6 +56,19 @@ EN = {
     "ov_c3": "Number of connections per departure hour and operator",
     "ov_c4": "Number of recorded connections per booking horizon",
     "ov_c5": "Avg. price per fare class and operator",
+    # ── view mode / trip mode (NEW) ──
+    "ov_mode": "View",
+    "ov_mode_route": "📍 Whole route",
+    "ov_mode_trip": "🚆 Single trip",
+    "ov_dep_date": "Departure date",
+    "ov_train_filter": "Train",
+    "ov_all_trains": "All trains (aggregated)",
+    "ov_no_trip_data": "No data for this departure date.",
+    "ov_nearest": "Nearest dates with data:",
+    "ov_trip_dev": "Price development by booking horizon — departure {date}",
+    "ov_trend_trip": "Recent change (7d)",
+    "ov_trend_trip_help": "Avg. of the last 7 crawl days vs. earlier crawls for this departure.",
+    "ov_data_maturity": "📊 Recorded booking horizons: +{hmax} to +{hmin} · {covered}/90 horizons · {obs} observations",
     "tr_head": "Individual Train — {orig} → {dest}",
     "tr_no_data": "No data with train number for this route.",
     "tr_op": "Operator", "tr_sel": "Select train",
@@ -160,6 +173,19 @@ DE = {
     "ov_c3": "Anzahl Verbindungen pro Abfahrtsstunde und Anbieter",
     "ov_c4": "Anzahl aufgezeichneter Verbindungen pro Buchungshorizont",
     "ov_c5": "Durchschnittspreis pro Tarifklasse und Anbieter",
+    # ── Ansicht / Reise-Modus (NEU) ──
+    "ov_mode": "Ansicht",
+    "ov_mode_route": "📍 Strecke gesamt",
+    "ov_mode_trip": "🚆 Einzelne Reise",
+    "ov_dep_date": "Abfahrtsdatum",
+    "ov_train_filter": "Zug",
+    "ov_all_trains": "Alle Züge (aggregiert)",
+    "ov_no_trip_data": "Keine Daten für dieses Abfahrtsdatum.",
+    "ov_nearest": "Nächstgelegene Termine mit Daten:",
+    "ov_trip_dev": "Preisentwicklung nach Buchungshorizont — Abfahrt {date}",
+    "ov_trend_trip": "Preisänderung zuletzt (7T)",
+    "ov_trend_trip_help": "Ø der letzten 7 Crawl-Tage vs. frühere Crawls für diese Abfahrt.",
+    "ov_data_maturity": "📊 Erfasste Buchungshorizonte: +{hmax} bis +{hmin} · {covered}/90 Horizonte · {obs} Messungen",
     "tr_head": "Einzelzug — {orig} → {dest}",
     "tr_no_data": "Keine Daten mit Zugnummer für diese Strecke.",
     "tr_op": "Anbieter", "tr_sel": "Zug auswählen",
@@ -695,72 +721,172 @@ tab1, tab2, tab3, tab4 = st.tabs([
 # ── TAB 1: OVERVIEW ───────────────────────────────────────────────────────────
 with tab1:
     st.subheader(f"{origin} → {destination}")
-    days      = st.slider(T["ov_time_range"], 7, 90, 30, key="ov_days")
-    cutoff    = df["collected_at"].max() - pd.Timedelta(days=days)
-    df_ts = (df[df["collected_at"]>=cutoff]
-             .groupby(["col_date","operator"])
-             .agg(price_min=("price_eur","min"), price_avg=("price_eur","mean"), price_max=("price_eur","max"))
-             .reset_index().rename(columns={"col_date":"date"}))
 
-    if df_ts.empty:
-        st.info(T["ov_no_data"])
+    view_mode = st.radio(
+        T["ov_mode"], options=["route", "trip"],
+        format_func=lambda m: T["ov_mode_route"] if m == "route" else T["ov_mode_trip"],
+        horizontal=True, key="ov_view_mode",
+    )
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # MODUS A: EINZELNE REISE (reisezentriert)
+    # ══════════════════════════════════════════════════════════════════════════
+    if view_mode == "trip":
+        avail_dates = sorted(d for d in df["dep_date"].dropna().unique())
+        if not avail_dates:
+            st.info(T["ov_no_data"])
+        else:
+            default_date = df.groupby("dep_date").size().idxmax()
+            sel_date = st.date_input(
+                T["ov_dep_date"], value=default_date,
+                min_value=avail_dates[0], max_value=avail_dates[-1],
+                key="ov_dep_date_input",
+            )
+            df_trip = df[df["dep_date"] == sel_date].copy()
+
+            if df_trip.empty:
+                st.info(T["ov_no_trip_data"])
+                nearest = sorted(avail_dates, key=lambda d: abs((d - sel_date).days))[:5]
+                st.caption(f'{T["ov_nearest"]} '
+                           + ", ".join(d.strftime("%d.%m.%Y") for d in sorted(nearest)))
+            else:
+                # ── optionale Zugauswahl ──
+                trains = sorted(t for t in df_trip["train_number"].dropna().unique() if t != "")
+                train_opts = ["__all__"] + trains
+                sel_train = st.selectbox(
+                    T["ov_train_filter"], train_opts,
+                    format_func=lambda t: T["ov_all_trains"] if t == "__all__" else str(t),
+                    key="ov_train_filter_select",
+                )
+                if sel_train != "__all__":
+                    df_trip = df_trip[df_trip["train_number"] == sel_train].copy()
+
+                if df_trip.empty:
+                    st.info(T["ov_no_trip_data"])
+                else:
+                    # ── Kennzahlen für genau diese Abfahrt ──
+                    min_price = float(df_trip["price_eur"].min())
+                    min_op    = df_trip.loc[df_trip["price_eur"].idxmin(), "operator"]
+                    avg_price = float(df_trip["price_eur"].mean())
+                    recent    = df_trip["collected_at"] >= (df_trip["collected_at"].max() - pd.Timedelta(days=7))
+                    base      = df_trip[~recent]["price_eur"].mean()
+                    trend     = ((df_trip[recent]["price_eur"].mean() - base) / base * 100) \
+                                if (pd.notna(base) and base) else 0
+
+                    c1, c2, c3, c4 = st.columns(4)
+                    c1.metric(T["ov_lowest_price"], f"{min_price:.2f} €", op_label(min_op))
+                    c2.metric(T["ov_avg_price"], f"{avg_price:.2f} €")
+                    c3.metric(T["ov_trend_trip"], f"{trend:+.1f}%", delta=f"{trend:+.1f}%",
+                              delta_color="inverse", help=T["ov_trend_trip_help"])
+                    c4.metric(T["ov_operators"], df_trip["operator"].nunique())
+
+                    # ── Yield-Kurve nach Buchungshorizont ──
+                    df_hz = (df_trip.dropna(subset=["booking_horizon_days"])
+                             .groupby(["operator", "booking_horizon_days"])
+                             .agg(price_avg=("price_eur", "mean"),
+                                  price_min=("price_eur", "min"),
+                                  observations=("price_eur", "count"))
+                             .reset_index())
+                    if df_hz.empty:
+                        st.info(T["ov_no_trip_data"])
+                    else:
+                        df_hz["op_label"] = df_hz["operator"].map(op_label)
+                        df_hz["booking_horizon_days"] = df_hz["booking_horizon_days"].astype(int)
+                        df_hz = df_hz.sort_values("booking_horizon_days")
+
+                        # ── Datenreife-Hinweis ──
+                        covered = int(df_hz["booking_horizon_days"].nunique())
+                        hmax    = int(df_hz["booking_horizon_days"].max())
+                        hmin    = int(df_hz["booking_horizon_days"].min())
+                        obs_tot = int(df_hz["observations"].sum())
+                        st.caption(T["ov_data_maturity"].format(
+                            hmax=hmax, hmin=hmin, covered=covered, obs=obs_tot))
+
+                        fig = px.line(df_hz, x="booking_horizon_days", y="price_avg",
+                                      color="op_label", color_discrete_map=color_map, markers=True,
+                                      title=T["ov_trip_dev"].format(date=sel_date.strftime("%d.%m.%Y")),
+                                      labels={"booking_horizon_days": T["ov_days_adv"],
+                                              "price_avg": T["ov_avg"], "op_label": T["ov_op"]},
+                                      custom_data=["price_min", "observations"])
+                        fig.update_traces(line_width=2, marker_size=6,
+                                          hovertemplate="<b>%{fullData.name}</b><br>+%{x} "
+                                                        + T["days_unit"] + "<br>Avg. %{y:.2f} €<br>"
+                                                        "Min %{customdata[0]:.2f} €<br>"
+                                                        "%{customdata[1]} obs.")
+                        fig.update_xaxes(autorange="reversed")  # links +90 (früh), rechts +1 (kurz vor Abreise)
+                        fig.update_layout(hovermode="x unified")
+                        st.plotly_chart(fig, use_container_width=True)
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # MODUS B: STRECKE GESAMT (Original-Verhalten)
+    # ══════════════════════════════════════════════════════════════════════════
     else:
-        min_price = float(df["price_eur"].min())
-        min_op    = df.loc[df["price_eur"].idxmin(),"operator"]
-        avg_price = float(df["price_eur"].mean())
-        recent    = df["collected_at"] >= (df["collected_at"].max() - pd.Timedelta(days=7))
-        trend     = ((df[recent]["price_eur"].mean()-df[~recent]["price_eur"].mean())
-                     / df[~recent]["price_eur"].mean()*100) if not df[~recent].empty else 0
+        days      = st.slider(T["ov_time_range"], 7, 90, 30, key="ov_days")
+        cutoff    = df["collected_at"].max() - pd.Timedelta(days=days)
+        df_ts = (df[df["collected_at"]>=cutoff]
+                 .groupby(["col_date","operator"])
+                 .agg(price_min=("price_eur","min"), price_avg=("price_eur","mean"), price_max=("price_eur","max"))
+                 .reset_index().rename(columns={"col_date":"date"}))
 
-        c1,c2,c3,c4 = st.columns(4)
-        c1.metric(T["ov_lowest_price"], f"{min_price:.2f} €", op_label(min_op))
-        c2.metric(T["ov_avg_price"], f"{avg_price:.2f} €")
-        c3.metric(T["ov_trend"], f"{trend:+.1f}%", delta=f"{trend:+.1f}%", delta_color="inverse")
-        c4.metric(T["ov_operators"], len(operators))
+        if df_ts.empty:
+            st.info(T["ov_no_data"])
+        else:
+            min_price = float(df["price_eur"].min())
+            min_op    = df.loc[df["price_eur"].idxmin(),"operator"]
+            avg_price = float(df["price_eur"].mean())
+            recent    = df["collected_at"] >= (df["collected_at"].max() - pd.Timedelta(days=7))
+            trend     = ((df[recent]["price_eur"].mean()-df[~recent]["price_eur"].mean())
+                         / df[~recent]["price_eur"].mean()*100) if not df[~recent].empty else 0
 
-        df_ts["op_label"] = df_ts["operator"].map(op_label)
-        fig = px.line(df_ts, x="date", y="price_min", color="op_label", color_discrete_map=color_map,
-                      title=T["ov_c1"].format(days=days),
-                      labels={"date":T["ov_date"],"price_min":T["ov_low_lbl"],"op_label":T["ov_op"]})
-        fig.update_traces(line_width=2); fig.update_layout(hovermode="x unified")
-        st.plotly_chart(fig, use_container_width=True)
+            c1,c2,c3,c4 = st.columns(4)
+            c1.metric(T["ov_lowest_price"], f"{min_price:.2f} €", op_label(min_op))
+            c2.metric(T["ov_avg_price"], f"{avg_price:.2f} €")
+            c3.metric(T["ov_trend"], f"{trend:+.1f}%", delta=f"{trend:+.1f}%", delta_color="inverse")
+            c4.metric(T["ov_operators"], len(operators))
 
-        df_bp = df[df["price_eur"].notna()].copy()
-        df_bp["op_label"] = df_bp["operator"].map(op_label)
-        fig2 = px.box(df_bp, x="op_label", y="price_eur", color="op_label",
-                      color_discrete_map=color_map, points="outliers",
-                      title=T["ov_c2"],
-                      labels={"op_label": T["ov_op"], "price_eur": T["ov_price"]})
-        fig2.update_layout(showlegend=False, yaxis_title=T["ov_price"])
-        st.plotly_chart(fig2, use_container_width=True)
+            df_ts["op_label"] = df_ts["operator"].map(op_label)
+            fig = px.line(df_ts, x="date", y="price_min", color="op_label", color_discrete_map=color_map,
+                          title=T["ov_c1"].format(days=days),
+                          labels={"date":T["ov_date"],"price_min":T["ov_low_lbl"],"op_label":T["ov_op"]})
+            fig.update_traces(line_width=2); fig.update_layout(hovermode="x unified")
+            st.plotly_chart(fig, use_container_width=True)
 
-        df_freq = df.groupby(["dep_hour","operator"]).agg(count=("price_eur","count")).reset_index()
-        df_freq["op_label"]   = df_freq["operator"].map(op_label)
-        df_freq["hour_label"] = df_freq["dep_hour"].astype(str).str.zfill(2) + ":00"
-        fig3 = px.bar(df_freq, x="hour_label", y="count", color="op_label", color_discrete_map=color_map,
-                      barmode="group", title=T["ov_c3"],
-                      labels={"hour_label":T["ov_dep_hour"],"count":T["ov_count"],"op_label":T["ov_op"]})
-        fig3.update_layout(hovermode="x unified"); st.plotly_chart(fig3, use_container_width=True)
+            df_bp = df[df["price_eur"].notna()].copy()
+            df_bp["op_label"] = df_bp["operator"].map(op_label)
+            fig2 = px.box(df_bp, x="op_label", y="price_eur", color="op_label",
+                          color_discrete_map=color_map, points="outliers",
+                          title=T["ov_c2"],
+                          labels={"op_label": T["ov_op"], "price_eur": T["ov_price"]})
+            fig2.update_layout(showlegend=False, yaxis_title=T["ov_price"])
+            st.plotly_chart(fig2, use_container_width=True)
 
-        df_fhz = (df.dropna(subset=["booking_horizon_days"])
-                  .groupby(["booking_horizon_days","operator"]).agg(count=("price_eur","count")).reset_index())
-        df_fhz["op_label"]             = df_fhz["operator"].map(op_label)
-        df_fhz["booking_horizon_days"] = df_fhz["booking_horizon_days"].astype(int)
-        fig4 = px.bar(df_fhz, x="booking_horizon_days", y="count", color="op_label",
-                      color_discrete_map=color_map, barmode="group", title=T["ov_c4"],
-                      labels={"booking_horizon_days":T["ov_days_adv"],"count":T["ov_count"],"op_label":T["ov_op"]})
-        st.plotly_chart(fig4, use_container_width=True)
+            df_freq = df.groupby(["dep_hour","operator"]).agg(count=("price_eur","count")).reset_index()
+            df_freq["op_label"]   = df_freq["operator"].map(op_label)
+            df_freq["hour_label"] = df_freq["dep_hour"].astype(str).str.zfill(2) + ":00"
+            fig3 = px.bar(df_freq, x="hour_label", y="count", color="op_label", color_discrete_map=color_map,
+                          barmode="group", title=T["ov_c3"],
+                          labels={"hour_label":T["ov_dep_hour"],"count":T["ov_count"],"op_label":T["ov_op"]})
+            fig3.update_layout(hovermode="x unified"); st.plotly_chart(fig3, use_container_width=True)
 
-        df_fare = df[df["fare_class"].notna() & (df["fare_class"]!="")]
-        if not df_fare.empty:
-            st.subheader(T["ov_fare_classes"])
-            df_fg = (df_fare.groupby(["operator","fare_class"])
-                     .agg(avg_price=("price_eur","mean"), count=("price_eur","count")).reset_index())
-            df_fg["op_label"] = df_fg["operator"].map(op_label)
-            fig5 = px.bar(df_fg, x="fare_class", y="avg_price", color="op_label",
-                          color_discrete_map=color_map, barmode="group", title=T["ov_c5"],
-                          labels={"fare_class":T["ov_class"],"avg_price":T["ov_avg"],"op_label":T["ov_op"]})
-            st.plotly_chart(fig5, use_container_width=True)
+            df_fhz = (df.dropna(subset=["booking_horizon_days"])
+                      .groupby(["booking_horizon_days","operator"]).agg(count=("price_eur","count")).reset_index())
+            df_fhz["op_label"]             = df_fhz["operator"].map(op_label)
+            df_fhz["booking_horizon_days"] = df_fhz["booking_horizon_days"].astype(int)
+            fig4 = px.bar(df_fhz, x="booking_horizon_days", y="count", color="op_label",
+                          color_discrete_map=color_map, barmode="group", title=T["ov_c4"],
+                          labels={"booking_horizon_days":T["ov_days_adv"],"count":T["ov_count"],"op_label":T["ov_op"]})
+            st.plotly_chart(fig4, use_container_width=True)
+
+            df_fare = df[df["fare_class"].notna() & (df["fare_class"]!="")]
+            if not df_fare.empty:
+                st.subheader(T["ov_fare_classes"])
+                df_fg = (df_fare.groupby(["operator","fare_class"])
+                         .agg(avg_price=("price_eur","mean"), count=("price_eur","count")).reset_index())
+                df_fg["op_label"] = df_fg["operator"].map(op_label)
+                fig5 = px.bar(df_fg, x="fare_class", y="avg_price", color="op_label",
+                              color_discrete_map=color_map, barmode="group", title=T["ov_c5"],
+                              labels={"fare_class":T["ov_class"],"avg_price":T["ov_avg"],"op_label":T["ov_op"]})
+                st.plotly_chart(fig5, use_container_width=True)
 
 # ── TAB 2: INDIVIDUAL TRAIN ───────────────────────────────────────────────────
 with tab2:
