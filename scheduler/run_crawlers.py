@@ -44,6 +44,8 @@ def run_all_crawlers():
         ItaloCrawler(),
         FlixbusCrawler(),
         CeskeDrahyCrawler(),
+        DBParseBotCrawler(),
+       
     ]
 
     for crawler in crawlers:
