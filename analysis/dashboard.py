@@ -21,10 +21,12 @@ st.set_page_config(page_title="RailDataHub", page_icon="🚄", layout="wide", in
 OPERATOR_COLORS = {
     "db": "#4a9eff", "flixtrain": "#a8e44a", "regiojet": "#ff7c5c",
     "trenitalia": "#ffb547", "italo": "#ff4f4f", "ouigo_es": "#b47fff", "ouigo_fr": "#ff6eb4",
+    "flixbus": "#18a04b", "ceske-drahy": "#003f87", "db_parsebot": "#f01414", 
 }
 OPERATOR_LABELS = {
     "db": "DB", "flixtrain": "Flixtrain", "regiojet": "RegioJet",
-    "trenitalia": "Trenitalia", "italo": "Italo", "ouigo_es": "Ouigo ES", "ouigo_fr": "Ouigo FR",
+    "trenitalia": "Trenitalia", "italo": "Italo", "ouigo_es": "Ouigo ES", "ouigo_fr": "Ouigo FR",  "flixbus": "Flixbus",
+    "ceske-drahy": "České dráhy", "db_parsebot": "DB (ParseBot)",
 }
 
 # ── translations ──────────────────────────────────────────────────────────────
