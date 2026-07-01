@@ -1,0 +1,328 @@
+# dashboard/config.py
+
+OPERATOR_COLORS = {
+    "db": "#4a9eff", "flixtrain": "#a8e44a", "regiojet": "#ff7c5c",
+    "trenitalia": "#ffb547", "italo": "#ff4f4f", "ouigo_es": "#b47fff", "ouigo_fr": "#ff6eb4",
+    "flixbus": "#18a04b", "ceske-drahy": "#003f87", "db_parsebot": "#f01414",
+}
+
+OPERATOR_LABELS = {
+    "db": "DB", "flixtrain": "Flixtrain", "regiojet": "RegioJet",
+    "trenitalia": "Trenitalia", "italo": "Italo", "ouigo_es": "Ouigo ES", "ouigo_fr": "Ouigo FR",
+    "flixbus": "Flixbus", "ceske-drahy": "České dráhy", "db_parsebot": "DB (ParseBot)",
+}
+
+# Zentrales Custom-CSS für den 1+ Premium Look (Schatten, Karten, abgerundete Ecken)
+CUSTOM_CSS = """
+<style>
+    /* Premium KPI Karten */
+    .kpi-card {
+        background-color: #111111;
+        border: 1px solid #222222;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        margin-bottom: 15px;
+    }
+    .kpi-title {
+        font-size: 13px;
+        color: #888888;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 5px;
+    }
+    .kpi-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #ffffff;
+    }
+    .kpi-subtitle {
+        font-size: 12px;
+        color: #aaaaaa;
+        margin-top: 5px;
+    }
+</style>
+"""
+
+# Übersetzungen (Eure originalen EN/DE Dictionaries gekürzt zur Übersicht)
+EN = {
+"csv_mode": "📁 CSV Mode", "db_mode": "🗄️ DB Mode",
+    "crawlers_running": "🔄 Crawlers running...", "no_data": "No data found.",
+    "enter_route": "**Enter route**", "from_label": "From", "origin_ph": "Origin...",
+    "to_label": "To", "dest_ph": "Destination...", "route_not_found": "Route not found:",
+    "route_label": "Route", "data_points": "Data points", "last_label": "Last:",
+    "reload_data": "🔄 Reload data", "operators_on_route": "**Operators on this route:**",
+    "routes_found": lambda n: f"{n} route{'s' if n != 1 else ''} found",
+    "region_de": "🇩🇪 Germany", "region_it": "🇮🇹 Italy", "region_es": "🇪🇸 Spain",
+    "region_fr": "🇫🇷 France", "region_int": "🌍 International", "region_other": "🌐 Other",
+    "just_now": "just now", "min_ago": "{m} min. ago", "h_ago": "{h} h ago",
+    "days_ago": "{d} days ago", "days_unit": "days",
+    "tab_overview": "📊 Overview", "tab_train": "🚆 Individual Train",
+    "tab_horizon": "⏱ Booking Horizon", "tab_daytime": "🕐 Time of Day",
+    "tab_operator": "⚖️ Operator Comparison", "tab_crawler": "🤖 Crawler Status",
+    "tab_normalized": "📐 €/km & €/h",
+    "dow": {0: "Mon", 1: "Tue", 2: "Wed", 3: "Thu", 4: "Fri", 5: "Sat", 6: "Sun"},
+    "ov_time_range": "Time range (days back)", "ov_no_data": "No data in the selected time range.",
+    "ov_lowest_price": "Overall lowest price", "ov_avg_price": "Avg. price overall",
+    "ov_trend": "Trend (last 7d)", "ov_operators": "Operators",
+    "ov_date": "Date", "ov_low_lbl": "Lowest price (€)", "ov_op": "Operator",
+    "ov_price": "Price (€)", "ov_dep_hour": "Departure hour", "ov_count": "Count",
+    "ov_days_adv": "Days in advance", "ov_fare_classes": "Fare classes",
+    "ov_class": "Class", "ov_avg": "Avg. price (€)",
+    "ov_c1": "Lowest price per day — last {days} days",
+    "ov_c2": "Price range Min / Avg / Max per operator (diamond = average)",
+    "ov_c3": "Number of connections per departure hour and operator",
+    "ov_c4": "Number of recorded connections per booking horizon",
+    "ov_c5": "Avg. price per fare class and operator",
+    "ov_mode": "View",
+    "ov_mode_route": "📍 Whole route",
+    "ov_mode_trip": "🚆 Single trip",
+    "ov_dep_date": "Departure date",
+    "ov_train_filter": "Train",
+    "ov_all_trains": "All trains (aggregated)",
+    "ov_no_trip_data": "No data for this departure date.",
+    "ov_nearest": "Nearest dates with data:",
+    "ov_trip_dev": "Price development by booking horizon — departure {date}",
+    "ov_trend_trip": "Recent change (7d)",
+    "ov_trend_trip_help": "Avg. of the last 7 crawl days vs. earlier crawls for this departure.",
+    "ov_data_maturity": "📊 Recorded booking horizons: +{hmax} to +{hmin} · {covered}/90 horizons · {obs} observations",
+    "tr_head": "Individual Train — {orig} → {dest}",
+    "tr_no_data": "No data with train number for this route.",
+    "tr_op": "Operator", "tr_sel": "Select train",
+    "tr_cur": "Current price", "tr_fare": "Fare: {fare}",
+    "tr_lohi": "Lowest / Highest", "tr_7d": "7-day change", "tr_seats": "Seats available",
+    "tr_dev": "Price development — {train} ({dep})",
+    "tr_no_hist": "No historical data for this train.",
+    "tr_sur_title": "Price increase from lowest price — {train}\nBasis: Avg. {price:.2f} € at +{horizon} days",
+    "tr_hz_lbl": "Booking horizon", "tr_sur_lbl": "Surcharge on lowest price (%)",
+    "tr_abs": "Absolute price by booking horizon — {train}",
+    "tr_low_line": "Lowest price {price:.2f} €",
+    "tr_rec": (
+        "💡 **Recommendation:** At +{days} days in advance this train was cheapest at avg. "
+        "**{price:.2f} €** ({obs} observations). Latest booking (+{worst}d) costs **{pct:.1f}% more**."
+    ),
+    "tr_no_hz": "No horizon data for this train.",
+    "bh_head": "Booking Horizon — {orig} → {dest}", "bh_no": "No horizon data.",
+    "bh_c1": "Avg. price per operator by booking horizon",
+    "bh_avg": "Avg. price (€)",
+    "bh_c2": "Number of recorded connections per booking horizon",
+    "bh_conn": "Number of connections",
+    "bh_table": "Detail table — Avg. price per operator and horizon",
+    "bh_opt": "Optimal booking time per operator",
+    "bh_cheap": "Cheapest at", "bh_saves": "saves {pct:.0f}%",
+    "bh_cap": "Avg. {price:.2f} € ({obs} obs.)",
+    "dt_head": "Time of Day Analysis — {orig} → {dest}",
+    "dt_op": "Operator", "dt_no": "No data for this operator.",
+    "dt_c1": "Avg. price by departure hour — {op}",
+    "dt_c2": "Heatmap — Avg. price per weekday and hour ({op})",
+    "dt_wd": "Weekday", "dt_c3": "Avg. available seats by departure hour — {op}",
+    "dt_seats": "Avg. seats",
+    "dt_ch_h": "Cheapest hour", "dt_ex_h": "Most expensive hour",
+    "dt_ch_d": "Cheapest day", "dt_ex_d": "Most expensive day",
+    "op_head": "Operator Comparison & Route Comparison",
+    "op_comp": "#### ⚖️ Operator Comparison — {orig} → {dest}",
+    "op_hz": "Booking horizon",
+    "op_no_hz": "No data for booking horizon +{days} days.",
+    "op_cheap": "Cheapest", "op_exp": "Most expensive",
+    "op_sav": "Max. savings", "op_sav_help": "By choosing the cheapest operator",
+    "op_hz_m": "Horizon", "op_mam": "Min / Avg / Max at +{days}d",
+    "op_extra": "Extra cost vs. {op}", "op_pct": "% more expensive",
+    "op_prof": "**Operator Profile**",
+    "op_radar_cats": ["Cheap Price", "Price Stability", "Availability", "Data Density"],
+    "op_radar_t": "Operator profile at +{days}d",
+    "op_radar_c": (
+        "Cheap Price: lower min price = better · Price Stability: smaller spread = better · "
+        "Availability: more seats = better · Data Density: more data points = better"
+    ),
+    "op_scatter": "Lowest price vs. avg. available seats",
+    "op_seats_hz": "Avg. available seats by booking horizon",
+    "op_low": "Lowest price (€)", "op_seats": "Avg. seats",
+    "op_route_head": "#### 🔀 Route Comparison",
+    "op_routes_lbl": "Routes to compare",
+    "op_badge": " 🏆 Cheapest", "op_avg": "Avg.", "op_pts": "pts",
+    "op_sel2": "Select at least 2 routes to compare.",
+    "op_no_rt": "No route selected.",
+    "op_hz_t": "Avg. price by booking horizon",
+    "op_low_rt": "Lowest price per route",
+    "op_conn": "Connections per horizon",
+    "cr_head": "Crawler Status & Control",
+    "cr_ctrl": "#### 🤖 Crawler Control",
+    "cr_err": "⚠️ {n} import errors",
+    "cr_sel": "Select crawlers", "cr_start": "▶ Start now",
+    "cr_on": "✅ Active", "cr_off": "⚠️ Inactive",
+    "cr_status": "#### 📋 Status per Crawler",
+    "cr_stat_cap": "Crawler · Last collected · Records · Routes · Avg. price",
+    "cr_refresh": "🔄 Refresh log",
+    "cr_data": "#### 📊 Data Overview",
+    "cr_total": "Total records", "cr_ops": "Operators",
+    "cr_routes": "Routes", "cr_last": "Last collected",
+    "cr_c1": "Total records per crawler",
+    "cr_rec": "Records", "cr_cr": "Crawler",
+    "cr_c2": "Records per day per crawler", "cr_date": "Date",
+    "nm_head": "Normalized Prices — {orig} → {dest}",
+    "nm_no_dist": "⚠️ No distance data available for this route.",
+    "nm_no_time": "⚠️ No travel time data (arrival_at missing) for this route.",
+    "nm_dist": "Route distance (Haversine)",
+    "nm_km": "km",
+    "nm_eur_km": "€ / km",
+    "nm_eur_h": "€ / h",
+    "nm_hz": "Booking horizon (days in advance)",
+    "nm_c1": "Min. price per km by booking horizon",
+    "nm_c2": "Min. price per hour of travel by booking horizon",
+    "nm_c3": "€/km vs. €/h — Operator comparison at +{days} days",
+    "nm_c4": "Distribution: price per km across all horizons",
+    "nm_note": "ℹ️ Distances are Haversine (straight-line). Actual rail distances are typically 15–25% longer.",
+    "nm_hz_sel": "Booking horizon for scatter",
+    "nm_op": "Operator",
+    "nm_travel_h": "Avg. travel time (h)",
+    "nm_obs": "Observations",
+}
+
+DE = {
+        "csv_mode": "📁 CSV-Modus", "db_mode": "🗄️ DB-Modus",
+    "crawlers_running": "🔄 Crawler laufen...", "no_data": "Keine Daten gefunden.",
+    "enter_route": "**Route eingeben**", "from_label": "Von", "origin_ph": "Herkunft...",
+    "to_label": "Nach", "dest_ph": "Ziel...", "route_not_found": "Route nicht gefunden:",
+    "route_label": "Route", "data_points": "Datenpunkte", "last_label": "Zuletzt:",
+    "reload_data": "🔄 Daten neu laden", "operators_on_route": "**Anbieter auf dieser Strecke:**",
+    "routes_found": lambda n: f"{n} Route{'n' if n != 1 else ''} gefunden",
+    "region_de": "🇩🇪 Deutschland", "region_it": "🇮🇹 Italien", "region_es": "🇪🇸 Spanien",
+    "region_fr": "🇫🇷 Frankreich", "region_int": "🌍 International", "region_other": "🌐 Sonstige",
+    "just_now": "gerade eben", "min_ago": "vor {m} Min.", "h_ago": "vor {h} Std.",
+    "days_ago": "vor {d} Tagen", "days_unit": "Tage",
+    "tab_overview": "📊 Übersicht", "tab_train": "🚆 Einzelzug",
+    "tab_horizon": "⏱ Buchungshorizont", "tab_daytime": "🕐 Tageszeit",
+    "tab_operator": "⚖️ Anbietervergleich", "tab_crawler": "🤖 Crawler-Status",
+    "tab_normalized": "📐 €/km & €/h",
+    "dow": {0: "Mo", 1: "Di", 2: "Mi", 3: "Do", 4: "Fr", 5: "Sa", 6: "So"},
+    "days_unit": "Tage",
+    "ov_time_range": "Zeitraum (Tage zurück)", "ov_no_data": "Keine Daten im gewählten Zeitraum.",
+    "ov_lowest_price": "Niedrigster Gesamtpreis", "ov_avg_price": "Durchschnittspreis gesamt",
+    "ov_trend": "Trend (letzte 7T)", "ov_operators": "Anbieter",
+    "ov_date": "Datum", "ov_low_lbl": "Niedrigster Preis (€)", "ov_op": "Anbieter",
+    "ov_price": "Preis (€)", "ov_dep_hour": "Abfahrtsstunde", "ov_count": "Anzahl",
+    "ov_days_adv": "Tage im Voraus", "ov_fare_classes": "Tarifklassen",
+    "ov_class": "Klasse", "ov_avg": "Durchschnittspreis (€)",
+    "ov_c1": "Niedrigster Preis pro Tag — letzte {days} Tage",
+    "ov_c2": "Preisrange Min / Avg / Max pro Anbieter (Raute = Durchschnitt)",
+    "ov_c3": "Anzahl Verbindungen pro Abfahrtsstunde und Anbieter",
+    "ov_c4": "Anzahl aufgezeichneter Verbindungen pro Buchungshorizont",
+    "ov_c5": "Durchschnittspreis pro Tarifklasse und Anbieter",
+    "ov_mode": "Ansicht",
+    "ov_mode_route": "📍 Strecke gesamt",
+    "ov_mode_trip": "🚆 Einzelne Reise",
+    "ov_dep_date": "Abfahrtsdatum",
+    "ov_train_filter": "Zug",
+    "ov_all_trains": "Alle Züge (aggregiert)",
+    "ov_no_trip_data": "Keine Daten für dieses Abfahrtsdatum.",
+    "ov_nearest": "Nächstgelegene Termine mit Daten:",
+    "ov_trip_dev": "Preisentwicklung nach Buchungshorizont — Abfahrt {date}",
+    "ov_trend_trip": "Preisänderung zuletzt (7T)",
+    "ov_trend_trip_help": "Ø der letzten 7 Crawl-Tage vs. frühere Crawls für diese Abfahrt.",
+    "ov_data_maturity": "📊 Erfasste Buchungshorizonte: +{hmax} bis +{hmin} · {covered}/90 Horizonte · {obs} Messungen",
+    "tr_head": "Einzelzug — {orig} → {dest}",
+    "tr_no_data": "Keine Daten mit Zugnummer für diese Strecke.",
+    "tr_op": "Anbieter", "tr_sel": "Zug auswählen",
+    "tr_cur": "Aktueller Preis", "tr_fare": "Tarif: {fare}",
+    "tr_lohi": "Min / Max", "tr_7d": "7-Tage-Änderung", "tr_seats": "Verfügbare Plätze",
+    "tr_dev": "Preisentwicklung — {train} ({dep})",
+    "tr_no_hist": "Keine historischen Daten für diesen Zug.",
+    "tr_sur_title": "Preisaufschlag zum Tiefstwert — {train}\nBasis: Avg. {price:.2f} € bei +{horizon} Tagen",
+    "tr_hz_lbl": "Buchungshorizont", "tr_sur_lbl": "Aufpreis auf Tiefstwert (%)",
+    "tr_abs": "Absoluter Preis nach Buchungshorizont — {train}",
+    "tr_low_line": "Tiefstwert {price:.2f} €",
+    "tr_rec": (
+        "💡 **Empfehlung:** Bei +{days} Tagen im Voraus war dieser Zug am günstigsten mit "
+        "durchschn. **{price:.2f} €** ({obs} Beobachtungen). Späteste Buchung (+{worst}T) kostet **{pct:.1f}% mehr**."
+    ),
+    "tr_no_hz": "Keine Horizont-Daten für diesen Zug.",
+    "bh_head": "Buchungshorizont — {orig} → {dest}", "bh_no": "Keine Horizont-Daten.",
+    "bh_c1": "Durchschnittspreis pro Anbieter nach Buchungshorizont",
+    "bh_avg": "Durchschnittspreis (€)",
+    "bh_c2": "Anzahl aufgezeichneter Verbindungen pro Buchungshorizont",
+    "bh_conn": "Anzahl Verbindungen",
+    "bh_table": "Detailtabelle — Durchschnittspreis pro Anbieter und Horizont",
+    "bh_opt": "Optimaler Buchungszeitpunkt pro Anbieter",
+    "bh_cheap": "Günstigst bei", "bh_saves": "spart {pct:.0f}%",
+    "bh_cap": "Avg. {price:.2f} € ({obs} Beob.)",
+    "dt_head": "Tageszeit-Analyse — {orig} → {dest}",
+    "dt_op": "Anbieter", "dt_no": "Keine Daten für diesen Anbieter.",
+    "dt_c1": "Durchschnittspreis nach Abfahrtsstunde — {op}",
+    "dt_c2": "Heatmap — Durchschnittspreis pro Wochentag und Stunde ({op})",
+    "dt_wd": "Wochentag", "dt_c3": "Durchschn. verfügbare Plätze nach Abfahrtsstunde — {op}",
+    "dt_seats": "Durchschn. Plätze",
+    "dt_ch_h": "Günstigste Stunde", "dt_ex_h": "Teuerste Stunde",
+    "dt_ch_d": "Günstigster Tag", "dt_ex_d": "Teuerster Tag",
+    "op_head": "Anbietervergleich & Streckenvergleich",
+    "op_comp": "#### ⚖️ Anbietervergleich — {orig} → {dest}",
+    "op_hz": "Buchungshorizont",
+    "op_no_hz": "Keine Daten für Buchungshorizont +{days} Tage.",
+    "op_cheap": "Günstigster", "op_exp": "Teuerster",
+    "op_sav": "Max. Ersparnis", "op_sav_help": "Durch Wahl des günstigsten Anbieters",
+    "op_hz_m": "Horizont", "op_mam": "Min / Avg / Max bei +{days}T",
+    "op_extra": "Mehrkosten vs. {op}", "op_pct": "% teurer",
+    "op_prof": "**Anbieter-Profil**",
+    "op_radar_cats": ["Günstiger Preis", "Preisstabilität", "Verfügbarkeit", "Datendichte"],
+    "op_radar_t": "Anbieter-Profil bei +{days}T",
+    "op_radar_c": (
+        "Günstiger Preis: niedrigerer Mindestpreis = besser · Preisstabilität: kleinere Spanne = besser · "
+        "Verfügbarkeit: mehr Plätze = besser · Datendichte: mehr Datenpunkte = besser"
+    ),
+    "op_scatter": "Niedrigster Preis vs. durchschn. verfügbare Plätze",
+    "op_seats_hz": "Durchschn. verfügbare Plätze nach Buchungshorizont",
+    "op_low": "Niedrigster Preis (€)", "op_seats": "Durchschn. Plätze",
+    "op_route_head": "#### 🔀 Streckenvergleich",
+    "op_routes_lbl": "Strecken vergleichen",
+    "op_badge": " 🏆 Günstigste", "op_avg": "Avg.", "op_pts": "Pkt.",
+    "op_sel2": "Mindestens 2 Strecken auswählen.",
+    "op_no_rt": "Keine Strecke ausgewählt.",
+    "op_hz_t": "Durchschnittspreis nach Buchungshorizont",
+    "op_low_rt": "Niedrigster Preis pro Strecke",
+    "op_conn": "Verbindungen pro Horizont",
+    "cr_head": "Crawler-Status & Steuerung",
+    "cr_ctrl": "#### 🤖 Crawler-Steuerung",
+    "cr_err": "⚠️ {n} Importfehler",
+    "cr_sel": "Crawler auswählen", "cr_start": "▶ Jetzt starten",
+    "cr_on": "✅ Aktiv", "cr_off": "⚠️ Inaktiv",
+    "cr_status": "#### 📋 Status pro Crawler",
+    "cr_stat_cap": "Crawler · Zuletzt · Einträge · Strecken · Durchschnittspreis",
+    "cr_refresh": "🔄 Log aktualisieren",
+    "cr_data": "#### 📊 Datenübersicht",
+    "cr_total": "Einträge gesamt", "cr_ops": "Anbieter",
+    "cr_routes": "Strecken", "cr_last": "Zuletzt gesammelt",
+    "cr_c1": "Einträge pro Crawler",
+    "cr_rec": "Einträge", "cr_cr": "Crawler",
+    "cr_c2": "Einträge pro Tag pro Crawler", "cr_date": "Datum",
+    "nm_head": "Normalisierte Preise — {orig} → {dest}",
+    "nm_no_dist": "⚠️ Keine Distanzdaten für diese Strecke verfügbar.",
+    "nm_no_time": "⚠️ Keine Fahrzeitdaten (arrival_at fehlt) für diese Strecke.",
+    "nm_dist": "Streckendistanz (Luftlinie)",
+    "nm_km": "km",
+    "nm_eur_km": "€ / km",
+    "nm_eur_h": "€ / h",
+    "nm_hz": "Buchungshorizont (Tage im Voraus)",
+    "nm_c1": "Mindestpreis pro km nach Buchungshorizont",
+    "nm_c2": "Mindestpreis pro Fahrstunde nach Buchungshorizont",
+    "nm_c3": "€/km vs. €/h — Anbietervergleich bei +{days} Tagen",
+    "nm_c4": "Verteilung: Preis pro km über alle Horizonte",
+    "nm_note": "ℹ️ Distanzen sind Luftlinien (Haversine). Tatsächliche Schienenwege sind typischerweise 15–25% länger.",
+    "nm_hz_sel": "Buchungshorizont für Streudiagramm",
+    "nm_op": "Anbieter",
+    "nm_travel_h": "Ø Fahrzeit (h)",
+    "nm_obs": "Beobachtungen",
+}
+
+TEXTS = {"en": EN, "de": DE}
+
+def op_label(op): return OPERATOR_LABELS.get(op, op)
+def op_color(op): return OPERATOR_COLORS.get(op, "#888888")
+
+def time_since(dt, T) -> str:
+    try:
+        diff = (datetime.utcnow() - pd.to_datetime(dt).replace(tzinfo=None)).total_seconds()
+        if diff < 60:    return T["just_now"]
+        if diff < 3600:  return T["min_ago"].format(m=int(diff/60))
+        if diff < 86400: return T["h_ago"].format(h=int(diff/3600))
+        return T["days_ago"].format(d=int(diff/86400))
+    except Exception:
+        return "—"
