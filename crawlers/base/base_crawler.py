@@ -6,14 +6,18 @@ the abstract methods get_url(), get_params() and parse().
 
 import time
 import os
+import socket
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone, timedelta
 
 import requests
+from requests.adapters import HTTPAdapter
 from loguru import logger
 from dotenv import load_dotenv
 
 load_dotenv()
+
+socket.setdefaulttimeout(60)
 
 
 class BaseCrawler(ABC):
@@ -35,7 +39,7 @@ class BaseCrawler(ABC):
 
     MAX_RETRIES = 3
     RETRY_DELAY = 5
-    REQUEST_TIMEOUT = 30
+    REQUEST_TIMEOUT = (10, 45)  # (connect_timeout, read_timeout)
     OPERATOR_NAME = "base"
 
     def __init__(self):
@@ -77,6 +81,12 @@ class BaseCrawler(ABC):
             "Accept": "application/json, text/html",
             "Accept-Language": "de-DE,de;q=0.9,en;q=0.8",
         })
+        # Eigene Retry-Logik im fetch(); urllib3 soll nicht selbst retrien.
+        # Erzwingt außerdem HTTP/1.1 – verhindert urllib3/hface HTTP/2-Bug,
+        # bei dem recv() nach PC-Schlaf/Netzwechsel unbegrenzt blockieren kann.
+        adapter = HTTPAdapter(max_retries=0)
+        session.mount("https://", adapter)
+        session.mount("http://", adapter)
         return session
 
     def _connect_db(self):
@@ -124,7 +134,7 @@ class BaseCrawler(ABC):
                 self.logger.warning(f"Timeout on attempt {attempt}")
             except requests.exceptions.HTTPError as e:
                 self.logger.warning(f"HTTP error {e.response.status_code} on attempt {attempt}")
-                if e.response.status_code in (400, 404):
+                if e.response.status_code in (400, 402, 404):
                     raise
             except requests.exceptions.ConnectionError:
                 self.logger.warning(f"Connection error on attempt {attempt}")

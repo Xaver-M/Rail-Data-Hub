@@ -18,6 +18,24 @@ services:
       timeout: 5s
       retries: 5
 
+  scheduler:
+    build:
+      context: .
+      dockerfile: scheduler/Dockerfile
+    container_name: rail_data_hub_scheduler
+    restart: unless-stopped
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+    environment:
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_USER: ${DB_USER}
+      DB_NAME: ${DB_NAME}
+      DB_HOST: timescaledb
+      DB_PORT: 5432
+    volumes:
+      - ./logs:/app/logs
+
 volumes:
   timescaledb_data:
     name: rail_data_hub_volume

@@ -163,7 +163,7 @@ if __name__ == "__main__":
 
     print(f"{len(routes)} RegioJet routes, {len(BOOKING_HORIZONS)} horizons\n")
 
-    for route in routes[:2]:
+    for route in routes[:3]:   #Test first 3 routes
         for horizon in BOOKING_HORIZONS[:3]:
             date = (datetime.now() + timedelta(days=horizon)).strftime("%Y-%m-%d")
             print(f"── {route.description} | +{horizon} days ({date})")
