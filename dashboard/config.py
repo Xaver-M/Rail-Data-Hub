@@ -1,4 +1,6 @@
 # dashboard/config.py
+import pandas as pd
+from datetime import datetime
 
 OPERATOR_COLORS = {
     "db": "#4a9eff", "flixtrain": "#a8e44a", "regiojet": "#ff7c5c",
@@ -176,6 +178,25 @@ EN = {
     "nm_op": "Operator",
     "nm_travel_h": "Avg. travel time (h)",
     "nm_obs": "Observations",
+    "nm_summary": "This route: **{eurkm:.3f} €/km** · **{eurh:.2f} €/h** (basis: {basis}, +{days}d)",
+    "nm_basis_note": "Charts below use the selected price basis. €/h uses total journey time (incl. transfers).",
+    "price_basis": "Price basis",
+    "price_min": "Minimum",
+    "price_avg": "Average",
+    "price_basis_help": "Minimum = cheapest fare per group (robust yield-management basis). Average = mean of all fares (sensitive to which trains were captured).",
+    "direct_filter": "Connection type",
+    "direct_all": "All",
+    "direct_only": "Direct only",
+    "direct_transfer": "With transfer",
+    "ov_dep_hour_note": "ℹ️ Note: some operators (esp. DB) only cover a limited daytime window — see Time of Day tab.",
+    "ov_fare_note": "ℹ️ Fare classes are not directly comparable across operators; price_eur (cheapest available fare) is the reliable field.",
+    "dt_coverage_warn": "⚠️ Limited daytime coverage: only {n} distinct hours recorded for {op}. Interpret with caution — this reflects the crawler's fixed query window, not the real timetable.",
+    "dt_seats_none": "No seat-availability data for this operator.",
+    "tr_heterogen": "⚠️ {n} distinct train identifiers for {op} — train numbers are heterogeneous (transfer combinations). Single-train analysis is most reliable for Trenitalia/Italo.",
+    "cr_health": "#### 🚦 7-day health",
+    "cr_health_cap": "Days with data in the last 7 · avg. records/day",
+    "cr_health_ok": "✅", "cr_health_warn": "⚠️", "cr_health_bad": "❌",
+    "cr_avg_day": "Ø/day",
 }
 
 DE = {
@@ -310,6 +331,25 @@ DE = {
     "nm_op": "Anbieter",
     "nm_travel_h": "Ø Fahrzeit (h)",
     "nm_obs": "Beobachtungen",
+    "nm_summary": "Diese Strecke: **{eurkm:.3f} €/km** · **{eurh:.2f} €/h** (Basis: {basis}, +{days}T)",
+    "nm_basis_note": "Charts unten nutzen die gewählte Preisbasis. €/h nutzt die Gesamtreisezeit (inkl. Umstiege).",
+    "price_basis": "Preisbasis",
+    "price_min": "Minimum",
+    "price_avg": "Durchschnitt",
+    "price_basis_help": "Minimum = günstigster Tarif pro Gruppe (robuste Yield-Management-Basis). Durchschnitt = Mittel aller Tarife (abhängig davon, welche Züge erfasst wurden).",
+    "direct_filter": "Verbindungstyp",
+    "direct_all": "Alle",
+    "direct_only": "Nur direkt",
+    "direct_transfer": "Mit Umstieg",
+    "ov_dep_hour_note": "ℹ️ Hinweis: Manche Anbieter (v.a. DB) decken nur ein begrenztes Tagesfenster ab — siehe Tab Tageszeit.",
+    "ov_fare_note": "ℹ️ Tarifklassen sind zwischen Anbietern nicht direkt vergleichbar; price_eur (günstigster verfügbarer Tarif) ist das verlässliche Feld.",
+    "dt_coverage_warn": "⚠️ Eingeschränkte Tagesabdeckung: nur {n} verschiedene Stunden für {op} erfasst. Vorsichtig interpretieren — dies spiegelt das feste Abfragefenster des Crawlers wider, nicht den echten Fahrplan.",
+    "dt_seats_none": "Keine Sitzplatz-Verfügbarkeitsdaten für diesen Anbieter.",
+    "tr_heterogen": "⚠️ {n} verschiedene Zug-IDs für {op} — Zugnummern sind heterogen (Umsteigekombinationen). Einzelzug-Analyse ist für Trenitalia/Italo am zuverlässigsten.",
+    "cr_health": "#### 🚦 7-Tage-Gesundheit",
+    "cr_health_cap": "Tage mit Daten in den letzten 7 · Ø Einträge/Tag",
+    "cr_health_ok": "✅", "cr_health_warn": "⚠️", "cr_health_bad": "❌",
+    "cr_avg_day": "Ø/Tag",
 }
 
 TEXTS = {"en": EN, "de": DE}

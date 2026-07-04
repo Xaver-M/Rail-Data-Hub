@@ -2,108 +2,82 @@
 import streamlit as st
 import plotly.express as px
 import pandas as pd
-from dashboard.database import get_db
+
 from dashboard.config import op_color, op_label
+from dashboard.database import load_booking_horizon
+
 
 def render_booking_horizon(route, T):
-    st.title(f"⏱️ {T['bh_head'].format(orig=route['origin_name'], dest=route['destination_name'])}")
-    
-    db = get_db()
-    
-    # Detektieren der Abfahrtszeit-Spalte
-    sample_df = db.query("SELECT * FROM price_observations LIMIT 1")
-    dep_col = next((c for c in ["departure_time", "departure_date", "departure", "departure_at"] if c in sample_df.columns), None)
-    
-    if not dep_col:
-        st.warning(T["bh_no"])
-        return
+    st.subheader(T["bh_head"].format(orig=route["origin_name"], dest=route["destination_name"]))
 
-    # 1. SQL-Query: Daten nach Horizont und Anbieter aggregieren
-    query = f"""
-        SELECT 
-            operator,
-            EXTRACT(DAY FROM ({dep_col} - collected_at)) as horizon_days,
-            AVG(price_eur) as avg_price,
-            COUNT(id) as connection_count
-        FROM price_observations
-        WHERE origin_name = :origin AND destination_name = :destination
-        GROUP BY operator, horizon_days
-        HAVING EXTRACT(DAY FROM ({dep_col} - collected_at)) BETWEEN 0 AND 90
-        ORDER BY horizon_days DESC
-    """
-    df_bh = db.query(query, params={"origin": route["origin_name"], "destination": route["destination_name"]})
-    
+    origin, destination = route["origin_name"], route["destination_name"]
+
+    df_bh = load_booking_horizon(origin, destination)
     if df_bh.empty:
-        st.warning(T["bh_no"])
+        st.info(T["bh_no"])
         return
 
-    # Datentypen korrigieren
-    df_bh["horizon_days"] = pd.to_numeric(df_bh["horizon_days"]).astype(int)
-    df_bh["avg_price"] = pd.to_numeric(df_bh["avg_price"])
-    df_bh["connection_count"] = pd.to_numeric(df_bh["connection_count"])
-    df_bh["Anbieter"] = df_bh["operator"].apply(op_label)
-    
-    color_map = {op_label(op): op_color(op) for op in df_bh["operator"].unique()}
+    df_bh["booking_horizon_days"] = pd.to_numeric(df_bh["booking_horizon_days"]).astype(int)
+    df_bh["price_avg"] = pd.to_numeric(df_bh["price_avg"])
+    df_bh["price_min"] = pd.to_numeric(df_bh["price_min"])
+    df_bh["observations"] = pd.to_numeric(df_bh["observations"])
+    df_bh["op_label"] = df_bh["operator"].map(op_label)
+    color_map = {op_label(o): op_color(o) for o in df_bh["operator"].unique()}
 
-    # 2. OPTIMALER BUCHUNGSZEITPUNKT (KPI-Karten berechnen)
+    # ── Optimaler Buchungszeitpunkt (KPI-Karten) ──
     st.write(f"#### 💡 {T['bh_opt']}")
-    
-    # Berechnen, wann es pro Operator im Schnitt am günstigsten war
-    opt_cols = st.columns(len(df_bh["operator"].unique()))
-    for idx, op in enumerate(df_bh["operator"].unique()):
+    ops = sorted(df_bh["operator"].unique())
+    opt_cols = st.columns(max(1, len(ops)))
+    for idx, op in enumerate(ops):
         df_op = df_bh[df_bh["operator"] == op]
-        if not df_op.empty:
-            # Günstigster Zeilenwert
-            cheapest_row = df_op.loc[df_op["avg_price"].idxmin()]
-            max_price = df_op["avg_price"].max()
-            
-            # Sparpotenzial berechnen vs. teuerstem Zeitpunkt
-            savings_pct = 0
-            if max_price > 0:
-                savings_pct = ((max_price - cheapest_row["avg_price"]) / max_price) * 100
-                
-            with opt_cols[idx]:
-                st.markdown(f"""
-                <div class="kpi-card" style="border-top: 4px solid {op_color(op)};">
-                    <div class="kpi-title">{op_label(op)}</div>
-                    <div class="kpi-value">+{int(cheapest_row['horizon_days'])} {T['days_unit']}</div>
-                    <div class="kpi-subtitle">{T['bh_cheap']} {cheapest_row['avg_price']:.2f} €</div>
-                    <div class="kpi-subtitle" style="color:#a8e44a; font-weight:bold;">{T['bh_saves'].format(pct=savings_pct)}</div>
-                </div>
-                """, unsafe_allow_html=True)
+        if df_op.empty:
+            continue
+        cheapest_row = df_op.loc[df_op["price_avg"].idxmin()]
+        max_price = df_op["price_avg"].max()
+        savings_pct = ((max_price - cheapest_row["price_avg"]) / max_price * 100) if max_price > 0 else 0
+        with opt_cols[idx]:
+            st.markdown(f"""
+            <div class="kpi-card" style="border-top: 4px solid {op_color(op)};">
+                <div class="kpi-title">{op_label(op)}</div>
+                <div class="kpi-value">+{int(cheapest_row['booking_horizon_days'])} {T['days_unit']}</div>
+                <div class="kpi-subtitle">{T['bh_cheap']} {cheapest_row['price_avg']:.2f} €</div>
+                <div class="kpi-subtitle" style="color:#a8e44a; font-weight:bold;">{T['bh_saves'].format(pct=savings_pct)}</div>
+            </div>
+            """, unsafe_allow_html=True)
 
     st.markdown("---")
 
-    # 3. CHARTS: Verlauf nach Horizont & Frequenz im Split-Layout
+    # ── Charts im Split-Layout ──
     c1, c2 = st.columns(2)
-    
+
     with c1:
         st.write(f"#### 📊 {T['bh_c1']}")
-        fig1 = px.line(
-            df_bh, x="horizon_days", y="avg_price", color="Anbieter",
-            color_discrete_map=color_map, markers=True,
-            labels={"horizon_days": T["ov_days_adv"], "avg_price": T["bh_avg"]}
-        )
-        # Zeitachse umkehren (90 Tage im Voraus links, 0 Tage knapp vor Abfahrt rechts)
+        fig1 = px.line(df_bh, x="booking_horizon_days", y="price_avg", color="op_label",
+                      color_discrete_map=color_map, markers=True,
+                      labels={"booking_horizon_days": T["ov_days_adv"], "price_avg": T["bh_avg"], "op_label": T["ov_op"]},
+                      custom_data=["observations", "price_min"])
+        fig1.update_traces(line_width=2, marker_size=7,
+                          hovertemplate="<b>%{fullData.name}</b><br>+%{x} days<br>Avg. %{y:.2f} €"
+                                        "<br>Min %{customdata[1]:.2f} €<br>%{customdata[0]} obs.")
         fig1.update_xaxes(autorange="reversed")
         fig1.update_layout(hovermode="x unified", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig1, use_container_width=True)
 
     with c2:
         st.write(f"#### 📈 {T['bh_c2']}")
-        fig2 = px.bar(
-            df_bh, x="horizon_days", y="connection_count", color="Anbieter",
-            color_discrete_map=color_map, barmode="stack",
-            labels={"horizon_days": T["ov_days_adv"], "connection_count": T["bh_conn"]}
-        )
+        fig2 = px.bar(df_bh, x="booking_horizon_days", y="observations", color="op_label",
+                      color_discrete_map=color_map, barmode="group",
+                      labels={"booking_horizon_days": T["ov_days_adv"], "observations": T["bh_conn"], "op_label": T["ov_op"]})
         fig2.update_xaxes(autorange="reversed")
-        fig2.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
+        fig2.update_layout(hovermode="x unified", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig2, use_container_width=True)
 
     st.markdown("---")
 
-    # 4. DETAIL-DATENTABELLE
+    # ── Detailtabelle ──
     st.write(f"#### 📋 {T['bh_table']}")
-    pivot_df = df_bh.pivot(index="horizon_days", columns="Anbieter", values="avg_price").sort_index(ascending=False)
-    # Schönere Formatierung für Währungswerte
-    st.dataframe(pivot_df.style.format("{:.2f} €", na_rep="—"), use_container_width=True)
+    pivot = df_bh.pivot_table(index="operator", columns="booking_horizon_days", values="price_avg").round(4)
+    pivot.index = pivot.index.map(op_label)
+    pivot.columns = [f"+{int(c)}d" for c in pivot.columns]
+    pivot = pivot[sorted(pivot.columns, key=lambda c: int(c.strip("+d")))]
+    st.dataframe(pivot.style.format("{:.2f} €", na_rep="—"), use_container_width=True)

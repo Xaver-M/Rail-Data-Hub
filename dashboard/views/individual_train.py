@@ -2,121 +2,130 @@
 import streamlit as st
 import plotly.express as px
 import pandas as pd
-from dashboard.database import get_db
+
 from dashboard.config import op_color, op_label
+from dashboard.database import load_train_numbers, load_single_train_data
+
 
 def render_individual_train(route, T):
-    st.title(f"🚆 {T['tab_train']}")
-    st.markdown(f"### Route: {route['label']}")
-    
-    db = get_db()
-    
-    # Detektieren der Abfahrtszeit-Spalte
-    sample_df = db.query("SELECT * FROM price_observations LIMIT 1")
-    dep_col = next((c for c in ["departure_time", "departure_date", "departure", "departure_at"] if c in sample_df.columns), None)
-    
-    if not dep_col:
-        st.warning(T["no_data"])
-        return
+    st.subheader(T["tr_head"].format(orig=route["origin_name"], dest=route["destination_name"]))
 
-    # 1. Alle verfügbaren Zugnummern für diese Strecke abfragen
-    trains_query = """
-        SELECT DISTINCT train_number 
-        FROM price_observations
-        WHERE origin_name = :origin AND destination_name = :destination AND train_number IS NOT NULL
-        ORDER BY train_number ASC
-    """
-    trains_df = db.query(trains_query, params={"origin": route["origin_name"], "destination": route["destination_name"]})
-    
+    origin, destination = route["origin_name"], route["destination_name"]
+    operators = route["operators"]
+
+    sel_op = st.selectbox(T["tr_op"], operators, format_func=op_label, key="train_op")
+
+    trains_df = load_train_numbers(origin, destination, sel_op)
     if trains_df.empty:
-        st.info("Keine Zugnummern-Daten für diese Strecke vorhanden.")
+        st.info(T["tr_no_data"])
         return
-        
+
     train_list = trains_df["train_number"].tolist()
-    selected_train = st.selectbox("🎯 Bitte eine Zugnummer wählen:", options=train_list)
+    if len(train_list) > 60:
+        st.caption(T["tr_heterogen"].format(n=len(train_list), op=op_label(sel_op)))
 
-    if not selected_train:
+    sel_train = st.selectbox(T["tr_sel"], train_list, key="train_name")
+    if not sel_train:
         return
 
-    # 2. SQL-Abfrage für den spezifischen Zug
-    query = f"""
-        SELECT 
-            operator,
-            train_number,
-            {dep_col} as departure_time,
-            collected_at,
-            price_eur,
-            seats_available,
-            EXTRACT(DAY FROM ({dep_col} - collected_at)) as horizon_days
-        FROM price_observations
-        WHERE origin_name = :origin AND destination_name = :destination AND train_number = :train
-        ORDER BY collected_at DESC
-    """
-    df_single = db.query(query, params={
-        "origin": route["origin_name"], 
-        "destination": route["destination_name"], 
-        "train": selected_train
-    })
-
+    df_single = load_single_train_data(origin, destination, sel_op, sel_train)
     if df_single.empty:
-        st.warning(T["no_data"])
+        st.info(T["tr_no_data"])
         return
 
-    # Datentypen korrigieren
-    df_single["price_eur"] = pd.to_numeric(df_single["price_eur"])
-    df_single["horizon_days"] = pd.to_numeric(df_single["horizon_days"]).astype(int)
-    if "seats_available" in df_single.columns:
-        df_single["seats_available"] = pd.to_numeric(df_single["seats_available"], errors="coerce")
+    # ── aktuelle Werte (jüngste Beobachtung) ──
+    latest = df_single.iloc[0]
+    dep_str = pd.to_datetime(latest["departure_at"]).strftime("%H:%M")
 
-    # Statistiken für diesen spezifischen Zug anzeigen
-    m1, m2, m3 = st.columns(3)
-    m1.metric("Günstigster Preis", f"{df_single['price_eur'].min():.2f} €")
-    m2.metric("Durchschnittspreis", f"{df_single['price_eur'].mean():.2f} €")
-    m3.metric("Erfasste Beobachtungen", f"{len(df_single):,}".replace(",", "."))
+    price_now = float(latest["price_eur"])
+    price_min = float(df_single["price_eur"].min())
+    price_max = float(df_single["price_eur"].max())
 
-    st.markdown("---")
+    # ── 7-Tage-Änderung ──
+    cut7 = df_single["collected_at"].max() - pd.Timedelta(days=8)
+    older = df_single[df_single["collected_at"] <= cut7]
+    price_7d_ago = float(older.iloc[0]["price_eur"]) if not older.empty else None
+    change_7d = ((price_now - price_7d_ago) / price_7d_ago * 100) if price_7d_ago else None
 
-    # 3. CHARTS IM SPLIT-LAYOUT
-    c1, c2 = st.columns(2)
-    
-    with c1:
-        st.write("#### 📉 Preiskurve nach Buchungshorizont")
-        # Aggregieren nach Horizont für eine sauberere Kurve
-        df_chart = df_single.groupby("horizon_days").agg({"price_eur": "mean"}).reset_index()
-        
-        fig1 = px.line(
-            df_chart, x="horizon_days", y="price_eur", markers=True,
-            labels={"horizon_days": T["ov_days_adv"], "price_eur": "Durchschnittspreis (€)"},
-            color_discrete_sequence=[op_color(df_single["operator"].iloc[0])]
-        )
-        fig1.update_xaxes(autorange="reversed")
-        fig1.update_layout(hovermode="x unified", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
-        st.plotly_chart(fig1, use_container_width=True)
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric(T["tr_cur"], f"{price_now:.2f} €",
+              help=T["tr_fare"].format(fare=latest.get("fare_class") or "—"))
+    m2.metric(T["tr_lohi"], f"{price_min:.2f} € / {price_max:.2f} €")
+    m3.metric(T["tr_7d"], f"{change_7d:+.1f}%" if change_7d is not None else "—",
+              delta=f"{change_7d:+.1f}%" if change_7d is not None else None, delta_color="inverse")
+    seats = latest.get("seats_available")
+    m4.metric(T["tr_seats"], str(int(seats)) if pd.notna(seats) else "—")
+    st.divider()
 
-    with c2:
-        st.write("#### 💺 Sitzplatzverfügbarkeit vs. Preis")
-        if "seats_available" in df_single.columns and not df_single["seats_available"].dropna().empty:
-            fig2 = px.scatter(
-                df_single, x="seats_available", y="price_eur", 
-                labels={"seats_available": "Verfügbare Sitze", "price_eur": "Preis (€)"},
-                color_discrete_sequence=["#ffb547"]
-            )
-            fig2.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
-            st.plotly_chart(fig2, use_container_width=True)
-        else:
-            st.info("Für diesen Betreiber/Zug werden keine Echtzeit-Sitzplatzdaten erhoben.")
+    # ── Preisverlauf über die Zeit (Sammeldatum) ──
+    df_single["col_date"] = df_single["collected_at"].dt.date
+    df_hist = (df_single.groupby("col_date")
+               .agg(price_min=("price_eur", "min"), price_avg=("price_eur", "mean"))
+               .reset_index().sort_values("col_date"))
 
-    st.markdown("---")
+    if not df_hist.empty:
+        avg_l = float(df_hist["price_avg"].mean())
+        fig = px.line(df_hist, x="col_date", y="price_min",
+                      title=T["tr_dev"].format(train=sel_train, dep=dep_str),
+                      labels={"col_date": T["ov_date"], "price_min": T["ov_low_lbl"]},
+                      color_discrete_sequence=[op_color(sel_op)])
+        fig.add_hline(y=avg_l, line_dash="dot", line_color="#888", annotation_text=f"Avg. {avg_l:.2f} €")
+        fig.update_traces(line_width=2, fill="tozeroy")
+        fig.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.info(T["tr_no_hist"])
 
-    # 4. TABELLE DER LETZTEN MESSUNGEN
-    st.write("#### 📋 Letzte Beobachtungen")
-    st.dataframe(
-        df_single[["collected_at", "departure_time", "horizon_days", "price_eur"]]
-        .rename(columns={
-            "collected_at": "Abfrage-Zeitpunkt", 
-            "departure_time": "Geplante Abfahrt", 
-            "horizon_days": "Tage im Voraus", 
-            "price_eur": "Preis"
-        }).head(100), 
-        use_container_width=True
-    )
+    # ── Preis nach Buchungshorizont: Surcharge + absolut ──
+    df_hz = (df_single.dropna(subset=["booking_horizon_days"])
+             .groupby("booking_horizon_days")
+             .agg(price_avg=("price_eur", "mean"), price_min=("price_eur", "min"),
+                  observations=("price_eur", "count"))
+             .reset_index().sort_values("booking_horizon_days"))
+
+    if not df_hz.empty:
+        tp = float(df_hz["price_avg"].min())
+        th = int(df_hz.loc[df_hz["price_avg"].idxmin(), "booking_horizon_days"])
+        df_hz["surcharge_pct"] = ((df_hz["price_avg"].astype(float) - tp) / tp * 100).round(1)
+        df_hz["label"] = "+" + df_hz["booking_horizon_days"].astype(int).astype(str) + "d"
+
+        fig2 = px.bar(df_hz, x="label", y="surcharge_pct", color="surcharge_pct",
+                      color_continuous_scale=["#a8e44a", "#ffb547", "#ff5f5f"],
+                      range_color=[0, df_hz["surcharge_pct"].max() if df_hz["surcharge_pct"].max() > 0 else 1],
+                      title=T["tr_sur_title"].format(train=sel_train, price=tp, horizon=th),
+                      labels={"label": T["tr_hz_lbl"], "surcharge_pct": T["tr_sur_lbl"]},
+                      custom_data=["price_avg", "observations", "price_min"])
+        fig2.update_traces(hovertemplate="<b>%{x}</b><br>+%{y:.1f}%<br>Avg. %{customdata[0]:.2f} €"
+                                         "<br>Min %{customdata[2]:.2f} €<br>%{customdata[1]} obs.")
+        fig2.update_coloraxes(showscale=False)
+        fig2.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
+        st.plotly_chart(fig2, use_container_width=True)
+
+        fig3 = px.line(df_hz, x="label", y="price_avg", markers=True,
+                       title=T["tr_abs"].format(train=sel_train),
+                       labels={"label": T["tr_hz_lbl"], "price_avg": T["ov_avg"]},
+                       color_discrete_sequence=[op_color(sel_op)],
+                       custom_data=["surcharge_pct", "observations"])
+        fig3.update_traces(line_width=2, marker_size=7, fill="tozeroy",
+                           hovertemplate="<b>%{x}</b><br>Avg. %{y:.2f} €<br>+%{customdata[0]:.1f}%<br>%{customdata[1]} obs.")
+        fig3.add_hline(y=tp, line_dash="dot", line_color="#3B6D11", annotation_text=T["tr_low_line"].format(price=tp))
+        fig3.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
+        st.plotly_chart(fig3, use_container_width=True)
+
+        best  = df_hz.loc[df_hz["price_avg"].idxmin()]
+        worst = df_hz.loc[df_hz["price_avg"].idxmax()]
+        st.success(T["tr_rec"].format(days=int(best["booking_horizon_days"]), price=float(best["price_avg"]),
+                                      obs=int(best["observations"]), worst=int(worst["booking_horizon_days"]),
+                                      pct=float(worst["surcharge_pct"])))
+    else:
+        st.info(T["tr_no_hz"])
+
+    # ── Sitzplatz vs Preis ──
+    df_seats = df_single[df_single["seats_available"].notna()]
+    if not df_seats.empty:
+        st.divider()
+        fig4 = px.scatter(df_seats, x="seats_available", y="price_eur",
+                          labels={"seats_available": T["tr_seats"], "price_eur": T["ov_price"]},
+                          color_discrete_sequence=[op_color(sel_op)])
+        fig4.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
+        st.plotly_chart(fig4, use_container_width=True)

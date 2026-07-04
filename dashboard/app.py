@@ -30,7 +30,7 @@ if "current_view" not in st.session_state:
 # ══════════════════════════════════════════════════════════════════════════════
 with st.sidebar:
     st.title("🚄 RailDataHub")
-    
+
     col_l1, col_l2 = st.columns(2)
     if col_l1.button("🇬🇧 English", use_container_width=True, type="primary" if st.session_state.lang == "en" else "secondary"):
         st.session_state.lang = "en"
@@ -38,9 +38,9 @@ with st.sidebar:
     if col_l2.button("🇩🇪 Deutsch", use_container_width=True, type="primary" if st.session_state.lang == "de" else "secondary"):
         st.session_state.lang = "de"
         st.rerun()
-        
+
     T = TEXTS[st.session_state.lang]
-    st.caption(f"⚡ TimescaleDB Mode Active")
+    st.caption("⚡ TimescaleDB Mode Active")
     st.divider()
 
     with st.spinner("Loading routes..."):
@@ -66,24 +66,32 @@ with st.sidebar:
         filtered_df = routes_df
 
     route_labels = filtered_df["label"].tolist()
-    selected_label = st.selectbox(T["route_label"], options=route_labels, label_visibility="collapsed")
+
+    if "selected_label" not in st.session_state or st.session_state.selected_label not in route_labels:
+        st.session_state.selected_label = route_labels[0]
+
+    selected_label = st.selectbox(
+        T["route_label"], options=route_labels,
+        index=route_labels.index(st.session_state.selected_label) if st.session_state.selected_label in route_labels else 0,
+        label_visibility="collapsed", key="route_selector",
+    )
+    st.session_state.selected_label = selected_label
     current_route = filtered_df[filtered_df["label"] == selected_label].iloc[0]
-    
+
     st.divider()
     st.markdown(T["operators_on_route"])
     for op in current_route["operators"]:
         st.markdown(f'<span style="color:{op_color(op)}">●</span> {op_label(op)}', unsafe_allow_html=True)
 
-    # 🛠️ EXAKTES RECONSTRUCTED MENÜ IN DER SIDEBAR LINKS UNTEN:
     st.divider()
     if st.button("📊 Main Content / Tabs", use_container_width=True, type="primary" if st.session_state.current_view == "tabs" else "secondary"):
         st.session_state.current_view = "tabs"
         st.rerun()
-        
+
     if st.button(T["tab_operator"], use_container_width=True, type="primary" if st.session_state.current_view == "operator" else "secondary"):
         st.session_state.current_view = "operator"
         st.rerun()
-        
+
     if st.button(T["tab_crawler"], use_container_width=True, type="primary" if st.session_state.current_view == "crawler" else "secondary"):
         st.session_state.current_view = "crawler"
         st.rerun()
@@ -91,12 +99,14 @@ with st.sidebar:
     st.divider()
     st.metric(T["data_points"], f"{int(current_route['record_count']):,}".replace(",", "."))
     st.caption(f"{T['last_label']} {time_since(current_route['last_collected'], T)}")
+    if st.button(T["reload_data"], use_container_width=True):
+        st.cache_data.clear()
+        st.rerun()
 
 # ══════════════════════════════════════════════════════════════════════════════
 # MAIN CONTENT ROUTING & UPPER TABS
 # ══════════════════════════════════════════════════════════════════════════════
 if st.session_state.current_view == "tabs":
-    # Nur die 5 Kern-Tabs werden oben im Hauptfenster gerendert
     tab_titles = [
         T["tab_overview"],
         T["tab_train"],
