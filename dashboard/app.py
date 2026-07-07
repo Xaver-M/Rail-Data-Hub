@@ -256,6 +256,13 @@ with st.sidebar:
         st.rerun()
 
     st.markdown('<div class="rdh-divider"></div>', unsafe_allow_html=True)
+
+    from dashboard.database import is_offline_mode
+    if is_offline_mode():
+        st.warning("⚠ Offline · lokaler Snapshot", icon="⚠")
+    else:
+        st.caption("⚡ Live · TimescaleDB")
+
     st.markdown('<div class="rdh-nav-section">Navigation</div>', unsafe_allow_html=True)
 
     nav_items = [
