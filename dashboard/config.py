@@ -19,16 +19,17 @@ CUSTOM_CSS = """
 <style>
     /* Premium KPI Karten */
     .kpi-card {
-        background-color: #111111;
-        border: 1px solid #222222;
+        background-color: var(--secondary-background-color);
+        border: 1px solid rgba(128,128,128,0.18);
         border-radius: 12px;
         padding: 20px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.15);
         margin-bottom: 15px;
     }
     .kpi-title {
         font-size: 13px;
-        color: #888888;
+        color: var(--text-color);
+        opacity: 0.55;
         text-transform: uppercase;
         letter-spacing: 0.5px;
         margin-bottom: 5px;
@@ -36,12 +37,23 @@ CUSTOM_CSS = """
     .kpi-value {
         font-size: 28px;
         font-weight: 700;
-        color: #ffffff;
+        color: var(--text-color);
     }
     .kpi-subtitle {
         font-size: 12px;
-        color: #aaaaaa;
+        color: var(--text-color);
+        opacity: 0.6;
         margin-top: 5px;
+    }
+    .kpi-badge {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 600;
+        margin-top: 6px;
+        padding: 2px 8px;
+        border-radius: 4px;
+        border: 1px solid;
+        background: transparent;
     }
 </style>
 """
@@ -65,15 +77,18 @@ EN = {
     "tab_normalized": "📐 €/km & €/h",
     "dow": {0: "Mon", 1: "Tue", 2: "Wed", 3: "Thu", 4: "Fri", 5: "Sat", 6: "Sun"},
     "ov_time_range": "Time range (days back)", "ov_no_data": "No data in the selected time range.",
-    "ov_lowest_price": "Overall lowest price", "ov_avg_price": "Avg. price overall",
-    "ov_trend": "Trend (last 7d)", "ov_operators": "Operators",
+    "ov_lowest_price": "Lowest price", "ov_avg_price": "Avg. price",
+    "ov_max_price": "Highest price",
+    "ov_trend": "Price trend", "ov_trend_sub": "Avg. last 7 crawl days vs. earlier",
+    "ov_operators": "Operators",
     "ov_date": "Date", "ov_low_lbl": "Lowest price (€)", "ov_op": "Operator",
     "ov_price": "Price (€)", "ov_dep_hour": "Departure hour", "ov_count": "Count",
     "ov_days_adv": "Days in advance", "ov_fare_classes": "Fare classes",
     "ov_class": "Class", "ov_avg": "Avg. price (€)",
-    "ov_c1": "Lowest price per day — last {days} days",
+    "ov_c1": "Avg. price per crawl date — last {days} days",
+    "ov_c1_note": "📌 Each point = avg. of all fares crawled on that date. Shows how the average price evolves over the observation window.",
     "ov_c2": "Price range Min / Avg / Max per operator (diamond = average)",
-    "ov_c3": "Number of connections per departure hour and operator",
+    "ov_c3": "Total recorded fare observations per departure hour and operator",
     "ov_c4": "Number of recorded connections per booking horizon",
     "ov_c5": "Avg. price per fare class and operator",
     "ov_mode": "View",
@@ -82,6 +97,10 @@ EN = {
     "ov_dep_date": "Departure date",
     "ov_train_filter": "Train",
     "ov_all_trains": "All trains (aggregated)",
+    "ov_all_trains_note": "💡 Aggregated view across all trains. For individual train analysis see the Individual Train tab.",
+    "ov_eur_km": "€ / km (avg.)", "ov_eur_h": "€ / h (avg.)",
+    "ov_km_sub": "{km:.0f} km (Haversine)", "ov_h_sub": "Avg. travel: {h:.1f} h",
+    "ov_no_dist": "No distance data", "ov_no_time": "No travel time data",
     "ov_no_trip_data": "No data for this departure date.",
     "ov_nearest": "Nearest dates with data:",
     "ov_trip_dev": "Price development by booking horizon — departure {date}",
@@ -218,15 +237,18 @@ DE = {
     "dow": {0: "Mo", 1: "Di", 2: "Mi", 3: "Do", 4: "Fr", 5: "Sa", 6: "So"},
     "days_unit": "Tage",
     "ov_time_range": "Zeitraum (Tage zurück)", "ov_no_data": "Keine Daten im gewählten Zeitraum.",
-    "ov_lowest_price": "Niedrigster Gesamtpreis", "ov_avg_price": "Durchschnittspreis gesamt",
-    "ov_trend": "Trend (letzte 7T)", "ov_operators": "Anbieter",
+    "ov_lowest_price": "Niedrigster Preis", "ov_avg_price": "Durchschnittspreis",
+    "ov_max_price": "Höchster Preis",
+    "ov_trend": "Preisentwicklung", "ov_trend_sub": "Ø letzte 7 Crawl-Tage vs. früher",
+    "ov_operators": "Anbieter",
     "ov_date": "Datum", "ov_low_lbl": "Niedrigster Preis (€)", "ov_op": "Anbieter",
     "ov_price": "Preis (€)", "ov_dep_hour": "Abfahrtsstunde", "ov_count": "Anzahl",
     "ov_days_adv": "Tage im Voraus", "ov_fare_classes": "Tarifklassen",
     "ov_class": "Klasse", "ov_avg": "Durchschnittspreis (€)",
-    "ov_c1": "Niedrigster Preis pro Tag — letzte {days} Tage",
+    "ov_c1": "Ø Preis pro Crawl-Datum — letzte {days} Tage",
+    "ov_c1_note": "📌 Jeder Punkt = Ø aller an diesem Datum gecrawlten Preise. Zeigt, wie sich der Durchschnittspreis im Beobachtungszeitraum entwickelt.",
     "ov_c2": "Preisrange Min / Avg / Max pro Anbieter (Raute = Durchschnitt)",
-    "ov_c3": "Anzahl Verbindungen pro Abfahrtsstunde und Anbieter",
+    "ov_c3": "Gesamte erfasste Preisbeobachtungen pro Abfahrtsstunde und Anbieter",
     "ov_c4": "Anzahl aufgezeichneter Verbindungen pro Buchungshorizont",
     "ov_c5": "Durchschnittspreis pro Tarifklasse und Anbieter",
     "ov_mode": "Ansicht",
@@ -235,6 +257,10 @@ DE = {
     "ov_dep_date": "Abfahrtsdatum",
     "ov_train_filter": "Zug",
     "ov_all_trains": "Alle Züge (aggregiert)",
+    "ov_all_trains_note": "💡 Aggregierte Ansicht über alle Züge. Für die Analyse einzelner Züge siehe Tab Einzelzug.",
+    "ov_eur_km": "€ / km (Ø)", "ov_eur_h": "€ / h (Ø)",
+    "ov_km_sub": "{km:.0f} km (Luftlinie)", "ov_h_sub": "Ø Fahrzeit: {h:.1f} h",
+    "ov_no_dist": "Keine Distanzdaten", "ov_no_time": "Keine Fahrzeitdaten",
     "ov_no_trip_data": "Keine Daten für dieses Abfahrtsdatum.",
     "ov_nearest": "Nächstgelegene Termine mit Daten:",
     "ov_trip_dev": "Preisentwicklung nach Buchungshorizont — Abfahrt {date}",

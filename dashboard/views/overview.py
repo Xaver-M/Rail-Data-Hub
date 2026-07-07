@@ -9,7 +9,24 @@ from dashboard.database import (
     load_overview_kpis, load_timeline_data, load_price_range_by_operator,
     load_departure_hour_counts, load_fare_class_avg,
     load_available_departure_dates, load_trip_data,
+    load_normalized_price_data, load_distances,
 )
+
+
+def _kpi_card(title, value, subtitle="", value_color=None, badge_color=None):
+    color_style = f"color:{value_color};" if value_color else ""
+    sub = ""
+    if badge_color and subtitle:
+        sub = f'<div class="kpi-badge" style="color:{badge_color};border-color:{badge_color};">{subtitle}</div>'
+    elif subtitle:
+        sub = f'<div class="kpi-subtitle">{subtitle}</div>'
+    return f"""
+    <div class="kpi-card">
+        <div class="kpi-title">{title}</div>
+        <div class="kpi-value" style="{color_style}">{value}</div>
+        {sub}
+    </div>
+    """
 
 
 def render_overview(route, T):
@@ -49,33 +66,39 @@ def render_overview(route, T):
             st.caption(f'{T["ov_nearest"]} ' + ", ".join(d.strftime("%d.%m.%Y") for d in sorted(nearest)))
             return
 
-        trains = sorted(t for t in df_trip["train_number"].dropna().unique() if t != "")
-        train_opts = ["__all__"] + trains
-        sel_train = st.selectbox(
-            T["ov_train_filter"], train_opts,
-            format_func=lambda t: T["ov_all_trains"] if t == "__all__" else str(t),
-            key="ov_train_filter_select",
-        )
-        if sel_train != "__all__":
-            df_trip = df_trip[df_trip["train_number"] == sel_train].copy()
+        st.caption(T["ov_all_trains_note"])
 
         if df_trip.empty:
             st.info(T["ov_no_trip_data"])
             return
 
         min_price = float(df_trip["price_eur"].min())
+        max_price = float(df_trip["price_eur"].max())
         min_op    = df_trip.loc[df_trip["price_eur"].idxmin(), "operator"]
+        max_op    = df_trip.loc[df_trip["price_eur"].idxmax(), "operator"]
         avg_price = float(df_trip["price_eur"].mean())
         recent    = df_trip["collected_at"] >= (df_trip["collected_at"].max() - pd.Timedelta(days=7))
         base      = df_trip[~recent]["price_eur"].mean()
         trend     = ((df_trip[recent]["price_eur"].mean() - base) / base * 100) if (pd.notna(base) and base) else 0
+        trend_color = "#ef4444" if trend > 1 else "#22c55e" if trend < -1 else None
+        trend_val   = f"▲ +{trend:.1f}%" if trend > 1 else f"▼ {trend:.1f}%" if trend < -1 else "± 0.0%"
 
-        c1, c2, c3, c4 = st.columns(4)
-        c1.metric(T["ov_lowest_price"], f"{min_price:.2f} €", op_label(min_op))
-        c2.metric(T["ov_avg_price"], f"{avg_price:.2f} €")
-        c3.metric(T["ov_trend_trip"], f"{trend:+.1f}%", delta=f"{trend:+.1f}%",
-                  delta_color="inverse", help=T["ov_trend_trip_help"])
-        c4.metric(T["ov_operators"], df_trip["operator"].nunique())
+        c1, c2, c3, c4, c5 = st.columns(5)
+        with c1:
+            st.markdown(_kpi_card(T["ov_lowest_price"], f"{min_price:.2f} €",
+                                  op_label(min_op), value_color="#22c55e",
+                                  badge_color=op_color(min_op)), unsafe_allow_html=True)
+        with c2:
+            st.markdown(_kpi_card(T["ov_avg_price"], f"{avg_price:.2f} €"), unsafe_allow_html=True)
+        with c3:
+            st.markdown(_kpi_card(T["ov_max_price"], f"{max_price:.2f} €",
+                                  op_label(max_op), value_color="#f97316",
+                                  badge_color=op_color(max_op)), unsafe_allow_html=True)
+        with c4:
+            st.markdown(_kpi_card(T["ov_trend_trip"], trend_val,
+                                  T["ov_trend_sub"], value_color=trend_color), unsafe_allow_html=True)
+        with c5:
+            st.markdown(_kpi_card(T["ov_operators"], str(df_trip["operator"].nunique())), unsafe_allow_html=True)
 
         df_hz = (df_trip.dropna(subset=["booking_horizon_days"])
                  .groupby(["operator", "booking_horizon_days"])
@@ -107,6 +130,7 @@ def render_overview(route, T):
                           hovertemplate="<b>%{fullData.name}</b><br>+%{x} " + T["days_unit"] +
                                         "<br>Avg. %{y:.2f} €<br>Min %{customdata[0]:.2f} €<br>%{customdata[1]} obs.")
         fig.update_xaxes(autorange="reversed")
+        fig.update_yaxes(rangemode="tozero")
         fig.update_layout(hovermode="x unified", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig, use_container_width=True)
         return
@@ -135,23 +159,65 @@ def render_overview(route, T):
         st.info(T["ov_no_data"])
         return
 
-    min_op_row = timeline_df.loc[timeline_df["min_price"].idxmin()]
+    min_op_row  = timeline_df.loc[timeline_df["min_price"].idxmin()]
+    max_op_row  = timeline_df.loc[timeline_df["max_price"].idxmax()]
+    route_max   = float(max_op_row["max_price"])
+    trend_color = "#ef4444" if trend > 1 else "#22c55e" if trend < -1 else None
+    trend_val   = f"▲ +{trend:.1f}%" if trend > 1 else f"▼ {trend:.1f}%" if trend < -1 else "± 0.0%"
 
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric(T["ov_lowest_price"], f"{min_price:.2f} €", op_label(min_op_row["operator"]))
-    c2.metric(T["ov_avg_price"], f"{avg_price:.2f} €")
-    c3.metric(T["ov_trend"], f"{trend:+.1f}%", delta=f"{trend:+.1f}%", delta_color="inverse")
-    c4.metric(T["ov_operators"], int(row["n_operators"]))
+    # ── €/km und €/h berechnen ──
+    dist_df = load_distances()
+    route_id = route.get("route_id")
+    haversine_km = None
+    if route_id is not None and not dist_df.empty:
+        match = dist_df[dist_df["route_id"] == route_id]
+        if not match.empty:
+            haversine_km = float(match.iloc[0]["haversine_km"])
+
+    norm_df = load_normalized_price_data(origin, destination)
+    avg_travel_h = float(norm_df["travel_h"].mean()) if not norm_df.empty and norm_df["travel_h"].notna().any() else None
+
+    eur_km_val = f"{avg_price / haversine_km:.3f} €" if haversine_km else "—"
+    eur_km_sub = T["ov_km_sub"].format(km=haversine_km) if haversine_km else T["ov_no_dist"]
+    eur_h_val  = f"{avg_price / avg_travel_h:.2f} €" if avg_travel_h else "—"
+    eur_h_sub  = T["ov_h_sub"].format(h=avg_travel_h) if avg_travel_h else T["ov_no_time"]
+
+    # ── Zeile 1: Preise + Meta ──
+    c1, c2, c3, c4, c5 = st.columns(5)
+    with c1:
+        st.markdown(_kpi_card(T["ov_lowest_price"], f"{min_price:.2f} €",
+                              op_label(min_op_row["operator"]), value_color="#22c55e",
+                              badge_color=op_color(min_op_row["operator"])), unsafe_allow_html=True)
+    with c2:
+        st.markdown(_kpi_card(T["ov_avg_price"], f"{avg_price:.2f} €"), unsafe_allow_html=True)
+    with c3:
+        st.markdown(_kpi_card(T["ov_max_price"], f"{route_max:.2f} €",
+                              op_label(max_op_row["operator"]), value_color="#f97316",
+                              badge_color=op_color(max_op_row["operator"])), unsafe_allow_html=True)
+    with c4:
+        st.markdown(_kpi_card(T["ov_trend"], trend_val,
+                              T["ov_trend_sub"], value_color=trend_color), unsafe_allow_html=True)
+    with c5:
+        st.markdown(_kpi_card(T["ov_operators"], str(int(row["n_operators"]))), unsafe_allow_html=True)
+
+    # ── Zeile 2: Normalisierte Preise ──
+    c6, c7, _ = st.columns([2, 2, 1])
+    with c6:
+        st.markdown(_kpi_card(T["ov_eur_km"], eur_km_val, eur_km_sub), unsafe_allow_html=True)
+    with c7:
+        st.markdown(_kpi_card(T["ov_eur_h"], eur_h_val, eur_h_sub), unsafe_allow_html=True)
 
     timeline_df["op_label"] = timeline_df["operator"].map(op_label)
     color_map = {op_label(o): op_color(o) for o in timeline_df["operator"].unique()}
 
-    fig = px.line(timeline_df, x="col_date", y="min_price", color="op_label", color_discrete_map=color_map,
+    fig = px.line(timeline_df, x="col_date", y="avg_price", color="op_label", color_discrete_map=color_map,
                   markers=True, title=T["ov_c1"].format(days=days),
-                  labels={"col_date": T["ov_date"], "min_price": T["ov_low_lbl"], "op_label": T["ov_op"]})
-    fig.update_traces(line_width=2)
+                  labels={"col_date": T["ov_date"], "avg_price": T["ov_avg"], "op_label": T["ov_op"]})
+    fig.update_traces(line_width=2, marker_size=5)
+    fig.update_yaxes(rangemode="tozero")
     fig.update_layout(hovermode="x unified", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
     st.plotly_chart(fig, use_container_width=True)
+    st.caption(T["ov_c1_note"])
 
     # ── Preisspanne Min/Avg/Max pro Operator ──
     range_df = load_price_range_by_operator(origin, destination)
@@ -164,6 +230,7 @@ def render_overview(route, T):
             fig2.add_trace(go.Scatter(x=[lbl], y=[float(r["price_avg"])], mode="markers",
                                        marker=dict(color="#fff", size=10, symbol="diamond", line=dict(color=col, width=2)),
                                        name=lbl))
+        fig2.update_yaxes(rangemode="tozero")
         fig2.update_layout(title=T["ov_c2"], yaxis_title=T["ov_price"],
                            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig2, use_container_width=True)
@@ -178,12 +245,14 @@ def render_overview(route, T):
         fig3 = px.bar(hour_df, x="hour_label", y="connection_count", color="op_label", color_discrete_map=color_map2,
                       barmode="group", title=T["ov_c3"],
                       labels={"hour_label": T["ov_dep_hour"], "connection_count": T["ov_count"], "op_label": T["ov_op"]})
+        fig3.update_yaxes(rangemode="tozero")
         fig3.update_layout(hovermode="x unified", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig3, use_container_width=True)
         st.caption(T["ov_dep_hour_note"])
 
-    # ── Tarifklassen ──
-    fare_df = load_fare_class_avg(origin, destination)
+    # ── Tarifklassen (nur Italo / Trenitalia) ──
+    route_ops = set(route.get("operators", []))
+    fare_df = load_fare_class_avg(origin, destination) if route_ops & {"italo", "trenitalia"} else pd.DataFrame()
     if not fare_df.empty:
         st.subheader(T["ov_fare_classes"])
         fare_df["op_label"] = fare_df["operator"].map(op_label)
@@ -191,6 +260,6 @@ def render_overview(route, T):
         fig4 = px.bar(fare_df, x="fare_class", y="avg_price", color="op_label", color_discrete_map=color_map3,
                       barmode="group", title=T["ov_c5"],
                       labels={"fare_class": T["ov_class"], "avg_price": T["ov_avg"], "op_label": T["ov_op"]})
+        fig4.update_yaxes(rangemode="tozero")
         fig4.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig4, use_container_width=True)
-        st.caption(T["ov_fare_note"])

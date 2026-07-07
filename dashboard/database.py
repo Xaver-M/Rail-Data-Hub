@@ -509,7 +509,7 @@ def load_route_horizon_curve(origin, destination):
                 .reset_index()
                 .sort_values("booking_horizon_days"))
 
-    query = """
+    query = """""
         SELECT booking_horizon_days,
                AVG(price_eur) as price_avg, MIN(price_eur) as price_min,
                COUNT(id) as observations
