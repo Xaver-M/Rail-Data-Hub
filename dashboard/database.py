@@ -343,7 +343,7 @@ def load_booking_horizon(origin, destination):
 
     query = """
         SELECT operator, booking_horizon_days,
-               AVG(price_eur) as price_avg, MIN(price_eur) as price_min,
+               AVG(price_eur) as price_avg, MIN(price_eur) as price_min, MAX(price_eur) as price_max,
                COUNT(id) as observations
         FROM price_observations
         WHERE origin_name = :origin AND destination_name = :destination

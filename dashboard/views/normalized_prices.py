@@ -18,7 +18,7 @@ def render_normalized_prices(route, T):
         st.info(T["nm_no_dist"])
         return
     dist_km = float(route_dist_row["haversine_km"].iloc[0])
-    st.caption(f"{T['nm_dist']}: **{dist_km:.1f} {T['nm_km']}**  —  {T['nm_note']}")
+    st.caption(f"{T['nm_dist']}: **{dist_km:.1f} {T['nm_km']}** —  {T['nm_note']}")
 
     with st.spinner("..."):
         df_norm_raw = load_normalized_price_data(origin, destination)
@@ -30,8 +30,8 @@ def render_normalized_prices(route, T):
     # ── Steuerelemente: Preisbasis + Verbindungstyp ──
     cbasis, cdirect = st.columns(2)
     with cbasis:
-        basis = st.radio(T["price_basis"], options=["min", "avg"],
-                         format_func=lambda m: T["price_min"] if m == "min" else T["price_avg"],
+        basis = st.radio(T["price_basis"], options=["min", "avg", "max"],
+                         format_func=lambda m: {"min": T["price_min"], "avg": T["price_avg"], "max": "Max"}[m],
                          horizontal=True, key="nm_basis", help=T["price_basis_help"])
     with cdirect:
         direct_choice = st.radio(T["direct_filter"], options=["all", "direct", "transfer"],
@@ -53,17 +53,21 @@ def render_normalized_prices(route, T):
     df_t["eur_per_h"]  = df_t["price_eur"] / df_t["travel_h"]
 
     df_agg = (df_t.groupby(["operator", "booking_horizon_days"])
-              .agg(eur_km_min=("eur_per_km", "min"), eur_km_avg=("eur_per_km", "mean"),
-                   eur_h_min=("eur_per_h", "min"),   eur_h_avg=("eur_per_h", "mean"),
+              .agg(eur_km_min=("eur_per_km", "min"), eur_km_avg=("eur_per_km", "mean"), eur_km_max=("eur_per_km", "max"),
+                   eur_h_min=("eur_per_h", "min"),   eur_h_avg=("eur_per_h", "mean"), eur_h_max=("eur_per_h", "max"),
                    travel_h_avg=("travel_h", "mean"), observations=("price_eur", "count"))
               .reset_index())
     df_agg["op_label"] = df_agg["operator"].map(op_label)
     df_agg = df_agg.sort_values(["operator", "booking_horizon_days"])
     color_map = {op_label(o): op_color(o) for o in df_agg["operator"].unique()}
 
-    ykm = "eur_km_min" if basis == "min" else "eur_km_avg"
-    yh  = "eur_h_min"  if basis == "min" else "eur_h_avg"
-    basis_lbl = T["price_min"] if basis == "min" else T["price_avg"]
+    # Auswahl der Spalten basierend auf Basis
+    if basis == "min":
+        ykm, yh, basis_lbl = "eur_km_min", "eur_h_min", T["price_min"]
+    elif basis == "avg":
+        ykm, yh, basis_lbl = "eur_km_avg", "eur_h_avg", T["price_avg"]
+    else:
+        ykm, yh, basis_lbl = "eur_km_max", "eur_h_max", T["price_max_label"]
 
     st.caption(T["nm_basis_note"])
 

@@ -1,6 +1,8 @@
 # dashboard/config.py
 import pandas as pd
 from datetime import datetime
+import streamlit as st
+
 
 OPERATOR_COLORS = {
     "db": "#4a9eff", "flixtrain": "#a8e44a", "regiojet": "#ff7c5c",
@@ -216,6 +218,87 @@ EN = {
     "cr_health_cap": "Days with data in the last 7 · avg. records/day",
     "cr_health_ok": "✅", "cr_health_warn": "⚠️", "cr_health_bad": "❌",
     "cr_avg_day": "Ø/day",
+        "lp_eyebrow":        "KIT · Institute of Economics · SS 2026",
+    "lp_subtitle":       "Systematic collection and analysis of ticket prices from European rail operators — empirical foundation for studying yield management strategies in passenger rail.",
+    "lp_kpi_obs":        "Observations",
+    "lp_kpi_ops":        "Operators",
+    "lp_kpi_routes":     "Routes",
+    "lp_kpi_horizons":   "Horizons",
+    "lp_sec_operators":  "Covered Operators",
+    "lp_sec_collection": "Data Collection",
+    "lp_sec_modules":    "Analysis Modules",
+    "lp_sec_method":     "Methodology & Notes",
+    "lp_observations":   "Observations",
+    "lp_hz_label":       "Booking horizons in days before departure",
+    "lp_steps_titles":   ["Scheduler", "14 Horizons", "TimescaleDB", "This Portal"],
+    "lp_steps_descs":    [
+        "Every day at 10:00 UTC the automated crawler process starts for all active operators simultaneously.",
+        "Per route, prices are queried for 14 fixed booking points between 1 and 90 days before departure.",
+        "All observations are deduplicated and stored in a time-series database on the project VM.",
+        "The dashboard reads directly from the database and enables real-time analysis and comparison.",
+    ],
+    "lp_mod_names":      ["Overview", "Individual Train", "Booking Horizon", "Time of Day", "Operator Comparison", "€/km & €/h", "Crawler Status"],
+    "lp_mod_questions":  [
+        "How have prices on this route developed over time?",
+        "How does the price of a specific train change over time?",
+        "When is the optimal time to book?",
+        "Are early or late departures systematically more expensive?",
+        "Which operator offers the best price on this route?",
+        "Which operator offers the best price per kilometre?",
+        "How reliably are the data collectors running?",
+    ],
+    "lp_mod_details":    [
+        "MIN · AVG · MAX per operator, selectable time range",
+        "Price history from 90 days out to just before departure",
+        "Price curves for all 14 booking horizons compared",
+        "Price by departure hour and day of week",
+        "Direct comparison of all operators at a selectable horizon",
+        "Normalised prices for route-neutral comparison",
+        "7-day availability, last runs, record counts",
+    ],
+    "lp_method_left":    (
+        "<b>Price basis</b><br>"
+        "All analyses use the cheapest available fare (<code>MIN(price_eur)</code>) per route, "
+        "horizon and collection day. Standardised to: 1 adult, 2nd class / economy fare, "
+        "single journey, no railcards or extras.<br><br>"
+        "<b>Fare classes</b><br>"
+        "The <code>fare_class</code> column is operator-specific and not directly comparable. "
+        "For cross-operator comparisons only <code>price_eur</code> is used."
+    ),
+    "lp_method_right":   (
+        "<b>Known limitations</b><br>"
+        "The DB API has been blocking datacenter IPs since 18.05.2026 (HTTP 403/500); "
+        "DB prices are additionally sourced via <code>db_parsebot</code>. "
+        "The DB crawler only captures connections in the morning window "
+        "(approx. 08:00–13:15 departure time).<br><br>"
+        "<b>Time zones</b><br>"
+        "All timestamps are stored in UTC. Exception: "
+        "Trenitalia stores departure times in local time (<code>Europe/Rome</code>)."
+    ),
+    "lp_footer_sub":     "Institute of Economics · Team Project SS 2026",
+    "lp_footer_last":    "Last crawl run",
+     "lp_sec_findings":       "Key Results",
+    "lp_finding_early":      "Early Booking Effect",
+    "lp_finding_cheap":      "Lowest Entry Price",
+    "lp_finding_route":      "Most Observed Route",
+    "lp_sec_growth":         "Data Growth & Coverage",
+    "lp_growth_caption":     "Cumulative database build-up — last 120 days",
+    "lp_density_caption":    "Data density per operator × booking horizon",
+    "lp_density_good":       "good",
+    "lp_density_partial":    "partial",
+    "lp_density_sparse":     "sparse",
+    "lp_kpi_period":         "Collection Period",
+    "lp_finding_more_exp":   "more expensive",
+    "lp_finding_cheaper":    "cheaper",
+    "lp_finding_early_text": "Tickets with ≤7 days lead time cost on average <b>{pct:.1f}%</b> {dir} than with ≥60 days — aggregated across all operators and routes.",
+    "lp_finding_cheap_text": "Lowest observed single price in the entire dataset: <b style='color:{color}'>{op}</b> with {price:.2f}&nbsp;€.",
+    "lp_finding_route_text": "<b>{route}</b> is the route with the most price observations in the dataset.",
+    "lp_footer_tech":        "Data: TimescaleDB · bwCloud VM · Ubuntu 24",
+    "lp_footer_github":      "↗ GitHub · Xaver-M/Rail-Data-Hub",
+    "lp_footer_kit":         "↗ KIT",
+    "lp_footer_inst":        "↗ Institute of Economics",
+    "price_max_label": "Maximum",
+    "ov_max_price":    "Highest price",
 }
 
 DE = {
@@ -376,6 +459,88 @@ DE = {
     "cr_health_cap": "Tage mit Daten in den letzten 7 · Ø Einträge/Tag",
     "cr_health_ok": "✅", "cr_health_warn": "⚠️", "cr_health_bad": "❌",
     "cr_avg_day": "Ø/Tag",
+    "lp_eyebrow":       "KIT · Institut für Wirtschaftswissenschaften · SS 2026",
+    "lp_subtitle":      "Systematische Erhebung und Analyse von Fahrkartenpreisen europäischer Bahnbetreiber — Grundlage für die empirische Untersuchung von Yield-Management-Strategien im Schienenpersonenverkehr.",
+    "lp_kpi_obs":       "Beobachtungen",
+    "lp_kpi_ops":       "Betreiber",
+    "lp_kpi_routes":    "Strecken",
+    "lp_kpi_horizons":  "Horizonte",
+    "lp_sec_operators": "Erfasste Betreiber",
+    "lp_sec_collection":"Datenerhebung",
+    "lp_sec_modules":   "Analyse-Module",
+    "lp_sec_method":    "Methodik & Hinweise",
+    "lp_observations":  "Beobachtungen",
+    "lp_hz_label":      "Buchungshorizonte in Tagen vor Abfahrt",
+    "lp_steps_titles":  ["Scheduler", "14 Horizonte", "TimescaleDB", "Dieses Portal"],
+    "lp_steps_descs":   [
+        "Täglich 10:00 UTC startet der automatische Crawl-Prozess für alle aktiven Betreiber simultan.",
+        "Pro Route werden Preise für 14 feste Buchungszeitpunkte zwischen 1 und 90 Tagen vor Abfahrt abgefragt.",
+        "Alle Beobachtungen werden dedupliziert in einer Zeitreihendatenbank auf der Projekt-VM gespeichert.",
+        "Das Dashboard liest direkt aus der Datenbank und ermöglicht Analyse und Vergleich in Echtzeit.",
+    ],
+    "lp_mod_names":     ["Übersicht", "Einzelzug", "Buchungshorizont", "Tageszeit", "Anbietervergleich", "€/km & €/h", "Crawler-Status"],
+    "lp_mod_questions": [
+        "Wie haben sich die Preise auf dieser Strecke entwickelt?",
+        "Wie verändert sich der Preis eines konkreten Zuges über die Zeit?",
+        "Wann ist der optimale Kaufzeitpunkt?",
+        "Sind frühe oder späte Abfahrten systematisch teurer?",
+        "Welcher Betreiber ist auf welcher Strecke am günstigsten?",
+        "Welcher Betreiber bietet den besten Preis pro Kilometer?",
+        "Wie zuverlässig laufen die Datensammler?",
+    ],
+    "lp_mod_details":   [
+        "MIN · AVG · MAX pro Betreiber, wählbarer Zeitraum",
+        "Preisverlauf ab 90 Tage bis kurz vor Abfahrt",
+        "Preiskurven für alle 14 Buchungshorizonte im Vergleich",
+        "Preis nach Abfahrtsstunde und Wochentag",
+        "Direktvergleich aller Anbieter bei wählbarem Horizont",
+        "Normalisierte Preise für streckenneutralen Vergleich",
+        "7-Tage-Verfügbarkeit, letzte Läufe, Record-Counts",
+    ],
+    "lp_method_left":   (
+        "<b>Preisbasis</b><br>"
+        "Alle Analysen basieren auf dem günstigsten verfügbaren Tarif (<code>MIN(price_eur)</code>) "
+        "pro Route, Horizont und Erhebungstag. Standardisierung: 1 Erwachsener, 2.&nbsp;Klasse "
+        "bzw. Economy-Tarif, Einzelfahrt, ohne Rabattkarten oder Zusatzleistungen.<br><br>"
+        "<b>Tarifklassen</b><br>"
+        "Die <code>fare_class</code>-Spalte ist betreiberspezifisch und nicht direkt vergleichbar. "
+        "Für Anbietervergleiche wird ausschließlich <code>price_eur</code> herangezogen."
+    ),
+    "lp_method_right":  (
+        "<b>Bekannte Einschränkungen</b><br>"
+        "Die DB-API blockiert Datacenter-IPs seit 18.05.2026 (HTTP&nbsp;403/500); "
+        "DB-Preise werden ergänzend über <code>db_parsebot</code> bezogen. "
+        "Der DB-Crawler erfasst ausschließlich Verbindungen im Morgenfenster "
+        "(ca.&nbsp;08:00-13:15&nbsp;Uhr Abfahrtszeit).<br><br>"
+        "<b>Zeitzonen</b><br>"
+        "Alle Zeitstempel werden in UTC gespeichert. Ausnahme: "
+        "Trenitalia speichert Abfahrtszeiten in Lokalzeit (<code>Europe/Rome</code>)."
+    ),
+    "lp_footer_sub":    "Institut für Wirtschaftswissenschaften · Teamprojekt SS 2026",
+    "lp_footer_last":   "Letzter Crawl-Lauf",
+    "lp_sec_findings":       "Kernergebnisse",
+    "lp_finding_early":      "Frühbuchereffekt",
+    "lp_finding_cheap":      "Günstigster Einstiegspreis",
+    "lp_finding_route":      "Meist beobachtete Strecke",
+    "lp_sec_growth":         "Datenwachstum & Abdeckung",
+    "lp_growth_caption":     "Kumulativer Aufbau der Datenbank — letzte 120 Tage",
+    "lp_density_caption":    "Datendichte pro Anbieter × Buchungshorizont",
+    "lp_density_good":       "gut",
+    "lp_density_partial":    "teilweise",
+    "lp_density_sparse":     "lückenhaft",
+    "lp_kpi_period":         "Erhebungszeitraum",
+    "lp_finding_more_exp":   "teurer",
+    "lp_finding_cheaper":    "günstiger",
+    "lp_finding_early_text": "Tickets bei ≤7&nbsp;Tagen Vorlauf sind im Schnitt <b>{pct:.1f}%</b> {dir} als bei ≥60&nbsp;Tagen — aggregiert über alle Betreiber und Strecken.",
+    "lp_finding_cheap_text": "Niedrigster beobachteter Einzelpreis im gesamten Datensatz: <b style='color:{color}'>{op}</b> mit {price:.2f}&nbsp;€.",
+    "lp_finding_route_text": "<b>{route}</b> ist die Strecke mit den meisten Preisbeobachtungen im Datensatz.",
+    "lp_footer_tech":        "Daten: TimescaleDB · bwCloud VM · Ubuntu 24",
+    "lp_footer_github":      "↗ GitHub · Xaver-M/Rail-Data-Hub",
+    "lp_footer_kit":         "↗ KIT",
+    "lp_footer_inst":        "↗ Institut für Wirtschaftswissenschaften",
+    "price_max_label": "Maximum",
+    "ov_max_price":    "Höchster Preis",
+ 
 }
 
 TEXTS = {"en": EN, "de": DE}
@@ -392,3 +557,12 @@ def time_since(dt, T) -> str:
         return T["days_ago"].format(d=int(diff/86400))
     except Exception:
         return "—"
+    
+
+def price_basis_toggle(key: str, T) -> str:
+    """Gibt 'min', 'avg' oder 'max' zurück."""
+    return st.radio(
+        T["price_basis"], options=["min", "avg", "max"],
+        format_func=lambda m: {"min": T["price_min"], "avg": T["price_avg"], "max": T["price_max_label"]}[m],
+        horizontal=True, key=key
+    )

@@ -3,7 +3,7 @@ import streamlit as st
 import plotly.express as px
 import pandas as pd
 
-from dashboard.config import op_color, op_label
+from dashboard.config import op_color, op_label, price_basis_toggle
 from dashboard.database import load_time_of_day
 
 
@@ -27,29 +27,38 @@ def render_time_of_day(route, T):
     if n_hours < 8:
         st.warning(T["dt_coverage_warn"].format(n=n_hours, op=op_label(sel_op)))
 
+    # ── Toggle ──
+    basis = price_basis_toggle("dt_basis", T)
+    y_lbl = {"min": T["price_min"], "avg": T["price_avg"], "max": T["price_max_label"]}[basis]
+    agg_fn = {"min": "min", "avg": "mean", "max": "max"}[basis]
+
     DOW = T["dow"]
 
-    # ── Avg. Preis nach Stunde ──
-    df_hour = (df_dt.groupby("dep_hour")["price_eur"].mean().reset_index()
-               .rename(columns={"price_eur": "price_avg"}))
+    # ── Preis nach Stunde ──
+    df_hour = (df_dt.groupby("dep_hour")["price_eur"]
+               .agg(agg_fn).reset_index()
+               .rename(columns={"price_eur": "price_val"}))
     df_hour["hour_label"] = df_hour["dep_hour"].astype(str).str.zfill(2) + ":00"
-    fig = px.bar(df_hour, x="hour_label", y="price_avg", color="price_avg",
+
+    fig = px.bar(df_hour, x="hour_label", y="price_val", color="price_val",
                  color_continuous_scale=["#a8e44a", "#ffb547", "#ff5f5f"],
-                 title=T["dt_c1"].format(op=op_label(sel_op)),
-                 labels={"hour_label": T["ov_dep_hour"], "price_avg": T["ov_avg"]})
+                 title=f"{T['dt_c1'].format(op=op_label(sel_op))} ({y_lbl})",
+                 labels={"hour_label": T["ov_dep_hour"], "price_val": y_lbl})
     fig.update_coloraxes(showscale=False)
     fig.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
     st.plotly_chart(fig, use_container_width=True)
 
     # ── Heatmap: Wochentag × Stunde ──
-    df_dt["dow_label"] = df_dt["dep_dow"].map(lambda d: DOW.get(int(d)) if pd.notna(d) else None)
+    df_dt["dow_label"]  = df_dt["dep_dow"].map(lambda d: DOW.get(int(d)) if pd.notna(d) else None)
     df_dt["hour_label"] = df_dt["dep_hour"].astype(str).str.zfill(2) + ":00"
-    ph = df_dt.pivot_table(index="dow_label", columns="hour_label", values="price_eur", aggfunc="mean").round(4)
+    ph = df_dt.pivot_table(index="dow_label", columns="hour_label",
+                            values="price_eur", aggfunc=agg_fn).round(4)
     ph = ph.reindex([d for d in DOW.values() if d in ph.index])
     if not ph.empty:
         fig2 = px.imshow(ph, color_continuous_scale=["#1a3a1a", "#a8e44a", "#ffb547", "#ff5f5f"],
-                         labels={"x": T["ov_dep_hour"], "y": T["dt_wd"], "color": T["ov_avg"]},
-                         title=T["dt_c2"].format(op=op_label(sel_op)), aspect="auto")
+                         labels={"x": T["ov_dep_hour"], "y": T["dt_wd"], "color": y_lbl},
+                         title=f"{T['dt_c2'].format(op=op_label(sel_op))} ({y_lbl})",
+                         aspect="auto")
         fig2.update_xaxes(tickangle=45)
         fig2.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig2, use_container_width=True)
@@ -70,14 +79,14 @@ def render_time_of_day(route, T):
     else:
         st.caption(T["dt_seats_none"])
 
-    # ── KPI-Karten: günstigste/teuerste Stunde & Tag ──
+    # ── KPI-Karten ──
     if not df_hour.empty:
-        minh = df_hour.loc[df_hour["price_avg"].idxmin()]
-        maxh = df_hour.loc[df_hour["price_avg"].idxmax()]
-        df_dow = df_dt.dropna(subset=["dow_label"]).groupby("dow_label")["price_eur"].mean()
+        minh = df_hour.loc[df_hour["price_val"].idxmin()]
+        maxh = df_hour.loc[df_hour["price_val"].idxmax()]
+        df_dow = df_dt.dropna(subset=["dow_label"]).groupby("dow_label")["price_eur"].agg(agg_fn)
         c1, c2, c3, c4 = st.columns(4)
-        c1.metric(T["dt_ch_h"], minh["hour_label"], f"Avg. {float(minh['price_avg']):.2f} €")
-        c2.metric(T["dt_ex_h"], maxh["hour_label"], f"Avg. {float(maxh['price_avg']):.2f} €")
+        c1.metric(T["dt_ch_h"], minh["hour_label"], f"{y_lbl}: {float(minh['price_val']):.2f} €")
+        c2.metric(T["dt_ex_h"], maxh["hour_label"], f"{y_lbl}: {float(maxh['price_val']):.2f} €")
         if not df_dow.empty:
-            c3.metric(T["dt_ch_d"], df_dow.idxmin(), f"Avg. {float(df_dow.min()):.2f} €")
-            c4.metric(T["dt_ex_d"], df_dow.idxmax(), f"Avg. {float(df_dow.max()):.2f} €")
+            c3.metric(T["dt_ch_d"], df_dow.idxmin(), f"{y_lbl}: {float(df_dow.min()):.2f} €")
+            c4.metric(T["dt_ex_d"], df_dow.idxmax(), f"{y_lbl}: {float(df_dow.max()):.2f} €")
