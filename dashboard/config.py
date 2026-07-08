@@ -10,6 +10,11 @@ OPERATOR_COLORS = {
     "flixbus": "#18a04b", "ceske-drahy": "#003f87", "db_parsebot": "#f01414",
 }
 
+# Anbieter mit verlässlichen seats_available-Daten (geprüft im Snapshot: DB, DB-Parsebot,
+# ČD liefern nie Sitzplatzdaten; Ouigo ES/FR nur für <5% der Zeilen, wirkt wie ein reines
+# "fast ausverkauft"-Signal statt einer echten Sitzplatzzahl — daher hier bewusst ausgeschlossen).
+SEATS_OPERATORS = {"italo", "flixtrain", "flixbus", "regiojet", "trenitalia"}
+
 OPERATOR_LABELS = {
     "db": "DB", "flixtrain": "Flixtrain", "regiojet": "RegioJet",
     "trenitalia": "Trenitalia", "italo": "Italo", "ouigo_es": "Ouigo ES", "ouigo_fr": "Ouigo FR",
@@ -66,6 +71,8 @@ EN = {
     "crawlers_running": "🔄 Crawlers running...", "no_data": "No data found.",
     "enter_route": "**Enter route**", "from_label": "From", "origin_ph": "Origin...",
     "to_label": "To", "dest_ph": "Destination...", "route_not_found": "Route not found:",
+    "swap_route": "Swap origin ↔ destination",
+    "swap_unavailable": "⚠️ No data for the reversed route.",
     "route_label": "Route", "data_points": "Data points", "last_label": "Last:",
     "reload_data": "🔄 Reload data", "operators_on_route": "**Operators on this route:**",
     "routes_found": lambda n: f"{n} route{'s' if n != 1 else ''} found",
@@ -279,7 +286,7 @@ EN = {
     "lp_footer_last":    "Last crawl run",
      "lp_sec_findings":       "Key Results",
     "lp_finding_early":      "Early Booking Effect",
-    "lp_finding_cheap":      "Lowest Entry Price",
+    "lp_finding_cheap":      "Biggest Price Range",
     "lp_finding_route":      "Most Observed Route",
     "lp_sec_growth":         "Data Growth & Coverage",
     "lp_growth_caption":     "Cumulative database build-up — last 120 days",
@@ -291,7 +298,7 @@ EN = {
     "lp_finding_more_exp":   "more expensive",
     "lp_finding_cheaper":    "cheaper",
     "lp_finding_early_text": "Tickets with ≤7 days lead time cost on average <b>{pct:.1f}%</b> {dir} than with ≥60 days — aggregated across all operators and routes.",
-    "lp_finding_cheap_text": "Lowest observed single price in the entire dataset: <b style='color:{color}'>{op}</b> with {price:.2f}&nbsp;€.",
+    "lp_finding_cheap_text": "<b>{route}</b> shows the widest price swing: from {low:.2f}&nbsp;€ up to {high:.2f}&nbsp;€.",
     "lp_finding_route_text": "<b>{route}</b> is the route with the most price observations in the dataset.",
     "lp_footer_tech":        "Data: TimescaleDB · bwCloud VM · Ubuntu 24",
     "lp_footer_github":      "↗ GitHub · Xaver-M/Rail-Data-Hub",
@@ -322,6 +329,8 @@ DE = {
     "crawlers_running": "🔄 Crawler laufen...", "no_data": "Keine Daten gefunden.",
     "enter_route": "**Route eingeben**", "from_label": "Von", "origin_ph": "Herkunft...",
     "to_label": "Nach", "dest_ph": "Ziel...", "route_not_found": "Route nicht gefunden:",
+    "swap_route": "Start ↔ Ziel tauschen",
+    "swap_unavailable": "⚠️ Keine Daten für die umgekehrte Strecke.",
     "route_label": "Route", "data_points": "Datenpunkte", "last_label": "Zuletzt:",
     "reload_data": "🔄 Daten neu laden", "operators_on_route": "**Anbieter auf dieser Strecke:**",
     "routes_found": lambda n: f"{n} Route{'n' if n != 1 else ''} gefunden",
@@ -536,7 +545,7 @@ DE = {
     "lp_footer_last":   "Letzter Crawl-Lauf",
     "lp_sec_findings":       "Kernergebnisse",
     "lp_finding_early":      "Frühbuchereffekt",
-    "lp_finding_cheap":      "Günstigster Einstiegspreis",
+    "lp_finding_cheap":      "Größter Preisunterschied",
     "lp_finding_route":      "Meist beobachtete Strecke",
     "lp_sec_growth":         "Datenwachstum & Abdeckung",
     "lp_growth_caption":     "Kumulativer Aufbau der Datenbank — letzte 120 Tage",
@@ -548,7 +557,7 @@ DE = {
     "lp_finding_more_exp":   "teurer",
     "lp_finding_cheaper":    "günstiger",
     "lp_finding_early_text": "Tickets bei ≤7&nbsp;Tagen Vorlauf sind im Schnitt <b>{pct:.1f}%</b> {dir} als bei ≥60&nbsp;Tagen — aggregiert über alle Betreiber und Strecken.",
-    "lp_finding_cheap_text": "Niedrigster beobachteter Einzelpreis im gesamten Datensatz: <b style='color:{color}'>{op}</b> mit {price:.2f}&nbsp;€.",
+    "lp_finding_cheap_text": "<b>{route}</b> zeigt die größte Preisspanne: von {low:.2f}&nbsp;€ bis {high:.2f}&nbsp;€.",
     "lp_finding_route_text": "<b>{route}</b> ist die Strecke mit den meisten Preisbeobachtungen im Datensatz.",
     "lp_footer_tech":        "Daten: TimescaleDB · bwCloud VM · Ubuntu 24",
     "lp_footer_github":      "↗ GitHub · Xaver-M/Rail-Data-Hub",

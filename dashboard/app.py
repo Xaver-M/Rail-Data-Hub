@@ -155,7 +155,7 @@ def _get_operators_for_countries(routes, countries):
     if not countries:
         return sorted(set(op for ops in routes["operators"] for op in ops))
     matching = routes[routes.apply(
-        lambda r: _get_country(r["origin_name"]) in countries or
+        lambda r: _get_country(r["origin_name"]) in countries and
                   _get_country(r["destination_name"]) in countries, axis=1
     )]
     return sorted(set(op for ops in matching["operators"] for op in ops))
@@ -167,7 +167,7 @@ if st.session_state.filter_countries:
     def _route_matches_countries(row):
         orig_country = _get_country(row["origin_name"])
         dest_country = _get_country(row["destination_name"])
-        return (orig_country in st.session_state.filter_countries or
+        return (orig_country in st.session_state.filter_countries and
                 dest_country in st.session_state.filter_countries)
     filtered_routes = filtered_routes[filtered_routes.apply(_route_matches_countries, axis=1)]
 
@@ -289,6 +289,8 @@ else:
             st.session_state.filter_countries = new_countries
             st.session_state.selected_origin = None
             st.session_state.selected_destination = None
+            st.session_state.pop("sb_origin", None)
+            st.session_state.pop("sb_dest", None)
             st.rerun()
 
     with col_operator:
@@ -307,16 +309,24 @@ else:
             st.session_state.filter_operators = new_operators
             st.session_state.selected_origin = None
             st.session_state.selected_destination = None
+            st.session_state.pop("sb_origin", None)
+            st.session_state.pop("sb_dest", None)
             st.rerun()
+
+    def _reset_filters():
+        st.session_state.filter_countries = []
+        st.session_state.filter_operators = []
+        st.session_state.ms_countries = []
+        st.session_state.ms_operators = []
+        st.session_state.selected_origin = None
+        st.session_state.selected_destination = None
+        st.session_state.pop("sb_origin", None)
+        st.session_state.pop("sb_dest", None)
 
     with col_reset:
         st.markdown("<div style='padding-top:1.6rem'>", unsafe_allow_html=True)
-        if st.button(T["picker_reset"], use_container_width=True, type="secondary"):
-            st.session_state.filter_countries = []
-            st.session_state.filter_operators = []
-            st.session_state.selected_origin = None
-            st.session_state.selected_destination = None
-            st.rerun()
+        st.button(T["picker_reset"], use_container_width=True, type="secondary",
+                  on_click=_reset_filters)
         st.markdown("</div>", unsafe_allow_html=True)
 
     # Routen-Zähler
@@ -346,10 +356,31 @@ else:
                 .dropna().unique().tolist()
             )
             st.session_state.selected_destination = new_dests[0] if new_dests else None
+            st.session_state.pop("sb_dest", None)
             st.rerun()
 
+    def _swap_route():
+        swapped_origin = st.session_state.selected_destination
+        swapped_dest = st.session_state.selected_origin
+        reverse_exists = not filtered_routes[
+            (filtered_routes["origin_name"] == swapped_origin) &
+            (filtered_routes["destination_name"] == swapped_dest)
+        ].empty
+        if swapped_origin in all_origins and reverse_exists:
+            st.session_state.selected_origin = swapped_origin
+            st.session_state.selected_destination = swapped_dest
+            st.session_state.sb_origin = swapped_origin
+            st.session_state.sb_dest = swapped_dest
+        else:
+            st.session_state.swap_warning = True
+
     with col_arr:
-        st.markdown('<div class="rdh-arrow">→</div>', unsafe_allow_html=True)
+        st.markdown('<div style="padding-top:1.55rem"></div>', unsafe_allow_html=True)
+        st.button("⇄", key="btn_swap_route", help=T["swap_route"], use_container_width=True,
+                  on_click=_swap_route)
+
+    if st.session_state.pop("swap_warning", False):
+        st.toast(T["swap_unavailable"], icon="⚠️")
 
     with col_dest:
         st.markdown(f'<div class="rdh-field-label">{T["to_label"]}</div>', unsafe_allow_html=True)

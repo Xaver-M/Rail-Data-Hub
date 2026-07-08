@@ -224,14 +224,23 @@ def _load_findings():
             early = df[df["booking_horizon_days"] >= 60]["price_eur"].mean()
             late  = df[df["booking_horizon_days"] <= 7]["price_eur"].mean()
             discount = ((late - early) / early * 100) if early > 0 else 0
-            cheapest_op    = df.groupby("operator")["price_eur"].min().idxmin()
-            cheapest_price = df.groupby("operator")["price_eur"].min().min()
+            grp = df.groupby(["origin_name", "destination_name"])["price_eur"].agg(
+                low="min", high="max", n="count")
+            grp = grp[grp["n"] >= 30]
+            spread_route, spread_low, spread_high, spread_pct = ("–", "–"), 0.0, 0.0, 0.0
+            if not grp.empty:
+                grp["spread_pct"] = (grp["high"] - grp["low"]) / grp["low"] * 100
+                spread_route = grp["spread_pct"].idxmax()
+                spread_low   = float(grp.loc[spread_route, "low"])
+                spread_high  = float(grp.loc[spread_route, "high"])
+                spread_pct   = float(grp.loc[spread_route, "spread_pct"])
             top_route      = df.groupby(["origin_name","destination_name"]).size().idxmax()
             top_route_count= df.groupby(["origin_name","destination_name"]).size().max()
             days_span      = (df["collected_at"].max() - df["collected_at"].min()).days
             return {
-                "discount": discount, "cheapest": cheapest_op,
-                "cheapest_price": cheapest_price,
+                "discount": discount,
+                "spread_route": spread_route, "spread_low": spread_low,
+                "spread_high": spread_high, "spread_pct": spread_pct,
                 "top_route": top_route, "top_route_count": top_route_count,
                 "days_span": days_span,
                 "first_date": df["collected_at"].min(),
@@ -241,14 +250,28 @@ def _load_findings():
         if db is None:
             return {}
         r  = db.query("SELECT AVG(price_eur) FILTER (WHERE booking_horizon_days >= 60) as early_avg, AVG(price_eur) FILTER (WHERE booking_horizon_days <= 7) as late_avg FROM price_observations WHERE booking_horizon_days IS NOT NULL").iloc[0]
-        rc = db.query("SELECT operator, MIN(price_eur) as min_price FROM price_observations GROUP BY operator ORDER BY min_price ASC LIMIT 1").iloc[0]
+        rp = db.query("""
+            SELECT origin_name, destination_name, MIN(price_eur) as low, MAX(price_eur) as high
+            FROM price_observations
+            GROUP BY origin_name, destination_name
+            HAVING COUNT(*) >= 30 AND MIN(price_eur) > 0
+            ORDER BY (MAX(price_eur) - MIN(price_eur)) / MIN(price_eur) DESC
+            LIMIT 1
+        """)
         rr = db.query("SELECT origin_name, destination_name, COUNT(*) as n FROM price_observations GROUP BY origin_name, destination_name ORDER BY n DESC LIMIT 1").iloc[0]
         rs = db.query("SELECT MIN(collected_at) as first, MAX(collected_at) as last FROM price_observations").iloc[0]
         discount = ((r["late_avg"] - r["early_avg"]) / r["early_avg"] * 100) if r["early_avg"] else 0
+        if not rp.empty:
+            rp0 = rp.iloc[0]
+            spread_route = (rp0["origin_name"], rp0["destination_name"])
+            spread_low, spread_high = float(rp0["low"]), float(rp0["high"])
+            spread_pct = (spread_high - spread_low) / spread_low * 100 if spread_low > 0 else 0.0
+        else:
+            spread_route, spread_low, spread_high, spread_pct = ("–", "–"), 0.0, 0.0, 0.0
         return {
             "discount": discount,
-            "cheapest": rc["operator"],
-            "cheapest_price": float(rc["min_price"]),
+            "spread_route": spread_route, "spread_low": spread_low,
+            "spread_high": spread_high, "spread_pct": spread_pct,
             "top_route": (rr["origin_name"], rr["destination_name"]),
             "top_route_count": int(rr["n"]),
             "days_span": (pd.Timestamp(rs["last"]) - pd.Timestamp(rs["first"])).days,
@@ -456,8 +479,10 @@ def render_landing(T):
         st.markdown(f'<div class="lp-section-label">{T["lp_sec_findings"]}</div>', unsafe_allow_html=True)
 
         discount      = findings.get("discount", 0)
-        cheapest_op   = findings.get("cheapest", "")
-        cheapest_p    = findings.get("cheapest_price", 0)
+        spread_route  = findings.get("spread_route", ("–", "–"))
+        spread_low    = findings.get("spread_low", 0)
+        spread_high   = findings.get("spread_high", 0)
+        spread_pct    = findings.get("spread_pct", 0)
         top_route     = findings.get("top_route", ("–", "–"))
         top_count     = findings.get("top_route_count", 0)
         discount_abs  = abs(discount)
@@ -465,9 +490,10 @@ def render_landing(T):
         lang = st.session_state.lang
         top_route_str = (f"{station_name(top_route[0], lang)} → {station_name(top_route[1], lang)}"
                           if isinstance(top_route, tuple) else str(top_route))
+        spread_route_str = (f"{station_name(spread_route[0], lang)} → {station_name(spread_route[1], lang)}"
+                             if isinstance(spread_route, tuple) else str(spread_route))
         top_count_fmt = f"{top_count:,}".replace(",", ".")
-        cheapest_color = op_color(cheapest_op) if cheapest_op else "#2563EB"
-        cheapest_label = op_label(cheapest_op) if cheapest_op else "–"
+        spread_color = "#ff5f5f"
 
         top_ops = []
         if not df_ops.empty and isinstance(top_route, tuple):
@@ -479,7 +505,7 @@ def render_landing(T):
         top_color = op_color(top_ops[0]) if top_ops else "#2563EB"
 
         early_text = T["lp_finding_early_text"].format(pct=discount_abs, dir=discount_dir)
-        cheap_text = T["lp_finding_cheap_text"].format(color=cheapest_color, op=cheapest_label, price=cheapest_p)
+        cheap_text = T["lp_finding_cheap_text"].format(route=spread_route_str, low=spread_low, high=spread_high)
         route_text = T["lp_finding_route_text"].format(route=top_route_str)
 
         st.markdown(f"""
@@ -491,10 +517,10 @@ def render_landing(T):
                 </div>
                 <div class="lp-finding-sub">{early_text}</div>
             </div>
-            <div class="lp-finding" style="border-left-color:{cheapest_color}">
+            <div class="lp-finding" style="border-left-color:{spread_color}">
                 <div class="lp-finding-label">{T["lp_finding_cheap"]}</div>
                 <div class="lp-finding-value">
-                    <span class="lp-finding-accent" style="color:{cheapest_color}">{cheapest_p:.2f}&nbsp;€</span>
+                    <span class="lp-finding-accent" style="color:{spread_color}">+{spread_pct:.0f}%</span>
                 </div>
                 <div class="lp-finding-sub">{cheap_text}</div>
             </div>

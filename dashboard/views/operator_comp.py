@@ -4,7 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 
-from dashboard.config import op_color, op_label, station_name
+from dashboard.config import op_color, op_label, station_name, SEATS_OPERATORS
 from dashboard.database import (
     load_all_route_pairs, load_route_horizon_curve, load_route_summary,
     load_operator_comparison_at_horizon, load_seats_by_horizon,
@@ -194,7 +194,7 @@ def render_operator_comparison(route, T):
                 st.plotly_chart(fig_r, use_container_width=True)
                 st.caption(T["op_radar_c"])
 
-            df_sc = df_cp[df_cp["seats_avg"].notna()]
+            df_sc = df_cp[df_cp["seats_avg"].notna() & df_cp["operator"].isin(SEATS_OPERATORS)]
             if not df_sc.empty:
                 color_map = {op_label(o): op_color(o) for o in df_cp["operator"].unique()}
                 fig3 = px.scatter(df_sc, x="price_min", y="seats_avg", color="op_label", color_discrete_map=color_map,
@@ -203,10 +203,13 @@ def render_operator_comparison(route, T):
                                   custom_data=["observations"])
                 fig3.update_traces(textposition="top center",
                                    hovertemplate="<b>%{text}</b><br>%{x:.2f} €<br>%{y:.0f} seats<br>%{customdata[0]} obs.")
+                fig3.update_xaxes(rangemode="tozero")
+                fig3.update_yaxes(rangemode="tozero")
                 fig3.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
                 st.plotly_chart(fig3, use_container_width=True)
 
             df_sh2 = load_seats_by_horizon(origin, destination)
+            df_sh2 = df_sh2[df_sh2["operator"].isin(SEATS_OPERATORS)] if not df_sh2.empty else df_sh2
             if not df_sh2.empty:
                 df_sh2 = df_sh2.copy()
                 df_sh2["booking_horizon_days"] = pd.to_numeric(df_sh2["booking_horizon_days"]).astype(int)
@@ -217,5 +220,6 @@ def render_operator_comparison(route, T):
                                color_discrete_map=color_map2, markers=True, title=T["op_seats_hz"],
                                labels={"booking_horizon_days": T["ov_days_adv"], "seats_avg": T["op_seats"], "op_label": T["ov_op"]})
                 fig4.update_xaxes(autorange="reversed")
+                fig4.update_yaxes(rangemode="tozero")
                 fig4.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
                 st.plotly_chart(fig4, use_container_width=True)

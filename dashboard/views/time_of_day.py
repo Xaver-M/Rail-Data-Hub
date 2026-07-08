@@ -3,7 +3,7 @@ import streamlit as st
 import plotly.express as px
 import pandas as pd
 
-from dashboard.config import op_color, op_label, price_basis_toggle, station_name
+from dashboard.config import op_color, op_label, price_basis_toggle, station_name, SEATS_OPERATORS
 from dashboard.database import load_time_of_day
 
 
@@ -66,20 +66,22 @@ def render_time_of_day(route, T):
         st.plotly_chart(fig2, use_container_width=True)
 
     # ── Sitzplatz nach Stunde ──
-    df_seats = df_dt.dropna(subset=["seats_available"])
-    if not df_seats.empty:
-        df_sh = (df_seats.groupby("dep_hour")["seats_available"].mean().reset_index()
-                 .rename(columns={"seats_available": "seats_avg"}))
-        df_sh["hour_label"] = df_sh["dep_hour"].astype(str).str.zfill(2) + ":00"
-        fig3 = px.line(df_sh, x="hour_label", y="seats_avg", markers=True,
-                       title=T["dt_c3"].format(op=op_label(sel_op)),
-                       labels={"hour_label": T["ov_dep_hour"], "seats_avg": T["dt_seats"]},
-                       color_discrete_sequence=[op_color(sel_op)])
-        fig3.update_traces(line_width=2)
-        fig3.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
-        st.plotly_chart(fig3, use_container_width=True)
-    else:
-        st.caption(T["dt_seats_none"])
+    if sel_op in SEATS_OPERATORS:
+        df_seats = df_dt.dropna(subset=["seats_available"])
+        if not df_seats.empty:
+            df_sh = (df_seats.groupby("dep_hour")["seats_available"].mean().reset_index()
+                     .rename(columns={"seats_available": "seats_avg"}))
+            df_sh["hour_label"] = df_sh["dep_hour"].astype(str).str.zfill(2) + ":00"
+            fig3 = px.line(df_sh, x="hour_label", y="seats_avg", markers=True,
+                           title=T["dt_c3"].format(op=op_label(sel_op)),
+                           labels={"hour_label": T["ov_dep_hour"], "seats_avg": T["dt_seats"]},
+                           color_discrete_sequence=[op_color(sel_op)])
+            fig3.update_traces(line_width=2)
+            fig3.update_yaxes(rangemode="tozero")
+            fig3.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
+            st.plotly_chart(fig3, use_container_width=True)
+        else:
+            st.caption(T["dt_seats_none"])
 
     # ── KPI-Karten ──
     if not df_hour.empty:

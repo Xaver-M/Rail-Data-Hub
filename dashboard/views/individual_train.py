@@ -3,7 +3,7 @@ import streamlit as st
 import plotly.express as px
 import pandas as pd
 
-from dashboard.config import op_color, op_label, price_basis_toggle, station_name
+from dashboard.config import op_color, op_label, price_basis_toggle, station_name, SEATS_OPERATORS
 from dashboard.database import load_train_numbers, load_single_train_data
 
 
@@ -79,7 +79,7 @@ def render_individual_train(route, T):
     m2.metric(T["tr_lohi"], f"{price_min:.2f} € / {price_max:.2f} €")
     m3.metric(T["tr_7d"], f"{change_7d:+.1f}%" if change_7d is not None else "—",
               delta=f"{change_7d:+.1f}%" if change_7d is not None else None, delta_color="inverse")
-    seats = latest.get("seats_available")
+    seats = latest.get("seats_available") if sel_op in SEATS_OPERATORS else None
     m4.metric(T["tr_seats"], str(int(seats)) if pd.notna(seats) else "—")
     st.divider()
 
@@ -170,11 +170,14 @@ def render_individual_train(route, T):
         st.info(T["tr_no_hz"])
 
     # ── Sitzplatz vs Preis ──
-    df_seats = df_single[df_single["seats_available"].notna()]
-    if not df_seats.empty:
-        st.divider()
-        fig4 = px.scatter(df_seats, x="seats_available", y="price_eur",
-                          labels={"seats_available": T["tr_seats"], "price_eur": T["ov_price"]},
-                          color_discrete_sequence=[op_color(sel_op)])
-        fig4.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
-        st.plotly_chart(fig4, use_container_width=True)
+    if sel_op in SEATS_OPERATORS:
+        df_seats = df_single[df_single["seats_available"].notna()]
+        if not df_seats.empty:
+            st.divider()
+            fig4 = px.scatter(df_seats, x="seats_available", y="price_eur",
+                              labels={"seats_available": T["tr_seats"], "price_eur": T["ov_price"]},
+                              color_discrete_sequence=[op_color(sel_op)])
+            fig4.update_xaxes(rangemode="tozero")
+            fig4.update_yaxes(rangemode="tozero")
+            fig4.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
+            st.plotly_chart(fig4, use_container_width=True)
