@@ -20,11 +20,33 @@ def render_individual_train(route, T):
         st.info(T["tr_no_data"])
         return
 
-    train_list = trains_df["train_number"].tolist()
-    if len(train_list) > 60:
-        st.caption(T["tr_heterogen"].format(n=len(train_list), op=op_label(sel_op)))
+    # ── Verbindungstyp-Filter für Dropdown ──
+    col_basis, col_direct = st.columns(2)
+    with col_direct:
+        direct_choice = st.radio(
+            T["direct_filter"], options=["all", "direct", "transfer"],
+            format_func=lambda m: {"all": T["direct_all"], "direct": T["direct_only"],
+                                   "transfer": T["direct_transfer"]}[m],
+            horizontal=True, key="tr_direct"
+        )
 
-    sel_train = st.selectbox(T["tr_sel"], train_list, key="train_name")
+    all_trains = trains_df["train_number"].tolist()
+    if direct_choice == "direct":
+        train_list = [t for t in all_trains if "+" not in str(t)]
+    elif direct_choice == "transfer":
+        train_list = [t for t in all_trains if "+" in str(t)]
+    else:
+        train_list = all_trains
+
+    if not train_list:
+        st.info(T["ov_no_data"])
+        return
+
+    if len(all_trains) > 60:
+        st.caption(T["tr_heterogen"].format(n=len(all_trains), op=op_label(sel_op)))
+
+    with col_basis:
+        sel_train = st.selectbox(T["tr_sel"], train_list, key="train_name")
     if not sel_train:
         return
 
@@ -33,7 +55,7 @@ def render_individual_train(route, T):
         st.info(T["tr_no_data"])
         return
 
-    # ── Toggle ──
+    # ── Preisbasis-Toggle ──
     basis = price_basis_toggle("tr_basis", T)
     y_lbl = {"min": T["price_min"], "avg": T["price_avg"], "max": T["price_max_label"]}[basis]
 

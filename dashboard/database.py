@@ -393,7 +393,7 @@ def load_single_train_data(origin, destination, operator, train_number):
 
     query = f"""
         SELECT operator, train_number, {DEP_COL} as departure_at, collected_at,
-               price_eur, seats_available, booking_horizon_days, fare_class
+               price_eur, seats_available, booking_horizon_days, fare_class, is_direct
         FROM price_observations
         WHERE origin_name = :origin AND destination_name = :destination
           AND operator = :operator AND train_number = :train_number
