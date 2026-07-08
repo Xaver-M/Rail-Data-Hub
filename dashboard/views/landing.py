@@ -2,7 +2,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
-from dashboard.config import op_color, op_label
+from dashboard.config import op_color, op_label, station_name
 from dashboard.database import (
     load_crawler_overview, load_crawler_stats_by_operator,
     load_crawler_daily_counts, load_route_list,
@@ -462,7 +462,9 @@ def render_landing(T):
         top_count     = findings.get("top_route_count", 0)
         discount_abs  = abs(discount)
         discount_dir  = T["lp_finding_more_exp"] if discount > 0 else T["lp_finding_cheaper"]
-        top_route_str = f"{top_route[0]} → {top_route[1]}" if isinstance(top_route, tuple) else str(top_route)
+        lang = st.session_state.lang
+        top_route_str = (f"{station_name(top_route[0], lang)} → {station_name(top_route[1], lang)}"
+                          if isinstance(top_route, tuple) else str(top_route))
         top_count_fmt = f"{top_count:,}".replace(",", ".")
         cheapest_color = op_color(cheapest_op) if cheapest_op else "#2563EB"
         cheapest_label = op_label(cheapest_op) if cheapest_op else "–"

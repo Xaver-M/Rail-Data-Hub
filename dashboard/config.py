@@ -580,6 +580,61 @@ TEXTS = {"en": EN, "de": DE}
 def op_label(op): return OPERATOR_LABELS.get(op, op)
 def op_color(op): return OPERATOR_COLORS.get(op, "#888888")
 
+# Anzeige-Übersetzung für Bahnhofsnamen (nur fürs UI — origin_name/destination_name
+# in der DB/den Queries bleiben unverändert, siehe config/routes.py).
+STATION_DISPLAY_NAMES = {
+    # ── Czech Republic ──
+    "Brno hlavní nádraží":           {"en": "Brno Main Station",           "de": "Brünn Hbf"},
+    "Ostrava hlavní nádraží":        {"en": "Ostrava Main Station",        "de": "Ostrau Hbf"},
+    "Praha hlavní nádraží":          {"en": "Prague Main Station",         "de": "Prag Hbf"},
+    # ── Slovakia ──
+    "Bratislava hlavná stanica":     {"en": "Bratislava Main Station",     "de": "Bratislava Hbf"},
+    # ── Poland ──
+    "Kraków Główny":                 {"en": "Krakow Main Station",         "de": "Krakau Hbf"},
+    "Gdańsk Główny":                 {"en": "Gdansk Main Station",         "de": "Danzig Hbf"},
+    "Warszawa Centralna":            {"en": "Warsaw Central Station",      "de": "Warschau Hbf"},
+    "Wrocław Główny":                {"en": "Wroclaw Main Station",        "de": "Breslau Hbf"},
+    # ── France ──
+    "Lyon toutes gares":             {"en": "Lyon - All Stations",        "de": "Lyon - Alle Bahnhöfe"},
+    "Montpellier toutes gares":      {"en": "Montpellier - All Stations", "de": "Montpellier - Alle Bahnhöfe"},
+    "Paris - Toutes les gares":      {"en": "Paris - All Stations",       "de": "Paris - Alle Bahnhöfe"},
+    "Nice Ville":                    {"en": "Nice Main Station",          "de": "Nizza Hbf"},
+    "Strasbourg Ville":              {"en": "Strasbourg Main Station",    "de": "Straßburg Hbf"},
+    # ── Germany (formatting fix only, no translation) ──
+    "Frankfurt(Main)Hbf":            {"en": "Frankfurt (Main) Hbf",       "de": "Frankfurt (Main) Hbf"},
+    # ── Italy ──
+    "Bari Centrale":                 {"en": "Bari Main Station",          "de": "Bari Hbf"},
+    "Bologna Centrale":              {"en": "Bologna Main Station",       "de": "Bologna Hbf"},
+    "Bolzano":                       {"en": "Bolzano",                    "de": "Bozen"},
+    "Firenze Santa Maria Novella":   {"en": "Florence Santa Maria Novella","de": "Florenz Santa Maria Novella"},
+    "Genova Brignole":               {"en": "Genoa Brignole",             "de": "Genua Brignole"},
+    "Genova Piazza Principe":        {"en": "Genoa Piazza Principe",      "de": "Genua Piazza Principe"},
+    "Milano Centrale":               {"en": "Milan Main Station",         "de": "Mailand Hbf"},
+    "Napoli Centrale":               {"en": "Naples Main Station",        "de": "Neapel Hbf"},
+    "Padova":                        {"en": "Padua",                      "de": "Padua"},
+    "Reggio di Calabria Centrale":   {"en": "Reggio Calabria Main Station","de": "Reggio Calabria Hbf"},
+    "Roma Tiburtina":                {"en": "Rome Tiburtina",             "de": "Rom Tiburtina"},
+    "Roma Termini":                  {"en": "Rome Termini",               "de": "Rom Termini"},
+    "Trieste Centrale":              {"en": "Trieste Main Station",       "de": "Triest Hbf"},
+    "Torino Porta Nuova":            {"en": "Turin Porta Nuova",          "de": "Turin Porta Nuova"},
+    "Torino Porta Susa":             {"en": "Turin Porta Susa",           "de": "Turin Porta Susa"},
+    "Venezia Mestre":                {"en": "Venice Mestre",              "de": "Venedig Mestre"},
+    "Venezia Santa Lucia":           {"en": "Venice Santa Lucia",         "de": "Venedig Santa Lucia"},
+    # ── Netherlands ──
+    "Amsterdam Centraal":            {"en": "Amsterdam Central Station",  "de": "Amsterdam Hbf"},
+    # ── Spain ──
+    "Madrid - Todas las estaciones": {"en": "Madrid - All Stations",      "de": "Madrid - Alle Bahnhöfe"},
+    "Sevilla - Santa Justa":         {"en": "Seville - Santa Justa",      "de": "Sevilla - Santa Justa"},
+    "Zaragoza - Delicias":           {"en": "Zaragoza - Delicias",        "de": "Saragossa - Delicias"},
+}
+
+def station_name(raw_name, lang="en"):
+    entry = STATION_DISPLAY_NAMES.get(raw_name)
+    return entry[lang] if entry else raw_name
+
+def route_label(origin_name, destination_name, lang="en"):
+    return f"{station_name(origin_name, lang)} → {station_name(destination_name, lang)}"
+
 def time_since(dt, T) -> str:
     try:
         diff = (datetime.utcnow() - pd.to_datetime(dt).replace(tzinfo=None)).total_seconds()

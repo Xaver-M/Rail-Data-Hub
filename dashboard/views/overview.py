@@ -4,7 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 
-from dashboard.config import op_color, op_label, price_basis_toggle
+from dashboard.config import op_color, op_label, price_basis_toggle, station_name
 from dashboard.database import (
     load_overview_kpis, load_timeline_data, load_price_range_by_operator,
     load_departure_hour_counts, load_fare_class_avg,
@@ -30,7 +30,8 @@ def _kpi_card(title, value, subtitle="", value_color=None, badge_color=None):
 
 
 def render_overview(route, T):
-    st.subheader(f"{route['origin_name']} → {route['destination_name']}")
+    lang = st.session_state.lang
+    st.subheader(f"{station_name(route['origin_name'], lang)} → {station_name(route['destination_name'], lang)}")
 
     origin, destination = route["origin_name"], route["destination_name"]
 

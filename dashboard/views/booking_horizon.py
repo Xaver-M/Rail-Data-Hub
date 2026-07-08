@@ -3,12 +3,14 @@ import streamlit as st
 import plotly.express as px
 import pandas as pd
 
-from dashboard.config import op_color, op_label, price_basis_toggle
+from dashboard.config import op_color, op_label, price_basis_toggle, station_name
 from dashboard.database import load_booking_horizon
 
 
 def render_booking_horizon(route, T):
-    st.subheader(T["bh_head"].format(orig=route["origin_name"], dest=route["destination_name"]))
+    lang = st.session_state.lang
+    st.subheader(T["bh_head"].format(orig=station_name(route["origin_name"], lang),
+                                      dest=station_name(route["destination_name"], lang)))
 
     origin, destination = route["origin_name"], route["destination_name"]
 

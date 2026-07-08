@@ -3,12 +3,14 @@ import streamlit as st
 import plotly.express as px
 import pandas as pd
 
-from dashboard.config import op_color, op_label, price_basis_toggle
+from dashboard.config import op_color, op_label, price_basis_toggle, station_name
 from dashboard.database import load_train_numbers, load_single_train_data
 
 
 def render_individual_train(route, T):
-    st.subheader(T["tr_head"].format(orig=route["origin_name"], dest=route["destination_name"]))
+    lang = st.session_state.lang
+    st.subheader(T["tr_head"].format(orig=station_name(route["origin_name"], lang),
+                                      dest=station_name(route["destination_name"], lang)))
 
     origin, destination = route["origin_name"], route["destination_name"]
     operators = route["operators"]

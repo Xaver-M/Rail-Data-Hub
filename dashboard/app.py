@@ -5,7 +5,7 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dashboard.config import TEXTS, CUSTOM_CSS, op_color, op_label, time_since
+from dashboard.config import TEXTS, CUSTOM_CSS, op_color, op_label, time_since, station_name
 from dashboard.database import load_route_list
 from dashboard.views.landing import render_landing
 
@@ -336,7 +336,8 @@ else:
             "origin", options=all_origins,
             index=all_origins.index(st.session_state.selected_origin)
                   if st.session_state.selected_origin in all_origins else 0,
-            key="sb_origin", label_visibility="collapsed"
+            key="sb_origin", label_visibility="collapsed",
+            format_func=lambda n: station_name(n, st.session_state.lang)
         )
         if new_origin != st.session_state.selected_origin:
             st.session_state.selected_origin = new_origin
@@ -356,7 +357,8 @@ else:
             "dest", options=destinations_for_origin,
             index=destinations_for_origin.index(st.session_state.selected_destination)
                   if st.session_state.selected_destination in destinations_for_origin else 0,
-            key="sb_dest", label_visibility="collapsed"
+            key="sb_dest", label_visibility="collapsed",
+            format_func=lambda n: station_name(n, st.session_state.lang)
         )
         if new_dest != st.session_state.selected_destination:
             st.session_state.selected_destination = new_dest

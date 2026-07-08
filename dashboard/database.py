@@ -337,6 +337,7 @@ def load_booking_horizon(origin, destination):
         return (df.groupby(["operator", "booking_horizon_days"])
                 .agg(price_avg=("price_eur", "mean"),
                      price_min=("price_eur", "min"),
+                     price_max=("price_eur", "max"),
                      observations=("price_eur", "count"))
                 .reset_index()
                 .sort_values("booking_horizon_days", ascending=False))

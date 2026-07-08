@@ -3,12 +3,14 @@ import streamlit as st
 import plotly.express as px
 import pandas as pd
 
-from dashboard.config import op_color, op_label
+from dashboard.config import op_color, op_label, station_name
 from dashboard.database import load_normalized_price_data, load_distances
 
 
 def render_normalized_prices(route, T):
-    st.subheader(T["nm_head"].format(orig=route["origin_name"], dest=route["destination_name"]))
+    lang = st.session_state.lang
+    st.subheader(T["nm_head"].format(orig=station_name(route["origin_name"], lang),
+                                      dest=station_name(route["destination_name"], lang)))
 
     origin, destination = route["origin_name"], route["destination_name"]
 

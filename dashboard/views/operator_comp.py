@@ -4,7 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 
-from dashboard.config import op_color, op_label
+from dashboard.config import op_color, op_label, station_name
 from dashboard.database import (
     load_all_route_pairs, load_route_horizon_curve, load_route_summary,
     load_operator_comparison_at_horizon, load_seats_by_horizon,
@@ -17,9 +17,17 @@ def _hex_to_rgba(hex_color: str, alpha: float = 0.18) -> str:
     return f"rgba({r},{g},{b},{alpha})"
 
 
+def _translate_label(label, lang):
+    parts = label.split(" → ")
+    if len(parts) == 2:
+        return f"{station_name(parts[0], lang)} → {station_name(parts[1], lang)}"
+    return label
+
+
 def render_operator_comparison(route, T):
     st.subheader(T["op_head"])
 
+    lang = st.session_state.lang
     origin, destination = route["origin_name"], route["destination_name"]
 
     # ══════════════════════════════════════════════════════════════════
@@ -32,12 +40,14 @@ def render_operator_comparison(route, T):
 
         default_label = route["label"] if route["label"] in all_labels else (all_labels[0] if all_labels else None)
         sel_rts = st.multiselect(T["op_routes_lbl"], options=all_labels,
-                                 default=[default_label] if default_label else [], key="route_compare")
+                                 default=[default_label] if default_label else [], key="route_compare",
+                                 format_func=lambda l: _translate_label(l, lang))
 
         if len(sel_rts) >= 2:
             frames, ffreq, summary = [], [], []
             for rl in sel_rts:
                 rr = all_routes[all_routes["label"] == rl].iloc[0]
+                disp_label = _translate_label(rl, lang)
                 curve = load_route_horizon_curve(rr["origin_name"], rr["destination_name"])
                 if curve.empty:
                     continue
@@ -46,7 +56,7 @@ def render_operator_comparison(route, T):
                 curve["price_avg"] = pd.to_numeric(curve["price_avg"])
                 curve["price_min"] = pd.to_numeric(curve["price_min"])
                 curve["observations"] = pd.to_numeric(curve["observations"])
-                curve["route"] = rl
+                curve["route"] = disp_label
                 frames.append(curve[["route", "booking_horizon_days", "price_avg", "price_min"]])
                 ffreq.append(curve[["route", "booking_horizon_days", "observations"]])
 
@@ -54,7 +64,7 @@ def render_operator_comparison(route, T):
                 if not summ.empty:
                     r0 = summ.iloc[0]
                     summary.append({
-                        "route": rl,
+                        "route": disp_label,
                         "low": float(r0["price_min"]) if pd.notna(r0["price_min"]) else 0.0,
                         "avg": float(r0["price_avg"]) if pd.notna(r0["price_avg"]) else 0.0,
                         "ops": int(r0["n_operators"]) if pd.notna(r0["n_operators"]) else 0,
@@ -81,6 +91,7 @@ def render_operator_comparison(route, T):
                               labels={"booking_horizon_days": T["ov_days_adv"], "price_avg": T["bh_avg"]})
                 fig.update_traces(line_width=2, marker_size=5)
                 fig.update_xaxes(autorange="reversed")
+                fig.update_yaxes(rangemode="tozero")
                 fig.update_layout(hovermode="x unified", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
                 st.plotly_chart(fig, use_container_width=True)
 
@@ -107,7 +118,7 @@ def render_operator_comparison(route, T):
     # BLOCK 2: ANBIETERVERGLEICH bei wählbarem Horizont
     # ══════════════════════════════════════════════════════════════════
     with st.container(border=True):
-        st.markdown(T["op_comp"].format(orig=origin, dest=destination))
+        st.markdown(T["op_comp"].format(orig=station_name(origin, lang), dest=station_name(destination, lang)))
         hz_val = st.select_slider(T["op_hz"], options=[1, 2, 3, 4, 5, 6, 7, 10, 14, 21, 30, 45, 60, 90],
                                   value=14, key="cp_h")
         df_cp = load_operator_comparison_at_horizon(origin, destination, hz_val)
