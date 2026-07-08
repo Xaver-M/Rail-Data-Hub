@@ -31,7 +31,11 @@ def _kpi_card(title, value, subtitle="", value_color=None, badge_color=None):
 
 def render_overview(route, T):
     lang = st.session_state.lang
-    st.subheader(f"{station_name(route['origin_name'], lang)} → {station_name(route['destination_name'], lang)}")
+    orig_lbl = station_name(route['origin_name'], lang)
+    dest_lbl = station_name(route['destination_name'], lang)
+    route_lbl = f"{orig_lbl} → {dest_lbl}"
+
+    st.subheader(route_lbl)
 
     origin, destination = route["origin_name"], route["destination_name"]
 
@@ -65,6 +69,11 @@ def render_overview(route, T):
             st.info(T["ov_no_trip_data"])
             nearest = sorted(avail_dates, key=lambda d: abs((d - sel_date).days))[:5]
             st.caption(f'{T["ov_nearest"]} ' + ", ".join(d.strftime("%d.%m.%Y") for d in sorted(nearest)))
+            return
+        if st.session_state.get("active_operators"):
+            df_trip = df_trip[df_trip["operator"].isin(st.session_state.active_operators)]
+        if df_trip.empty:
+            st.info(T["ov_no_trip_data"])
             return
 
         # ── Toggle ──
@@ -124,7 +133,7 @@ def render_overview(route, T):
 
         fig = px.line(df_hz, x="booking_horizon_days", y=y_col,
                       color="op_label", color_discrete_map=color_map, markers=True,
-                      title=T["ov_trip_dev"].format(date=sel_date.strftime("%d.%m.%Y")),
+                      title=f"{T['ov_trip_dev'].format(date=sel_date.strftime('%d.%m.%Y'))} — {route_lbl}",
                       labels={"booking_horizon_days": T["ov_days_adv"], y_col: y_lbl, "op_label": T["ov_op"]},
                       custom_data=["price_min", "price_avg", "price_max", "observations"])
         fig.update_traces(line_width=2, marker_size=6,
@@ -164,6 +173,11 @@ def render_overview(route, T):
         trend = (float(recent_avg) - float(prior_avg)) / float(prior_avg) * 100
 
     timeline_df = load_timeline_data(origin, destination, days)
+    if st.session_state.get("active_operators"):
+        timeline_df = timeline_df[timeline_df["operator"].isin(st.session_state.active_operators)]
+    if timeline_df.empty:
+        st.info(T["ov_no_data"])
+        return
     if timeline_df.empty:
         st.info(T["ov_no_data"])
         return
@@ -221,7 +235,7 @@ def render_overview(route, T):
 
     fig = px.line(timeline_df, x="col_date", y=y_col, color="op_label",
                   color_discrete_map=color_map, markers=True,
-                  title=f"{T['ov_c1'].format(days=days)} ({y_lbl})",
+                  title=f"{T['ov_c1'].format(days=days)} ({y_lbl}) — {route_lbl}",
                   labels={"col_date": T["ov_date"], y_col: y_lbl, "op_label": T["ov_op"]},
                   custom_data=["min_price", "avg_price", "max_price"])
     fig.update_traces(line_width=2, marker_size=5,
@@ -246,7 +260,7 @@ def render_overview(route, T):
                                        marker=dict(color="#fff", size=10, symbol="diamond",
                                                    line=dict(color=col, width=2)), name=lbl))
         fig2.update_yaxes(rangemode="tozero")
-        fig2.update_layout(title=T["ov_c2"], yaxis_title=T["ov_price"],
+        fig2.update_layout(title=f"{T['ov_c2']} — {route_lbl}", yaxis_title=T["ov_price"],
                            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig2, use_container_width=True)
 
@@ -258,7 +272,7 @@ def render_overview(route, T):
         hour_df["hour_label"] = hour_df["dep_hour"].astype(str).str.zfill(2) + ":00"
         color_map2 = {op_label(o): op_color(o) for o in hour_df["operator"].unique()}
         fig3 = px.bar(hour_df, x="hour_label", y="connection_count", color="op_label",
-                      color_discrete_map=color_map2, barmode="group", title=T["ov_c3"],
+                      color_discrete_map=color_map2, barmode="group", title=f"{T['ov_c3']} — {route_lbl}",
                       labels={"hour_label": T["ov_dep_hour"], "connection_count": T["ov_count"], "op_label": T["ov_op"]})
         fig3.update_yaxes(rangemode="tozero")
         fig3.update_layout(hovermode="x unified", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
@@ -273,7 +287,7 @@ def render_overview(route, T):
         fare_df["op_label"] = fare_df["operator"].map(op_label)
         color_map3 = {op_label(o): op_color(o) for o in fare_df["operator"].unique()}
         fig4 = px.bar(fare_df, x="fare_class", y="avg_price", color="op_label",
-                      color_discrete_map=color_map3, barmode="group", title=T["ov_c5"],
+                      color_discrete_map=color_map3, barmode="group", title=f"{T['ov_c5']} — {route_lbl}",
                       labels={"fare_class": T["ov_class"], "avg_price": T["ov_avg"], "op_label": T["ov_op"]})
         fig4.update_yaxes(rangemode="tozero")
         fig4.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")

@@ -134,6 +134,7 @@ EN = {
     "tr_no_hz": "No horizon data for this train.",
     "bh_head": "Booking Horizon — {orig} → {dest}", "bh_no": "No horizon data.",
     "bh_c1": "Avg. price per operator by booking horizon",
+    "bh_c1_dyn": "{basis} price per operator by booking horizon",
     "bh_avg": "Avg. price (€)",
     "bh_c2": "Number of recorded connections per booking horizon",
     "bh_conn": "Number of connections",
@@ -145,6 +146,8 @@ EN = {
     "dt_op": "Operator", "dt_no": "No data for this operator.",
     "dt_c1": "Avg. price by departure hour — {op}",
     "dt_c2": "Heatmap — Avg. price per weekday and hour ({op})",
+    "dt_c1_dyn": "{basis} price by departure hour — {op}",
+    "dt_c2_dyn": "{basis} price heatmap by weekday and hour ({op})",
     "dt_wd": "Weekday", "dt_c3": "Avg. available seats by departure hour — {op}",
     "dt_seats": "Avg. seats",
     "dt_ch_h": "Cheapest hour", "dt_ex_h": "Most expensive hour",
@@ -158,12 +161,9 @@ EN = {
     "op_hz_m": "Horizon", "op_mam": "Min / Avg / Max at +{days}d",
     "op_extra": "Extra cost vs. {op}", "op_pct": "% more expensive",
     "op_prof": "**Operator Profile**",
-    "op_radar_cats": ["Cheap Price", "Price Stability", "Availability", "Data Density"],
-    "op_radar_t": "Operator profile at +{days}d",
-    "op_radar_c": (
-        "Cheap Price: lower min price = better · Price Stability: smaller spread = better · "
-        "Availability: more seats = better · Data Density: more data points = better"
-    ),
+    "op_prof": "**Operator Profile**",
+    "op_tbl_min": "Min Price", "op_tbl_avg": "Avg Price", "op_tbl_max": "Max Price",
+    "op_tbl_spread": "Price Spread", "op_tbl_seats": "Avg. Seat Capacity", "op_tbl_obs": "Observations",
     "op_scatter": "Lowest price vs. avg. available seats",
     "op_seats_hz": "Avg. available seats by booking horizon",
     "op_low": "Lowest price (€)", "op_seats": "Avg. seats",
@@ -322,6 +322,13 @@ EN = {
     "picker_reset":          "✕ Reset",
     "picker_of":             "of",
     "picker_routes":         "routes",
+    "picker_active_ops":     "Displayed Operators",
+    "picker_all_active_ops": "All operators",
+    "country_names": {
+    "DE": "🇩🇪 Germany", "IT": "🇮🇹 Italy", "FR": "🇫🇷 France",
+    "ES": "🇪🇸 Spain",   "CZ": "🇨🇿 Czechia", "AT": "🇦🇹 Austria",
+    "SK": "🇸🇰 Slovakia", "HU": "🇭🇺 Hungary", "OTHER": "🌍 Other",
+    }
 }
 
 DE = {
@@ -393,6 +400,7 @@ DE = {
     "tr_no_hz": "Keine Horizont-Daten für diesen Zug.",
     "bh_head": "Buchungshorizont — {orig} → {dest}", "bh_no": "Keine Horizont-Daten.",
     "bh_c1": "Durchschnittspreis pro Anbieter nach Buchungshorizont",
+    "bh_c1_dyn": "{basis} pro Anbieter nach Buchungshorizont",
     "bh_avg": "Durchschnittspreis (€)",
     "bh_c2": "Anzahl aufgezeichneter Verbindungen pro Buchungshorizont",
     "bh_conn": "Anzahl Verbindungen",
@@ -403,7 +411,9 @@ DE = {
     "dt_head": "Tageszeit-Analyse — {orig} → {dest}",
     "dt_op": "Anbieter", "dt_no": "Keine Daten für diesen Anbieter.",
     "dt_c1": "Durchschnittspreis nach Abfahrtsstunde — {op}",
+    "dt_c1_dyn": "{basis} nach Abfahrtsstunde — {op}",
     "dt_c2": "Heatmap — Durchschnittspreis pro Wochentag und Stunde ({op})",
+    "dt_c2_dyn": "Heatmap — {basis} pro Wochentag und Stunde ({op})",
     "dt_wd": "Wochentag", "dt_c3": "Durchschn. verfügbare Plätze nach Abfahrtsstunde — {op}",
     "dt_seats": "Durchschn. Plätze",
     "dt_ch_h": "Günstigste Stunde", "dt_ex_h": "Teuerste Stunde",
@@ -417,12 +427,9 @@ DE = {
     "op_hz_m": "Horizont", "op_mam": "Min / Avg / Max bei +{days}T",
     "op_extra": "Mehrkosten vs. {op}", "op_pct": "% teurer",
     "op_prof": "**Anbieter-Profil**",
-    "op_radar_cats": ["Günstiger Preis", "Preisstabilität", "Verfügbarkeit", "Datendichte"],
-    "op_radar_t": "Anbieter-Profil bei +{days}T",
-    "op_radar_c": (
-        "Günstiger Preis: niedrigerer Mindestpreis = besser · Preisstabilität: kleinere Spanne = besser · "
-        "Verfügbarkeit: mehr Plätze = besser · Datendichte: mehr Datenpunkte = besser"
-    ),
+    "op_prof": "**Anbieter-Profil**",
+    "op_tbl_min": "Mindestpreis", "op_tbl_avg": "Durchschn. Preis", "op_tbl_max": "Höchstpreis",
+    "op_tbl_spread": "Preisspanne", "op_tbl_seats": "Durchschn. Sitzkapazität", "op_tbl_obs": "Beobachtungen",
     "op_scatter": "Niedrigster Preis vs. durchschn. verfügbare Plätze",
     "op_seats_hz": "Durchschn. verfügbare Plätze nach Buchungshorizont",
     "op_low": "Niedrigster Preis (€)", "op_seats": "Durchschn. Plätze",
@@ -581,6 +588,13 @@ DE = {
     "picker_reset":          "✕ Reset",
     "picker_of":             "von",
     "picker_routes":         "Strecken",
+    "picker_active_ops":     "Angezeigte Anbieter",
+    "picker_all_active_ops": "Alle Anbieter",
+    "country_names": {
+    "DE": "🇩🇪 Deutschland", "IT": "🇮🇹 Italien", "FR": "🇫🇷 Frankreich",
+    "ES": "🇪🇸 Spanien",    "CZ": "🇨🇿 Tschechien", "AT": "🇦🇹 Österreich",
+    "SK": "🇸🇰 Slowakei",   "HU": "🇭🇺 Ungarn", "OTHER": "🌍 Andere",
+},
  
 }
 

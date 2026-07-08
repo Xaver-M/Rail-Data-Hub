@@ -9,8 +9,11 @@ from dashboard.database import load_train_numbers, load_single_train_data
 
 def render_individual_train(route, T):
     lang = st.session_state.lang
-    st.subheader(T["tr_head"].format(orig=station_name(route["origin_name"], lang),
-                                      dest=station_name(route["destination_name"], lang)))
+    orig_lbl = station_name(route["origin_name"], lang)
+    dest_lbl = station_name(route["destination_name"], lang)
+    route_lbl = f"{orig_lbl} → {dest_lbl}"
+
+    st.subheader(T["tr_head"].format(orig=orig_lbl, dest=dest_lbl))
 
     origin, destination = route["origin_name"], route["destination_name"]
     operators = route["operators"]
@@ -95,7 +98,7 @@ def render_individual_train(route, T):
         y_col_hist = {"min": "price_min", "avg": "price_avg", "max": "price_max"}[basis]
         avg_l = float(df_hist["price_avg"].mean())
         fig = px.line(df_hist, x="col_date", y=y_col_hist,
-                      title=f"{T['tr_dev'].format(train=sel_train, dep=dep_str)} ({y_lbl})",
+                      title=f"{T['tr_dev'].format(train=sel_train, dep=dep_str)} ({y_lbl}) — {route_lbl}",
                       labels={"col_date": T["ov_date"], y_col_hist: y_lbl},
                       color_discrete_sequence=[op_color(sel_op)],
                       custom_data=["price_min", "price_avg", "price_max"])
@@ -131,7 +134,7 @@ def render_individual_train(route, T):
         fig2 = px.bar(df_hz, x="label", y="surcharge_pct", color="surcharge_pct",
                       color_continuous_scale=["#a8e44a", "#ffb547", "#ff5f5f"],
                       range_color=[0, df_hz["surcharge_pct"].max() if df_hz["surcharge_pct"].max() > 0 else 1],
-                      title=T["tr_sur_title"].format(train=sel_train, price=tp, horizon=th),
+                      title=f"{T['tr_sur_title'].format(train=sel_train, price=tp, horizon=th)} — {route_lbl}",
                       labels={"label": T["tr_hz_lbl"], "surcharge_pct": T["tr_sur_lbl"]},
                       custom_data=["observations", "price_min", "price_avg", "price_max"])
         fig2.update_traces(hovertemplate="<b>%{x}</b><br>+%{y:.1f}%<br>"
@@ -145,7 +148,7 @@ def render_individual_train(route, T):
         st.plotly_chart(fig2, use_container_width=True)
 
         fig3 = px.line(df_hz, x="label", y=y_col_hz, markers=True,
-                       title=f"{T['tr_abs'].format(train=sel_train)} ({y_lbl})",
+                       title=f"{T['tr_abs'].format(train=sel_train)} ({y_lbl}) — {route_lbl}",
                        labels={"label": T["tr_hz_lbl"], y_col_hz: y_lbl},
                        color_discrete_sequence=[op_color(sel_op)],
                        custom_data=["surcharge_pct", "observations", "price_min", "price_avg", "price_max"])
@@ -178,6 +181,7 @@ def render_individual_train(route, T):
         if not df_seats.empty:
             st.divider()
             fig4 = px.scatter(df_seats, x="seats_available", y="price_eur",
+                              title=route_lbl,
                               labels={"seats_available": T["tr_seats"], "price_eur": T["ov_price"]},
                               color_discrete_sequence=[op_color(sel_op)])
             fig4.update_xaxes(rangemode="tozero")

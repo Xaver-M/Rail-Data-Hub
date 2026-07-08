@@ -93,30 +93,30 @@ div[data-testid="stMultiSelect"] label { font-size: 0.72rem !important; opacity:
 
 # ── Länder-Mapping ────────────────────────────────────────────────
 _COUNTRY_KEYWORDS = {
-    "🇩🇪 Deutschland":  ["Berlin", "München", "Hamburg", "Frankfurt", "Köln", "Stuttgart",
-                         "Basel", "Mannheim", "Nürnberg", "Leipzig", "Dresden", "Bremen",
-                         "Hannover", "Dortmund", "Essen", "Duisburg", "Karlsruhe", "Augsburg",
-                         "Wiesbaden", "Münster", "Bonn", "Freiburg", "Kiel", "Bielefeld"],
-    "🇮🇹 Italien":      ["Roma", "Milano", "Napoli", "Torino", "Bologna", "Firenze",
-                         "Venezia", "Genova", "Verona", "Padova", "Trieste", "Brescia",
-                         "Modena", "Parma", "Perugia", "Ravenna", "Livorno", "Cagliari"],
-    "🇫🇷 Frankreich":   ["Paris", "Lyon", "Marseille", "Toulouse", "Bordeaux", "Nantes",
-                         "Strasbourg", "Montpellier", "Rennes", "Grenoble", "Dijon", "Toulon"],
-    "🇪🇸 Spanien":      ["Madrid", "Barcelona", "Valencia", "Sevilla", "Zaragoza", "Málaga",
-                         "Bilbao", "Alicante", "Córdoba", "Valladolid", "Vigo", "Granada"],
-    "🇨🇿 Tschechien":   ["Praha", "Brno", "Ostrava", "Plzeň", "Olomouc", "České",
-                         "Pardubice", "Liberec", "Hradec", "Zlín"],
-    "🇦🇹 Österreich":   ["Wien", "Graz", "Linz", "Salzburg", "Innsbruck", "Klagenfurt",
-                         "Villach", "Wels", "Dornbirn", "Steyr"],
-    "🇸🇰 Slowakei":     ["Bratislava", "Košice", "Prešov", "Žilina", "Nitra"],
-    "🇭🇺 Ungarn":       ["Budapest", "Debrecen", "Miskolc", "Szeged", "Pécs"],
+    "DE": ["Berlin", "München", "Hamburg", "Frankfurt", "Köln", "Stuttgart",
+           "Basel", "Mannheim", "Nürnberg", "Leipzig", "Dresden", "Bremen",
+           "Hannover", "Dortmund", "Essen", "Duisburg", "Karlsruhe", "Augsburg",
+           "Wiesbaden", "Münster", "Bonn", "Freiburg", "Kiel", "Bielefeld"],
+    "IT": ["Roma", "Milano", "Napoli", "Torino", "Bologna", "Firenze",
+           "Venezia", "Genova", "Verona", "Padova", "Trieste", "Brescia",
+           "Modena", "Parma", "Perugia", "Ravenna", "Livorno", "Cagliari"],
+    "FR": ["Paris", "Lyon", "Marseille", "Toulouse", "Bordeaux", "Nantes",
+           "Strasbourg", "Montpellier", "Rennes", "Grenoble", "Dijon", "Toulon"],
+    "ES": ["Madrid", "Barcelona", "Valencia", "Sevilla", "Zaragoza", "Málaga",
+           "Bilbao", "Alicante", "Córdoba", "Valladolid", "Vigo", "Granada"],
+    "CZ": ["Praha", "Brno", "Ostrava", "Plzeň", "Olomouc", "České",
+           "Pardubice", "Liberec", "Hradec", "Zlín"],
+    "AT": ["Wien", "Graz", "Linz", "Salzburg", "Innsbruck", "Klagenfurt",
+           "Villach", "Wels", "Dornbirn", "Steyr"],
+    "SK": ["Bratislava", "Košice", "Prešov", "Žilina", "Nitra"],
+    "HU": ["Budapest", "Debrecen", "Miskolc", "Szeged", "Pécs"],
 }
 
 def _get_country(station_name: str) -> str:
-    for country, keywords in _COUNTRY_KEYWORDS.items():
+    for code, keywords in _COUNTRY_KEYWORDS.items():
         if any(kw.lower() in station_name.lower() for kw in keywords):
-            return country
-    return "🌍 Andere"
+            return code
+    return "OTHER"
 
 # ── Session State ─────────────────────────────────────────────────
 for key, val in [
@@ -126,6 +126,7 @@ for key, val in [
     ("selected_destination", None),
     ("filter_countries", []),
     ("filter_operators", []),
+    ("active_operators", []),
 ]:
     if key not in st.session_state:
         st.session_state[key] = val
@@ -282,6 +283,7 @@ else:
         new_countries = st.multiselect(
             T["picker_country"], options=all_countries,
             default=st.session_state.filter_countries,
+            format_func=lambda c: T["country_names"].get(c, c),
             placeholder=T["picker_all_countries"],
             key="ms_countries"
         )
@@ -412,6 +414,35 @@ else:
                 <div class="rdh-picker-stat">{rec_fmt} {T["lp_observations"]} · {last_fmt}</div>
             </div>
             """, unsafe_allow_html=True)
+
+    # ── Operator-Auswahl (erst sichtbar wenn Route feststeht) ──────
+    if current_route is not None:
+        route_operators = current_route["operators"]
+
+        # Bei Routenwechsel: active_operators auf alle Operatoren der neuen Route zurücksetzen
+        route_key = (st.session_state.selected_origin, st.session_state.selected_destination)
+        if st.session_state.get("_active_operators_route_key") != route_key:
+            st.session_state.active_operators = list(route_operators)
+            st.session_state._active_operators_route_key = route_key
+            st.session_state.pop("ms_active_operators", None)
+
+        st.markdown("<div style='height:0.6rem'></div>", unsafe_allow_html=True)
+        st.markdown(f'<div class="rdh-field-label">{T["picker_active_ops"]}</div>', unsafe_allow_html=True)
+
+        new_active_ops = st.multiselect(
+            "active_operators", options=route_operators,
+            default=[o for o in st.session_state.active_operators if o in route_operators],
+            format_func=op_label,
+            placeholder=T["picker_all_active_ops"],
+            key="ms_active_operators", label_visibility="collapsed",
+        )
+
+        # Leere Auswahl -> Fallback auf alle Operatoren der Route (kein "keine Daten"-Zustand)
+        effective_ops = new_active_ops if new_active_ops else list(route_operators)
+
+        if effective_ops != st.session_state.active_operators:
+            st.session_state.active_operators = effective_ops
+            st.rerun()
 
     st.markdown('</div>', unsafe_allow_html=True)
 

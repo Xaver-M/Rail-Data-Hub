@@ -15,6 +15,11 @@ def render_time_of_day(route, T):
     origin, destination = route["origin_name"], route["destination_name"]
     operators = route["operators"]
 
+    # Dropdown auf im Header aktive Operatoren einschränken (falls dort gefiltert wurde)
+    active = st.session_state.get("active_operators")
+    if active:
+        operators = [o for o in operators if o in active] or operators
+
     sel_op = st.selectbox(T["dt_op"], operators, format_func=op_label, key="dt_op")
 
     df_dt = load_time_of_day(origin, destination, sel_op)

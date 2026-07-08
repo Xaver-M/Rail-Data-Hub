@@ -29,6 +29,9 @@ def render_operator_comparison(route, T):
 
     lang = st.session_state.lang
     origin, destination = route["origin_name"], route["destination_name"]
+    orig_lbl = station_name(origin, lang)
+    dest_lbl = station_name(destination, lang)
+    route_lbl = f"{orig_lbl} → {dest_lbl}"
 
     # ══════════════════════════════════════════════════════════════════
     # BLOCK 1: STRECKENVERGLEICH (Multi-Route)
@@ -120,7 +123,7 @@ def render_operator_comparison(route, T):
     # BLOCK 2: ANBIETERVERGLEICH bei wählbarem Horizont
     # ══════════════════════════════════════════════════════════════════
     with st.container(border=True):
-        st.markdown(T["op_comp"].format(orig=station_name(origin, lang), dest=station_name(destination, lang)))
+        st.markdown(T["op_comp"].format(orig=orig_lbl, dest=dest_lbl))
         hz_val = st.select_slider(T["op_hz"], options=[1, 2, 3, 4, 5, 6, 7, 10, 14, 21, 30, 45, 60, 90],
                                   value=14, key="cp_h")
         df_cp = load_operator_comparison_at_horizon(origin, destination, hz_val)
@@ -129,6 +132,11 @@ def render_operator_comparison(route, T):
             st.info(T["op_no_hz"].format(days=hz_val))
         else:
             df_cp = df_cp.copy()
+            if st.session_state.get("active_operators"):
+                df_cp = df_cp[df_cp["operator"].isin(st.session_state.active_operators)]
+            if df_cp.empty:
+                st.info(T["op_no_hz"].format(days=hz_val))
+
             for col in ["price_min", "price_avg", "price_max", "seats_avg"]:
                 df_cp[col] = pd.to_numeric(df_cp[col], errors="coerce")
             df_cp["observations"] = pd.to_numeric(df_cp["observations"])
@@ -153,17 +161,18 @@ def render_operator_comparison(route, T):
                     c = op_color(r["operator"])
                     fig.add_trace(go.Bar(name=r["op_label"], x=["Min", "Avg", "Max"],
                                          y=[float(r["price_min"]), float(r["price_avg"]), float(r["price_max"])],
-                                         marker_color=[_hex_to_rgba(c, 0.8), _hex_to_rgba(c, 0.533), _hex_to_rgba(c, 0.267)],
+                                         marker_color=_hex_to_rgba(c, 0.8),
                                          marker_line_color=c, marker_line_width=1))
                 fig.update_yaxes(rangemode="tozero")
-                fig.update_layout(barmode="group", yaxis_title=T["ov_price"], title=T["op_mam"].format(days=hz_val),
+                fig.update_layout(barmode="group", yaxis_title=T["ov_price"],
+                                  title=f"{T['op_mam'].format(days=hz_val)} — {route_lbl}",
                                   margin=dict(t=40, b=20), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
                 st.plotly_chart(fig, use_container_width=True)
             with cr:
                 df_cp["diff_pct"] = ((df_cp["price_min"] - min_p) / min_p * 100).round(4)
                 fig2 = px.bar(df_cp, x="op_label", y="diff_pct", color="diff_pct",
                               color_continuous_scale=["#a8e44a", "#ffb547", "#ff5f5f"],
-                              title=T["op_extra"].format(op=op_label(cheap["operator"])),
+                              title=f"{T['op_extra'].format(op=op_label(cheap['operator']))} — {route_lbl}",
                               labels={"op_label": T["ov_op"], "diff_pct": T["op_pct"]}, text="diff_pct")
                 fig2.update_traces(texttemplate="+%{text:.1f}%", textposition="outside")
                 fig2.update_coloraxes(showscale=False)
@@ -173,36 +182,31 @@ def render_operator_comparison(route, T):
 
             if len(df_cp) >= 2:
                 st.markdown(T["op_prof"])
-                spread = df_cp["price_max"] - df_cp["price_min"]
-                max_pm, min_pm = df_cp["price_min"].max(), df_cp["price_min"].min()
-                mx_sp = spread.max()
-                mx_obs = float(df_cp["observations"].max())
-                mx_seats = float(df_cp["seats_avg"].fillna(0).max())
-                cats = T["op_radar_cats"]
-                fig_r = go.Figure()
+                rows = []
+                min_price_overall = float(df_cp["price_min"].min())
                 for _, r in df_cp.iterrows():
-                    denom = (max_pm - min_pm) if (max_pm - min_pm) > 0 else 1
-                    vals = [1 - (float(r["price_min"]) - min_pm) / denom,
-                            1 - (float(r["price_max"]) - float(r["price_min"])) / (mx_sp if mx_sp > 0 else 1),
-                            float(r["seats_avg"] or 0) / (mx_seats if mx_seats > 0 else 1),
-                            float(r["observations"]) / (mx_obs if mx_obs > 0 else 1)]
-                    fig_r.add_trace(go.Scatterpolar(r=vals + [vals[0]], theta=cats + [cats[0]], fill="toself",
-                                                     name=r["op_label"], line_color=op_color(r["operator"]),
-                                                     fillcolor=_hex_to_rgba(op_color(r["operator"]))))
-                fig_r.update_layout(
-                    polar=dict(radialaxis=dict(visible=True, range=[0, 1], tickvals=[0.25, 0.5, 0.75, 1.0],
-                                               ticktext=["25%", "50%", "75%", "100%"])),
-                    title=T["op_radar_t"].format(days=hz_val),
-                    legend=dict(orientation="h", yanchor="bottom", y=-0.25), margin=dict(t=50, b=60),
-                    paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
-                st.plotly_chart(fig_r, use_container_width=True)
-                st.caption(T["op_radar_c"])
+                    spread = float(r["price_max"]) - float(r["price_min"])
+                    price_flag = " ✓" if float(r["price_min"]) == min_price_overall else ""
+                    rows.append({
+                        T["ov_op"]:           r["op_label"],
+                        T["op_tbl_min"]:      f"{float(r['price_min']):.2f} €{price_flag}",
+                        T["op_tbl_avg"]:      f"{float(r['price_avg']):.2f} €",
+                        T["op_tbl_max"]:      f"{float(r['price_max']):.2f} €",
+                        T["op_tbl_spread"]:   f"{spread:.2f} €",
+                        T["op_tbl_seats"]:    f"{float(r['seats_avg']):.0f}" if pd.notna(r["seats_avg"]) else "–",
+                        T["op_tbl_obs"]:      f"{int(r['observations']):,}",
+                    })
+                st.dataframe(
+                    pd.DataFrame(rows).set_index(T["ov_op"]),
+                    use_container_width=True,
+                )
 
             df_sc = df_cp[df_cp["seats_avg"].notna() & df_cp["operator"].isin(SEATS_OPERATORS)]
             if not df_sc.empty:
                 color_map = {op_label(o): op_color(o) for o in df_cp["operator"].unique()}
                 fig3 = px.scatter(df_sc, x="price_min", y="seats_avg", color="op_label", color_discrete_map=color_map,
-                                  size=[20] * len(df_sc), text="op_label", title=T["op_scatter"],
+                                  size=[20] * len(df_sc), text="op_label",
+                                  title=f"{T['op_scatter']} — {route_lbl}",
                                   labels={"price_min": T["op_low"], "seats_avg": T["op_seats"], "op_label": T["ov_op"]},
                                   custom_data=["observations"])
                 fig3.update_traces(textposition="top center",
@@ -214,14 +218,18 @@ def render_operator_comparison(route, T):
 
             df_sh2 = load_seats_by_horizon(origin, destination)
             df_sh2 = df_sh2[df_sh2["operator"].isin(SEATS_OPERATORS)] if not df_sh2.empty else df_sh2
+            if st.session_state.get("active_operators") and not df_sh2.empty:
+                df_sh2 = df_sh2[df_sh2["operator"].isin(st.session_state.active_operators)]
             if not df_sh2.empty:
                 df_sh2 = df_sh2.copy()
                 df_sh2["booking_horizon_days"] = pd.to_numeric(df_sh2["booking_horizon_days"]).astype(int)
                 df_sh2["seats_avg"] = pd.to_numeric(df_sh2["seats_avg"])
+                df_sh2 = df_sh2.sort_values(["operator", "booking_horizon_days"], ascending=[True, False])
                 df_sh2["op_label"] = df_sh2["operator"].map(op_label)
                 color_map2 = {op_label(o): op_color(o) for o in df_sh2["operator"].unique()}
                 fig4 = px.line(df_sh2, x="booking_horizon_days", y="seats_avg", color="op_label",
-                               color_discrete_map=color_map2, markers=True, title=T["op_seats_hz"],
+                               color_discrete_map=color_map2, markers=True,
+                               title=f"{T['op_seats_hz']} — {route_lbl}",
                                labels={"booking_horizon_days": T["ov_days_adv"], "seats_avg": T["op_seats"], "op_label": T["ov_op"]})
                 fig4.update_xaxes(autorange="reversed")
                 fig4.update_yaxes(rangemode="tozero")

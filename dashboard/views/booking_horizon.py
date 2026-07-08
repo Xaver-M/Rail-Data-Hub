@@ -9,12 +9,21 @@ from dashboard.database import load_booking_horizon
 
 def render_booking_horizon(route, T):
     lang = st.session_state.lang
-    st.subheader(T["bh_head"].format(orig=station_name(route["origin_name"], lang),
-                                      dest=station_name(route["destination_name"], lang)))
+    orig_lbl = station_name(route["origin_name"], lang)
+    dest_lbl = station_name(route["destination_name"], lang)
+    route_lbl = f"{orig_lbl} → {dest_lbl}"
+
+    st.subheader(T["bh_head"].format(orig=orig_lbl, dest=dest_lbl))
 
     origin, destination = route["origin_name"], route["destination_name"]
 
     df_bh = load_booking_horizon(origin, destination)
+    if df_bh.empty:
+        st.info(T["bh_no"])
+        return
+
+    if st.session_state.get("active_operators"):
+        df_bh = df_bh[df_bh["operator"].isin(st.session_state.active_operators)]
     if df_bh.empty:
         st.info(T["bh_no"])
         return
@@ -59,7 +68,8 @@ def render_booking_horizon(route, T):
     c1, c2 = st.columns(2)
 
     with c1:
-        st.write(f"#### 📊 {T['bh_c1']} ({y_lbl})")
+        bh_c1_dyn = T["bh_c1_dyn"].format(basis=y_lbl)
+        st.write(f"#### 📊 {bh_c1_dyn} — {route_lbl}")
         fig1 = px.line(df_bh, x="booking_horizon_days", y=y_col, color="op_label",
                       color_discrete_map=color_map, markers=True,
                       labels={"booking_horizon_days": T["ov_days_adv"], y_col: y_lbl, "op_label": T["ov_op"]},
@@ -77,7 +87,7 @@ def render_booking_horizon(route, T):
         st.plotly_chart(fig1, use_container_width=True)
 
     with c2:
-        st.write(f"#### 📈 {T['bh_c2']}")
+        st.write(f"#### 📈 {T['bh_c2']} — {route_lbl}")
         fig2 = px.bar(df_bh, x="booking_horizon_days", y="observations", color="op_label",
                       color_discrete_map=color_map, barmode="group",
                       labels={"booking_horizon_days": T["ov_days_adv"], "observations": T["bh_conn"], "op_label": T["ov_op"]})
@@ -89,7 +99,7 @@ def render_booking_horizon(route, T):
     st.markdown("---")
 
     # ── Detailtabelle ──
-    st.write(f"#### 📋 {T['bh_table']} ({y_lbl})")
+    st.write(f"#### 📋 {T['bh_table']} ({y_lbl}) — {route_lbl}")
     pivot = df_bh.pivot_table(index="operator", columns="booking_horizon_days", values=y_col).round(4)
     pivot.index = pivot.index.map(op_label)
     pivot.columns = [f"+{int(c)}d" for c in pivot.columns]

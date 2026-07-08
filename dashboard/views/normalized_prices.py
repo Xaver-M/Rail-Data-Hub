@@ -9,8 +9,11 @@ from dashboard.database import load_normalized_price_data, load_distances
 
 def render_normalized_prices(route, T):
     lang = st.session_state.lang
-    st.subheader(T["nm_head"].format(orig=station_name(route["origin_name"], lang),
-                                      dest=station_name(route["destination_name"], lang)))
+    orig_lbl = station_name(route["origin_name"], lang)
+    dest_lbl = station_name(route["destination_name"], lang)
+    route_lbl = f"{orig_lbl} → {dest_lbl}"
+
+    st.subheader(T["nm_head"].format(orig=orig_lbl, dest=dest_lbl))
 
     origin, destination = route["origin_name"], route["destination_name"]
 
@@ -50,6 +53,11 @@ def render_normalized_prices(route, T):
     if df_t.empty:
         st.info(T["nm_no_time"])
         return
+    if st.session_state.get("active_operators"):
+        df_t = df_t[df_t["operator"].isin(st.session_state.active_operators)]
+    if df_t.empty:
+        st.info(T["nm_no_time"])
+        return
 
     df_t["eur_per_km"] = df_t["price_eur"] / dist_km
     df_t["eur_per_h"]  = df_t["price_eur"] / df_t["travel_h"]
@@ -82,8 +90,9 @@ def render_normalized_prices(route, T):
     st.markdown("---")
 
     # ── Chart 1: €/km nach Horizont ──
+    title1 = f"{basis_lbl} {T['nm_eur_km']} {T['nm_hz'].lower()} — {route_lbl}"
     fig1 = px.line(df_agg, x="booking_horizon_days", y=ykm, color="op_label", color_discrete_map=color_map,
-                  markers=True, title=T["nm_c1"] + f"  ({basis_lbl})",
+                  markers=True, title=title1,
                   labels={"booking_horizon_days": T["nm_hz"], ykm: T["nm_eur_km"], "op_label": T["nm_op"]},
                   custom_data=["eur_km_avg", "observations"])
     fig1.update_traces(line_width=2, marker_size=6,
@@ -94,8 +103,9 @@ def render_normalized_prices(route, T):
     st.plotly_chart(fig1, use_container_width=True)
 
     # ── Chart 2: €/h nach Horizont ──
+    title2 = f"{basis_lbl} {T['nm_eur_h']} {T['nm_hz'].lower()} — {route_lbl}"
     fig2 = px.line(df_agg, x="booking_horizon_days", y=yh, color="op_label", color_discrete_map=color_map,
-                  markers=True, title=T["nm_c2"] + f"  ({basis_lbl})",
+                  markers=True, title=title2,
                   labels={"booking_horizon_days": T["nm_hz"], yh: T["nm_eur_h"], "op_label": T["nm_op"]},
                   custom_data=["travel_h_avg", "observations"])
     fig2.update_traces(line_width=2, marker_size=6,
@@ -112,8 +122,9 @@ def render_normalized_prices(route, T):
                                   value=14 if 14 in avail_hz else avail_hz[len(avail_hz) // 2], key="nm_hz_scatter")
     df_sc = df_agg[df_agg["booking_horizon_days"] == hz_scatter]
     if not df_sc.empty:
+        title3 = f"{T['nm_c3'].format(days=hz_scatter)} — {route_lbl}"
         fig3 = px.scatter(df_sc, x="eur_km_avg", y="eur_h_avg", color="op_label", color_discrete_map=color_map,
-                          size="observations", text="op_label", title=T["nm_c3"].format(days=hz_scatter),
+                          size="observations", text="op_label", title=title3,
                           labels={"eur_km_avg": T["nm_eur_km"], "eur_h_avg": T["nm_eur_h"], "op_label": T["nm_op"]},
                           custom_data=["travel_h_avg", "observations"])
         fig3.update_traces(textposition="top center",
@@ -126,8 +137,9 @@ def render_normalized_prices(route, T):
 
     # ── Chart 4: Boxplot €/km über alle Horizonte ──
     df_t["op_label"] = df_t["operator"].map(op_label)
+    title4 = f"{T['nm_c4']} — {route_lbl}"
     fig4 = px.box(df_t, x="op_label", y="eur_per_km", color="op_label", color_discrete_map=color_map,
-                 points="outliers", title=T["nm_c4"],
+                 points="outliers", title=title4,
                  labels={"op_label": T["nm_op"], "eur_per_km": T["nm_eur_km"]})
     fig4.update_yaxes(rangemode="tozero")
     fig4.update_layout(showlegend=False, paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
