@@ -89,6 +89,7 @@ def render_normalized_prices(route, T):
     fig1.update_traces(line_width=2, marker_size=6,
                        hovertemplate="<b>%{fullData.name}</b><br>+%{x} days<br>%{y:.3f} €/km<br>%{customdata[1]} obs.")
     fig1.update_xaxes(autorange="reversed")
+    fig1.update_yaxes(rangemode="tozero")
     fig1.update_layout(hovermode="x unified", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
     st.plotly_chart(fig1, use_container_width=True)
 
@@ -101,6 +102,7 @@ def render_normalized_prices(route, T):
                        hovertemplate="<b>%{fullData.name}</b><br>+%{x} days<br>%{y:.2f} €/h<br>"
                                      "Avg travel %{customdata[0]:.2f} h<br>%{customdata[1]} obs.")
     fig2.update_xaxes(autorange="reversed")
+    fig2.update_yaxes(rangemode="tozero")
     fig2.update_layout(hovermode="x unified", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
     st.plotly_chart(fig2, use_container_width=True)
 
@@ -117,6 +119,8 @@ def render_normalized_prices(route, T):
         fig3.update_traces(textposition="top center",
                            hovertemplate="<b>%{text}</b><br>%{x:.3f} €/km<br>%{y:.2f} €/h<br>"
                                          "Avg travel %{customdata[0]:.2f} h<br>%{customdata[1]} obs.")
+        fig3.update_xaxes(rangemode="tozero")
+        fig3.update_yaxes(rangemode="tozero")
         fig3.update_layout(showlegend=False, paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig3, use_container_width=True)
 
@@ -125,5 +129,6 @@ def render_normalized_prices(route, T):
     fig4 = px.box(df_t, x="op_label", y="eur_per_km", color="op_label", color_discrete_map=color_map,
                  points="outliers", title=T["nm_c4"],
                  labels={"op_label": T["nm_op"], "eur_per_km": T["nm_eur_km"]})
+    fig4.update_yaxes(rangemode="tozero")
     fig4.update_layout(showlegend=False, paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
     st.plotly_chart(fig4, use_container_width=True)

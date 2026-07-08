@@ -72,6 +72,7 @@ def render_booking_horizon(route, T):
                                         "<br>Max %{customdata[3]:.2f} €"
                                         "<br>%{customdata[0]} obs.")
         fig1.update_xaxes(autorange="reversed")
+        fig1.update_yaxes(rangemode="tozero")
         fig1.update_layout(hovermode="x unified", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig1, use_container_width=True)
 
@@ -81,6 +82,7 @@ def render_booking_horizon(route, T):
                       color_discrete_map=color_map, barmode="group",
                       labels={"booking_horizon_days": T["ov_days_adv"], "observations": T["bh_conn"], "op_label": T["ov_op"]})
         fig2.update_xaxes(autorange="reversed")
+        fig2.update_yaxes(rangemode="tozero")
         fig2.update_layout(hovermode="x unified", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig2, use_container_width=True)
 

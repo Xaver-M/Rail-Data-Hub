@@ -47,6 +47,7 @@ def render_time_of_day(route, T):
                  title=f"{T['dt_c1'].format(op=op_label(sel_op))} ({y_lbl})",
                  labels={"hour_label": T["ov_dep_hour"], "price_val": y_lbl})
     fig.update_coloraxes(showscale=False)
+    fig.update_yaxes(rangemode="tozero")
     fig.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
     st.plotly_chart(fig, use_container_width=True)
 

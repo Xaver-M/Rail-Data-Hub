@@ -42,6 +42,7 @@ def render_crawler_status(T):
                 title=T["cr_c1"],
                 labels={"records": T["cr_rec"], "op_label": T["cr_cr"]}
             )
+            fig.update_xaxes(rangemode="tozero")
             fig.update_layout(showlegend=False, paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
             st.plotly_chart(fig, use_container_width=True)
 
@@ -55,6 +56,7 @@ def render_crawler_status(T):
                     title=T["cr_c2"],
                     labels={"col_date": T["cr_date"], "records": T["cr_rec"], "op_label": T["cr_cr"]}
                 )
+                fig2.update_yaxes(rangemode="tozero")
                 fig2.update_layout(barmode="stack", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
                 st.plotly_chart(fig2, use_container_width=True)
 

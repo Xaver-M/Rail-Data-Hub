@@ -106,6 +106,7 @@ def render_individual_train(route, T):
                                         "Max %{customdata[2]:.2f} €")
         fig.add_hline(y=avg_l, line_dash="dot", line_color="#888",
                       annotation_text=f"Avg. {avg_l:.2f} €")
+        fig.update_yaxes(rangemode="tozero")
         fig.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig, use_container_width=True)
     else:
@@ -139,6 +140,7 @@ def render_individual_train(route, T):
                                          "<br>Max %{customdata[3]:.2f} €"
                                          "<br>%{customdata[0]} obs.")
         fig2.update_coloraxes(showscale=False)
+        fig2.update_yaxes(rangemode="tozero")
         fig2.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig2, use_container_width=True)
 
@@ -157,6 +159,7 @@ def render_individual_train(route, T):
                                          "%{customdata[1]} obs.")
         fig3.add_hline(y=tp, line_dash="dot", line_color="#3B6D11",
                        annotation_text=T["tr_low_line"].format(price=tp))
+        fig3.update_yaxes(rangemode="tozero")
         fig3.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig3, use_container_width=True)
 

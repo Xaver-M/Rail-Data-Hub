@@ -99,6 +99,7 @@ def render_operator_comparison(route, T):
                 fig2 = px.bar(df_rmin, x="route", y="low", color="route", title=T["op_low_rt"],
                               labels={"low": T["op_low"]}, text="low")
                 fig2.update_traces(texttemplate="%{text:.2f} €", textposition="outside")
+                fig2.update_yaxes(rangemode="tozero")
                 fig2.update_layout(showlegend=False, paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
                 st.plotly_chart(fig2, use_container_width=True)
 
@@ -107,6 +108,7 @@ def render_operator_comparison(route, T):
                 fig3 = px.bar(df_frc, x="booking_horizon_days", y="observations", color="route", barmode="group",
                               title=T["op_conn"], labels={"booking_horizon_days": T["ov_days_adv"], "observations": T["ov_count"]})
                 fig3.update_xaxes(autorange="reversed")
+                fig3.update_yaxes(rangemode="tozero")
                 fig3.update_layout(hovermode="x unified", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
                 st.plotly_chart(fig3, use_container_width=True)
         else:
@@ -153,6 +155,7 @@ def render_operator_comparison(route, T):
                                          y=[float(r["price_min"]), float(r["price_avg"]), float(r["price_max"])],
                                          marker_color=[_hex_to_rgba(c, 0.8), _hex_to_rgba(c, 0.533), _hex_to_rgba(c, 0.267)],
                                          marker_line_color=c, marker_line_width=1))
+                fig.update_yaxes(rangemode="tozero")
                 fig.update_layout(barmode="group", yaxis_title=T["ov_price"], title=T["op_mam"].format(days=hz_val),
                                   margin=dict(t=40, b=20), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
                 st.plotly_chart(fig, use_container_width=True)
@@ -164,6 +167,7 @@ def render_operator_comparison(route, T):
                               labels={"op_label": T["ov_op"], "diff_pct": T["op_pct"]}, text="diff_pct")
                 fig2.update_traces(texttemplate="+%{text:.1f}%", textposition="outside")
                 fig2.update_coloraxes(showscale=False)
+                fig2.update_yaxes(rangemode="tozero")
                 fig2.update_layout(margin=dict(t=40, b=20), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
                 st.plotly_chart(fig2, use_container_width=True)
 
