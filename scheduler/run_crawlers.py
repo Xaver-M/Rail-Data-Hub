@@ -35,15 +35,15 @@ def run_all_crawlers():
     logger.info(f"=== Crawler run started: {datetime.now()} ===")
 
     crawlers = [
-        FlixtrainCrawler(),
-        TrenitaliaCrawler(),
-        OuigoEsCrawler(),
+      #  FlixtrainCrawler(),
+     #   TrenitaliaCrawler(),
+      #  OuigoEsCrawler(),
 #        DBCrawler(),
-        RegioJetCrawler(),
-        OuigoFrCrawler(),
+     #   RegioJetCrawler(),
+     #   OuigoFrCrawler(),
         ItaloCrawler(),
-        FlixbusCrawler(),
-        CeskeDrahyCrawler(),
+      #  FlixbusCrawler(),
+      #  CeskeDrahyCrawler(),
         DBParseBotCrawler(),
        
     ]

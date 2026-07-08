@@ -232,3 +232,5 @@ yarn-error.log*
 
 
 .DS_Store
+secrets.toml
+_geocode_cache.json
