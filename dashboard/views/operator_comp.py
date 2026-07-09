@@ -72,6 +72,7 @@ def render_operator_comparison(route, T):
                         "avg": float(r0["price_avg"]) if pd.notna(r0["price_avg"]) else 0.0,
                         "ops": int(r0["n_operators"]) if pd.notna(r0["n_operators"]) else 0,
                         "pts": int(r0["observations"]) if pd.notna(r0["observations"]) else 0,
+                        "cheapest_op": r0["cheapest_operator"] if pd.notna(r0["cheapest_operator"]) else None,
                     })
 
             if summary:
@@ -80,10 +81,11 @@ def render_operator_comparison(route, T):
                     best = s["route"] == cheapest_rt["route"]
                     border = "2px solid #a8e44a" if best else "1px solid #333"
                     badge = T["op_badge"] if best else ""
+                    op_name = op_label(s["cheapest_op"]) if s["cheapest_op"] else "—"
                     st.markdown(
                         f'<div style="border:{border};border-radius:8px;padding:10px 12px;background:#111;margin-bottom:8px;">'
                         f'<div style="font-size:11px;color:#888;margin-bottom:2px;">{s["route"]}{badge}</div>'
-                        f'<div style="font-size:20px;font-weight:700;color:#fff;">{s["low"]:.2f} €</div>'
+                        f'<div style="font-size:20px;font-weight:700;color:#fff;">{s["low"]:.2f} € <span style="font-size:12px;font-weight:500;color:{op_color(s["cheapest_op"])};">{op_name}</span></div>'
                         f'<div style="font-size:11px;color:#aaa;">{T["op_avg"]} {s["avg"]:.2f} € · {s["ops"]} op. · {s["pts"]:,} {T["op_pts"]}</div>'
                         f'</div>', unsafe_allow_html=True)
 
@@ -154,11 +156,13 @@ def render_operator_comparison(route, T):
             c3.metric(T["op_sav"], f"{savings:.0f}%", help=T["op_sav_help"])
             c4.metric(T["op_hz_m"], f"+{hz_val}d")
 
+            op_color_map = {o: op_color(o) for o in df_cp["operator"].unique()}
+
             cl, cr = st.columns(2)
             with cl:
                 fig = go.Figure()
                 for _, r in df_cp.iterrows():
-                    c = op_color(r["operator"])
+                    c = op_color_map[r["operator"]]
                     fig.add_trace(go.Bar(name=r["op_label"], x=["Min", "Avg", "Max"],
                                          y=[float(r["price_min"]), float(r["price_avg"]), float(r["price_max"])],
                                          marker_color=_hex_to_rgba(c, 0.8),
@@ -170,14 +174,14 @@ def render_operator_comparison(route, T):
                 st.plotly_chart(fig, use_container_width=True)
             with cr:
                 df_cp["diff_pct"] = ((df_cp["price_min"] - min_p) / min_p * 100).round(4)
-                fig2 = px.bar(df_cp, x="op_label", y="diff_pct", color="diff_pct",
-                              color_continuous_scale=["#a8e44a", "#ffb547", "#ff5f5f"],
+                label_color_map = {r["op_label"]: op_color_map[r["operator"]] for _, r in df_cp.iterrows()}
+                fig2 = px.bar(df_cp, x="op_label", y="diff_pct", color="op_label",
+                              color_discrete_map=label_color_map,
                               title=f"{T['op_extra'].format(op=op_label(cheap['operator']))} — {route_lbl}",
                               labels={"op_label": T["ov_op"], "diff_pct": T["op_pct"]}, text="diff_pct")
                 fig2.update_traces(texttemplate="+%{text:.1f}%", textposition="outside")
-                fig2.update_coloraxes(showscale=False)
                 fig2.update_yaxes(rangemode="tozero")
-                fig2.update_layout(margin=dict(t=40, b=20), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
+                fig2.update_layout(showlegend=False, margin=dict(t=40, b=20), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
                 st.plotly_chart(fig2, use_container_width=True)
 
             if len(df_cp) >= 2:

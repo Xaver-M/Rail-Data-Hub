@@ -273,7 +273,6 @@ if st.session_state.current_view == "landing":
 # ══════════════════════════════════════════════════════════════════
 else:
     # ── Route-Picker ──────────────────────────────────────────────
-    st.markdown('<div class="rdh-picker">', unsafe_allow_html=True)
     st.markdown(f'<div class="rdh-picker-eyebrow">{T["picker_route"]}</div>', unsafe_allow_html=True)
 
     # Filter-Zeile
@@ -443,8 +442,6 @@ else:
         if effective_ops != st.session_state.active_operators:
             st.session_state.active_operators = effective_ops
             st.rerun()
-
-    st.markdown('</div>', unsafe_allow_html=True)
 
     if current_route is None:
         st.info(T["no_data"])
