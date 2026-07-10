@@ -15,9 +15,6 @@ OPERATOR_COLORS = {
 # "fast ausverkauft"-Signal statt einer echten Sitzplatzzahl — daher hier bewusst ausgeschlossen).
 SEATS_OPERATORS = {"italo", "flixtrain", "flixbus", "regiojet", "trenitalia"}
 
-# Anbieter, für die DB-Bahncard-Preisvarianten (BC50/BC25) berechnet werden.
-DB_BAHNCARD_OPERATORS = ("db", "db_parsebot")
-
 OPERATOR_LABELS = {
     "db": "DB", "flixtrain": "Flixtrain", "regiojet": "RegioJet",
     "trenitalia": "Trenitalia", "italo": "Italo", "ouigo_es": "Ouigo ES", "ouigo_fr": "Ouigo FR",
@@ -106,10 +103,6 @@ EN = {
     "ov_mode": "View",
     "ov_mode_route": "📍 Whole route",
     "ov_mode_trip": "🚆 Single trip",
-    "ov_show_reverse": "⇄ Also show return direction",
-    "ov_dir_outbound": "Outbound",
-    "ov_dir_return": "Return",
-    "ov_no_reverse_data": "No data available for the return direction.",
     "ov_dep_date": "Departure date",
     "ov_train_filter": "Train",
     "ov_all_trains": "All trains (aggregated)",
@@ -149,11 +142,6 @@ EN = {
     "bh_opt": "Optimal booking time per operator",
     "bh_cheap": "Cheapest at", "bh_saves": "saves {pct:.0f}%",
     "bh_cap": "Avg. {price:.2f} € ({obs} obs.)",
-    "bh_bc_normal": "Standard fare",
-    "bh_bc50": "🎫 BahnCard 50",
-    "bh_bc25": "🎫 BahnCard 25",
-    "bh_bc_note": "BahnCard 50 = 50% off, BahnCard 25 = 25% off — applied to DB and DB (ParseBot) standard fares.",
-    "bh_bc_none": "Select at least one fare type to display.",
     "dt_head": "Time of Day Analysis — {orig} → {dest}",
     "dt_op": "Operator", "dt_no": "No data for this operator.",
     "dt_c1": "Avg. price by departure hour — {op}",
@@ -381,10 +369,6 @@ DE = {
     "ov_mode": "Ansicht",
     "ov_mode_route": "📍 Strecke gesamt",
     "ov_mode_trip": "🚆 Einzelne Reise",
-    "ov_show_reverse": "⇄ Rückrichtung auch anzeigen",
-    "ov_dir_outbound": "Hin",
-    "ov_dir_return": "Rück",
-    "ov_no_reverse_data": "Keine Daten für die Rückrichtung verfügbar.",
     "ov_dep_date": "Abfahrtsdatum",
     "ov_train_filter": "Zug",
     "ov_all_trains": "Alle Züge (aggregiert)",
@@ -424,11 +408,6 @@ DE = {
     "bh_opt": "Optimaler Buchungszeitpunkt pro Anbieter",
     "bh_cheap": "Günstigst bei", "bh_saves": "spart {pct:.0f}%",
     "bh_cap": "Avg. {price:.2f} € ({obs} Beob.)",
-    "bh_bc_normal": "Normalpreis",
-    "bh_bc50": "🎫 Bahncard 50",
-    "bh_bc25": "🎫 Bahncard 25",
-    "bh_bc_note": "Bahncard 50 = 50% Rabatt, Bahncard 25 = 25% Rabatt — angewendet auf DB- und DB (ParseBot)-Normalpreise.",
-    "bh_bc_none": "Bitte mindestens einen Preistyp auswählen.",
     "dt_head": "Tageszeit-Analyse — {orig} → {dest}",
     "dt_op": "Anbieter", "dt_no": "Keine Daten für diesen Anbieter.",
     "dt_c1": "Durchschnittspreis nach Abfahrtsstunde — {op}",
@@ -512,7 +491,7 @@ DE = {
     "cr_health_cap": "Tage mit Daten in den letzten 7 · Ø Einträge/Tag",
     "cr_health_ok": "✅", "cr_health_warn": "⚠️", "cr_health_bad": "❌",
     "cr_avg_day": "Ø/Tag",
-    "lp_eyebrow":       "KIT · Institut für Volkswirtschaftslehre · SS 2026",
+    "lp_eyebrow":       "KIT · Institut für Wirtschaftswissenschaften · SS 2026",
     "lp_subtitle":      "Systematische Erhebung und Analyse von Fahrkartenpreisen europäischer Bahnbetreiber — Grundlage für die empirische Untersuchung von Yield-Management-Strategien im Schienenpersonenverkehr.",
     "lp_kpi_obs":       "Beobachtungen",
     "lp_kpi_ops":       "Betreiber",
@@ -569,7 +548,7 @@ DE = {
         "Alle Zeitstempel werden in UTC gespeichert. Ausnahme: "
         "Trenitalia speichert Abfahrtszeiten in Lokalzeit (<code>Europe/Rome</code>)."
     ),
-    "lp_footer_sub":    "Institut für Volkswirtschaftslehre · Teamprojekt SS 2026",
+    "lp_footer_sub":    "Institut für Wirtschaftswissenschaften · Teamprojekt SS 2026",
     "lp_footer_last":   "Letzter Crawl-Lauf",
     "lp_sec_findings":       "Kernergebnisse",
     "lp_finding_early":      "Frühbuchereffekt",
@@ -590,7 +569,7 @@ DE = {
     "lp_footer_tech":        "Daten: TimescaleDB · bwCloud VM · Ubuntu 24",
     "lp_footer_github":      "↗ GitHub · Xaver-M/Rail-Data-Hub",
     "lp_footer_kit":         "↗ KIT",
-    "lp_footer_inst":        "↗ Institut für Volkswirtschaftslehre",
+    "lp_footer_inst":        "↗ Institut für Wirtschaftswissenschaften",
     "price_max_label": "Maximum",
     "ov_max_price":    "Höchster Preis",
      "sidebar_sub":           "Preisbeobachtung im<br>Schienenpersonenverkehr",
