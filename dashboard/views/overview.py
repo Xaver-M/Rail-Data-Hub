@@ -230,13 +230,37 @@ def render_overview(route, T):
         st.markdown(_kpi_card(T["ov_eur_h"], eur_h_val, eur_h_sub), unsafe_allow_html=True)
 
     # ── Zeitverlauf mit Toggle ──
-    timeline_df["op_label"] = timeline_df["operator"].map(op_label)
-    color_map = {op_label(o): op_color(o) for o in timeline_df["operator"].unique()}
+    show_reverse = st.checkbox(T["ov_show_reverse"], key="ov_show_reverse_chk")
 
-    fig = px.line(timeline_df, x="col_date", y=y_col, color="op_label",
+    timeline_df["op_label"] = timeline_df["operator"].map(op_label)
+    timeline_df["direction"] = T["ov_dir_outbound"]
+    color_map = {op_label(o): op_color(o) for o in timeline_df["operator"].unique()}
+    dash_map = {T["ov_dir_outbound"]: "solid"}
+
+    plot_df = timeline_df
+    chart_title = f"{T['ov_c1'].format(days=days)} ({y_lbl}) — {route_lbl}"
+
+    if show_reverse:
+        rev_df = load_timeline_data(destination, origin, days)
+        if st.session_state.get("active_operators"):
+            rev_df = rev_df[rev_df["operator"].isin(st.session_state.active_operators)]
+        if rev_df.empty:
+            st.caption(T["ov_no_reverse_data"])
+        else:
+            rev_df["op_label"] = rev_df["operator"].map(op_label)
+            rev_df["direction"] = T["ov_dir_return"]
+            for o in rev_df["operator"].unique():
+                color_map.setdefault(op_label(o), op_color(o))
+            dash_map[T["ov_dir_return"]] = "dash"
+            plot_df = pd.concat([timeline_df, rev_df], ignore_index=True)
+            chart_title = f"{chart_title} ⇄ {dest_lbl} → {orig_lbl}"
+
+    fig = px.line(plot_df, x="col_date", y=y_col, color="op_label",
+                  line_dash="direction" if show_reverse else None,
+                  line_dash_map=dash_map if show_reverse else None,
                   color_discrete_map=color_map, markers=True,
-                  title=f"{T['ov_c1'].format(days=days)} ({y_lbl}) — {route_lbl}",
-                  labels={"col_date": T["ov_date"], y_col: y_lbl, "op_label": T["ov_op"]},
+                  title=chart_title,
+                  labels={"col_date": T["ov_date"], y_col: y_lbl, "op_label": T["ov_op"], "direction": ""},
                   custom_data=["min_price", "avg_price", "max_price"])
     fig.update_traces(line_width=2, marker_size=5,
                       hovertemplate="<b>%{fullData.name}</b><br>%{x}<br>"
@@ -244,7 +268,8 @@ def render_overview(route, T):
                                     "Avg %{customdata[1]:.2f} €<br>"
                                     "Max %{customdata[2]:.2f} €")
     fig.update_yaxes(rangemode="tozero")
-    fig.update_layout(hovermode="x unified", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
+    fig.update_layout(hovermode="x unified", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                      legend_title_text=T["ov_op"])
     st.plotly_chart(fig, use_container_width=True)
     st.caption(T["ov_c1_note"])
 

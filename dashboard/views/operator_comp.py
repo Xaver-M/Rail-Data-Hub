@@ -4,10 +4,10 @@ import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 
-from dashboard.config import op_color, op_label, station_name, SEATS_OPERATORS
+from dashboard.config import op_color, op_label, station_name, SEATS_OPERATORS, DB_BAHNCARD_OPERATORS
 from dashboard.database import (
     load_all_route_pairs, load_route_horizon_curve, load_route_summary,
-    load_operator_comparison_at_horizon, load_seats_by_horizon,
+    load_operator_comparison_at_horizon, load_seats_by_horizon, load_booking_horizon,
 )
 
 
@@ -91,14 +91,57 @@ def render_operator_comparison(route, T):
 
             if frames:
                 df_rhz = pd.concat(frames, ignore_index=True)
-                fig = px.line(df_rhz, x="booking_horizon_days", y="price_avg", color="route", markers=True,
-                              title=T["op_hz_t"],
-                              labels={"booking_horizon_days": T["ov_days_adv"], "price_avg": T["bh_avg"]})
-                fig.update_traces(line_width=2, marker_size=5)
-                fig.update_xaxes(autorange="reversed")
-                fig.update_yaxes(rangemode="tozero")
-                fig.update_layout(hovermode="x unified", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
-                st.plotly_chart(fig, use_container_width=True)
+
+                bt1, bt2, bt3 = st.columns(3)
+                show_normal = bt1.toggle(T["bh_bc_normal"], value=True, key="op_route_fare_normal")
+                show_bc50 = bt2.toggle(T["bh_bc50"], value=False, key="op_route_fare_bc50")
+                show_bc25 = bt3.toggle(T["bh_bc25"], value=False, key="op_route_fare_bc25")
+                if show_bc50 or show_bc25:
+                    st.caption(T["bh_bc_note"])
+
+                plot_frames = []
+                if show_normal:
+                    base = df_rhz.copy()
+                    base["series"] = base["route"]
+                    plot_frames.append(base[["series", "booking_horizon_days", "price_avg"]])
+
+                if show_bc50 or show_bc25:
+                    for rl in sel_rts:
+                        rr = all_routes[all_routes["label"] == rl].iloc[0]
+                        disp_label = _translate_label(rl, lang)
+                        bh_op = load_booking_horizon(rr["origin_name"], rr["destination_name"])
+                        if bh_op.empty:
+                            continue
+                        bh_db = bh_op[bh_op["operator"].isin(DB_BAHNCARD_OPERATORS)].copy()
+                        if bh_db.empty:
+                            continue
+                        bh_db["booking_horizon_days"] = pd.to_numeric(bh_db["booking_horizon_days"]).astype(int)
+                        bh_db["price_avg"] = pd.to_numeric(bh_db["price_avg"])
+                        for op_id in bh_db["operator"].unique():
+                            op_df = bh_db[bh_db["operator"] == op_id]
+                            if show_bc50:
+                                bc50 = op_df.copy()
+                                bc50["price_avg"] = bc50["price_avg"] * 0.5
+                                bc50["series"] = f"{disp_label} · {op_label(op_id)} {T['bh_bc50']}"
+                                plot_frames.append(bc50[["series", "booking_horizon_days", "price_avg"]])
+                            if show_bc25:
+                                bc25 = op_df.copy()
+                                bc25["price_avg"] = bc25["price_avg"] * 0.75
+                                bc25["series"] = f"{disp_label} · {op_label(op_id)} {T['bh_bc25']}"
+                                plot_frames.append(bc25[["series", "booking_horizon_days", "price_avg"]])
+
+                if not plot_frames:
+                    st.info(T["bh_bc_none"])
+                else:
+                    df_plot = pd.concat(plot_frames, ignore_index=True)
+                    fig = px.line(df_plot, x="booking_horizon_days", y="price_avg", color="series", markers=True,
+                                  title=T["op_hz_t"],
+                                  labels={"booking_horizon_days": T["ov_days_adv"], "price_avg": T["bh_avg"], "series": T["op_routes_lbl"]})
+                    fig.update_traces(line_width=2, marker_size=5)
+                    fig.update_xaxes(autorange="reversed")
+                    fig.update_yaxes(rangemode="tozero")
+                    fig.update_layout(hovermode="x unified", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
+                    st.plotly_chart(fig, use_container_width=True)
 
                 df_rmin = df_rhz.groupby("route").agg(low=("price_min", "min")).reset_index().sort_values("low")
                 fig2 = px.bar(df_rmin, x="route", y="low", color="route", title=T["op_low_rt"],

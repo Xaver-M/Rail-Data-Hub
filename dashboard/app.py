@@ -205,7 +205,7 @@ current_route = current_route_df.iloc[0] if not current_route_df.empty else None
 # ══════════════════════════════════════════════════════════════════
 with st.sidebar:
     st.markdown(f"""
-    <div class="rdh-logo-eye">KIT · Inst. f. Wirtschaftswiss.</div>
+    <div class="rdh-logo-eye">KIT · Institut für Volkswirtschaftslehre</div>
     <div class="rdh-logo-title">Rail Data Hub</div>
     <div class="rdh-logo-sub">{T["sidebar_sub"]}</div>
     """, unsafe_allow_html=True)
