@@ -91,6 +91,9 @@ def render_operator_comparison(route, T):
 
             if frames:
                 df_rhz = pd.concat(frames, ignore_index=True)
+                route_palette = px.colors.qualitative.Plotly
+                route_color_map = {r: route_palette[i % len(route_palette)]
+                                   for i, r in enumerate(df_rhz["route"].unique())}
 
                 bt1, bt2, bt3 = st.columns(3)
                 show_normal = bt1.toggle(T["bh_bc_normal"], value=True, key="op_route_fare_normal")
@@ -102,8 +105,10 @@ def render_operator_comparison(route, T):
                 plot_frames = []
                 if show_normal:
                     base = df_rhz.copy()
+                    base["route_grp"] = base["route"]
+                    base["fare_type"] = T["bh_bc_normal"]
                     base["series"] = base["route"]
-                    plot_frames.append(base[["series", "booking_horizon_days", "price_avg"]])
+                    plot_frames.append(base[["route_grp", "fare_type", "series", "booking_horizon_days", "price_avg"]])
 
                 if show_bc50 or show_bc25:
                     for rl in sel_rts:
@@ -122,21 +127,31 @@ def render_operator_comparison(route, T):
                             if show_bc50:
                                 bc50 = op_df.copy()
                                 bc50["price_avg"] = bc50["price_avg"] * 0.5
+                                bc50["route_grp"] = disp_label
+                                bc50["fare_type"] = T["bh_bc50"]
                                 bc50["series"] = f"{disp_label} · {op_label(op_id)} {T['bh_bc50']}"
-                                plot_frames.append(bc50[["series", "booking_horizon_days", "price_avg"]])
+                                plot_frames.append(bc50[["route_grp", "fare_type", "series", "booking_horizon_days", "price_avg"]])
                             if show_bc25:
                                 bc25 = op_df.copy()
                                 bc25["price_avg"] = bc25["price_avg"] * 0.75
+                                bc25["route_grp"] = disp_label
+                                bc25["fare_type"] = T["bh_bc25"]
                                 bc25["series"] = f"{disp_label} · {op_label(op_id)} {T['bh_bc25']}"
-                                plot_frames.append(bc25[["series", "booking_horizon_days", "price_avg"]])
+                                plot_frames.append(bc25[["route_grp", "fare_type", "series", "booking_horizon_days", "price_avg"]])
 
                 if not plot_frames:
                     st.info(T["bh_bc_none"])
                 else:
                     df_plot = pd.concat(plot_frames, ignore_index=True)
-                    fig = px.line(df_plot, x="booking_horizon_days", y="price_avg", color="series", markers=True,
+                    fare_dash_map = {T["bh_bc_normal"]: "solid", T["bh_bc50"]: "dot", T["bh_bc25"]: "dashdot"}
+                    multi_fare = (show_bc50 or show_bc25)
+                    fig = px.line(df_plot, x="booking_horizon_days", y="price_avg", color="route_grp",
+                                  line_dash="fare_type" if multi_fare else None,
+                                  line_dash_map=fare_dash_map if multi_fare else None,
+                                  line_group="series", color_discrete_map=route_color_map,
+                                  markers=True, hover_name="series",
                                   title=T["op_hz_t"],
-                                  labels={"booking_horizon_days": T["ov_days_adv"], "price_avg": T["bh_avg"], "series": T["op_routes_lbl"]})
+                                  labels={"booking_horizon_days": T["ov_days_adv"], "price_avg": T["bh_avg"], "route_grp": T["op_routes_lbl"]})
                     fig.update_traces(line_width=2, marker_size=5)
                     fig.update_xaxes(autorange="reversed")
                     fig.update_yaxes(rangemode="tozero")
@@ -144,8 +159,8 @@ def render_operator_comparison(route, T):
                     st.plotly_chart(fig, use_container_width=True)
 
                 df_rmin = df_rhz.groupby("route").agg(low=("price_min", "min")).reset_index().sort_values("low")
-                fig2 = px.bar(df_rmin, x="route", y="low", color="route", title=T["op_low_rt"],
-                              labels={"low": T["op_low"]}, text="low")
+                fig2 = px.bar(df_rmin, x="route", y="low", color="route", color_discrete_map=route_color_map,
+                              title=T["op_low_rt"], labels={"low": T["op_low"]}, text="low")
                 fig2.update_traces(texttemplate="%{text:.2f} €", textposition="outside")
                 fig2.update_yaxes(rangemode="tozero")
                 fig2.update_layout(showlegend=False, paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
@@ -154,6 +169,7 @@ def render_operator_comparison(route, T):
             if ffreq:
                 df_frc = pd.concat(ffreq, ignore_index=True)
                 fig3 = px.bar(df_frc, x="booking_horizon_days", y="observations", color="route", barmode="group",
+                              color_discrete_map=route_color_map,
                               title=T["op_conn"], labels={"booking_horizon_days": T["ov_days_adv"], "observations": T["ov_count"]})
                 fig3.update_xaxes(autorange="reversed")
                 fig3.update_yaxes(rangemode="tozero")

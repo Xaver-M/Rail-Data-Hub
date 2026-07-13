@@ -98,7 +98,7 @@ def render_booking_horizon(route, T):
         st.info(T["bh_bc_none"])
     else:
         plot_df = pd.concat(fare_frames, ignore_index=True)
-        fare_dash_map = {T["bh_bc_normal"]: "solid", T["bh_bc50"]: "dash", T["bh_bc25"]: "dot"}
+        fare_dash_map = {T["bh_bc_normal"]: "solid", T["bh_bc50"]: "dot", T["bh_bc25"]: "dashdot"}
         multi_fare = (show_bc50 or show_bc25)
         fig1 = px.line(plot_df, x="booking_horizon_days", y=y_col, color="op_label",
                       line_dash="fare_type" if multi_fare else None,
