@@ -10,28 +10,38 @@ from dashboard.database import (
 
 
 _OPERATOR_META = {
-    "db":           {"flag": "🇩🇪", "country": "Deutschland",  "type": "Fernbahn"},
-    "db_parsebot":  {"flag": "🇩🇪", "country": "Deutschland",  "type": "Fernbahn (2. Quelle)"},
-    "flixtrain":    {"flag": "🇩🇪", "country": "Europa",       "type": "Low-Cost Bahn"},
-    "flixbus":      {"flag": "🇪🇺", "country": "Europa",       "type": "Fernbus"},
-    "trenitalia":   {"flag": "🇮🇹", "country": "Italien",      "type": "Fernbahn"},
-    "italo":        {"flag": "🇮🇹", "country": "Italien",      "type": "High-Speed"},
-    "ouigo_es":     {"flag": "🇪🇸", "country": "Spanien",      "type": "Low-Cost Bahn"},
-    "ouigo_fr":     {"flag": "🇫🇷", "country": "Frankreich",   "type": "Low-Cost Bahn"},
-    "regiojet":     {"flag": "🇨🇿", "country": "Tschechien",   "type": "Fernbahn"},
-    "ceske-drahy":  {"flag": "🇨🇿", "country": "Tschechien",   "type": "Fernbahn"},
+    "db":           {"flag": "🇩🇪", "country": {"en": "Germany", "de": "Deutschland"},
+                      "type": {"en": "Long-distance rail", "de": "Fernbahn"}},
+    "db_parsebot":  {"flag": "🇩🇪", "country": {"en": "Germany", "de": "Deutschland"},
+                      "type": {"en": "Long-distance rail (2nd source)", "de": "Fernbahn (2. Quelle)"}},
+    "flixtrain":    {"flag": "🇩🇪", "country": {"en": "Europe", "de": "Europa"},
+                      "type": {"en": "Low-cost rail", "de": "Low-Cost Bahn"}},
+    "flixbus":      {"flag": "🇪🇺", "country": {"en": "Europe", "de": "Europa"},
+                      "type": {"en": "Long-distance bus", "de": "Fernbus"}},
+    "trenitalia":   {"flag": "🇮🇹", "country": {"en": "Italy", "de": "Italien"},
+                      "type": {"en": "Long-distance rail", "de": "Fernbahn"}},
+    "italo":        {"flag": "🇮🇹", "country": {"en": "Italy", "de": "Italien"},
+                      "type": {"en": "High-speed", "de": "High-Speed"}},
+    "ouigo_es":     {"flag": "🇪🇸", "country": {"en": "Spain", "de": "Spanien"},
+                      "type": {"en": "Low-cost rail", "de": "Low-Cost Bahn"}},
+    "ouigo_fr":     {"flag": "🇫🇷", "country": {"en": "France", "de": "Frankreich"},
+                      "type": {"en": "Low-cost rail", "de": "Low-Cost Bahn"}},
+    "regiojet":     {"flag": "🇨🇿", "country": {"en": "Czech Republic", "de": "Tschechien"},
+                      "type": {"en": "Long-distance rail", "de": "Fernbahn"}},
+    "ceske-drahy":  {"flag": "🇨🇿", "country": {"en": "Czech Republic", "de": "Tschechien"},
+                      "type": {"en": "Long-distance rail", "de": "Fernbahn"}},
 }
 
 _HORIZONS = [90, 60, 45, 30, 21, 14, 10, 7, 6, 5, 4, 3, 2, 1]
 _MODULE_CHART_TYPES = ["area", "line", "curve", "heatmap", "bar", "scatter", "dots"]
 
 _ANNOTATIONS = [
-    ("2026-03-01", "Projektstart"),
-    ("2026-04-15", "Trenitalia & Italo"),
-    ("2026-05-10", "OUIGO ES/FR"),
-    ("2026-06-01", "České dráhy"),
-    ("2026-06-30", "db_parsebot Ausfall"),
-    ("2026-07-01", "DB-Crawler → VM"),
+    ("2026-03-01", {"en": "Project start",        "de": "Projektstart"}),
+    ("2026-04-15", {"en": "Trenitalia & Italo",    "de": "Trenitalia & Italo"}),
+    ("2026-05-10", {"en": "OUIGO ES/FR",           "de": "OUIGO ES/FR"}),
+    ("2026-06-01", {"en": "České dráhy",           "de": "České dráhy"}),
+    ("2026-06-30", {"en": "db_parsebot outage",    "de": "db_parsebot Ausfall"}),
+    ("2026-07-01", {"en": "DB crawler → VM",       "de": "DB-Crawler → VM"}),
 ]
 
 _CHART_ICONS = {
@@ -316,7 +326,7 @@ def _load_density_grid():
         return pd.DataFrame()
 
 
-def _build_growth_chart(daily_df, findings):
+def _build_growth_chart(daily_df, findings, T, lang):
     if daily_df.empty:
         return None
     total_per_day = daily_df.groupby("col_date")["records"].sum().reset_index().sort_values("col_date")
@@ -329,14 +339,15 @@ def _build_growth_chart(daily_df, findings):
         mode="lines", fill="tozeroy",
         fillcolor="rgba(37,99,235,0.06)",
         line=dict(color="#2563EB", width=1.8),
-        hovertemplate="<b>%{x|%d.%m.%Y}</b><br>%{y:,.0f} Beobachtungen<extra></extra>",
+        hovertemplate="<b>%{x|%d.%m.%Y}</b><br>%{y:,.0f} " + T["lp_observations"] + "<extra></extra>",
     ))
 
     if not total_per_day.empty:
         x_min = total_per_day["col_date"].min()
         x_max = total_per_day["col_date"].max()
         shapes, annotations = [], []
-        for date_str, label in _ANNOTATIONS:
+        for date_str, label_map in _ANNOTATIONS:
+            label = label_map[lang]
             dt = pd.Timestamp(date_str)
             if not (x_min <= dt <= x_max):
                 continue
@@ -370,14 +381,14 @@ def _build_growth_chart(daily_df, findings):
 
 def _build_density_html(density_df, T):
     if density_df.empty:
-        return "<p style='opacity:0.4;font-size:0.8rem'>Keine Daten</p>"
+        return f"<p style='opacity:0.4;font-size:0.8rem'>{T['no_data']}</p>"
     operators = sorted(density_df["operator"].unique())
     horizons  = sorted(density_df["booking_horizon_days"].unique(), reverse=True)
     pivot = density_df.pivot(index="operator", columns="booking_horizon_days", values="n").fillna(0)
     max_n = pivot.values.max() if pivot.values.max() > 0 else 1
 
     html = '<div class="lp-density-wrap"><table class="lp-density-table"><thead><tr>'
-    html += '<th class="row-head">Anbieter</th>'
+    html += f'<th class="row-head">{T["lp_th_operator"]}</th>'
     for h in horizons:
         html += f'<th>+{int(h)}</th>'
     html += '</tr></thead><tbody>'
@@ -387,7 +398,7 @@ def _build_density_html(density_df, T):
             n     = pivot.loc[op, h] if op in pivot.index and h in pivot.columns else 0
             ratio = n / max_n
             cls   = "lp-cell-full" if ratio >= 0.6 else ("lp-cell-part" if ratio >= 0.1 else "lp-cell-empty")
-            html += f'<td><span class="{cls}" title="{int(n)} Beob."></span></td>'
+            html += f'<td><span class="{cls}" title="{int(n)} {T["lp_obs_short"]}"></span></td>'
         html += '</tr>'
     html += '</tbody></table></div>'
 
@@ -402,6 +413,7 @@ def _build_density_html(density_df, T):
 
 def render_landing(T):
     _css()
+    lang = st.session_state.lang
 
     overview   = load_crawler_overview()
     df_ops     = load_crawler_stats_by_operator()
@@ -425,6 +437,13 @@ def render_landing(T):
     n_operators    = int(overview.iloc[0]["n_operators"])   if not overview.empty else 0
     n_routes       = int(overview.iloc[0]["n_routes"])      if not overview.empty else 0
     last_collected = overview.iloc[0]["last_collected"]     if not overview.empty else None
+
+    # db und db_parsebot sind derselbe Anbieter (Deutsche Bahn), aber zwei separate
+    # Crawler — für die "echte" Anbieterzahl auf der Startseite dedupliziert zählen.
+    if not df_ops.empty and {"db", "db_parsebot"}.issubset(set(df_ops["operator"])):
+        n_operators_real = n_operators - 1
+    else:
+        n_operators_real = n_operators
 
     # ══════════════════════════════════════════════════════════
     # HERO
@@ -457,7 +476,7 @@ def render_landing(T):
                 <div class="lp-kpi-label">{T["lp_kpi_obs"]}</div>
             </div>
             <div class="lp-kpi">
-                <div class="lp-kpi-value">{n_operators}</div>
+                <div class="lp-kpi-value">{n_operators_real}</div>
                 <div class="lp-kpi-label">{T["lp_kpi_ops"]}</div>
             </div>
             <div class="lp-kpi">
@@ -488,7 +507,6 @@ def render_landing(T):
         top_count     = findings.get("top_route_count", 0)
         discount_abs  = abs(discount)
         discount_dir  = T["lp_finding_more_exp"] if discount > 0 else T["lp_finding_cheaper"]
-        lang = st.session_state.lang
         top_route_str = (f"{station_name(top_route[0], lang)} → {station_name(top_route[1], lang)}"
                           if isinstance(top_route, tuple) else str(top_route))
         spread_route_str = (f"{station_name(spread_route[0], lang)} → {station_name(spread_route[1], lang)}"
@@ -552,12 +570,12 @@ def render_landing(T):
         </div>
         """, unsafe_allow_html=True)
         if not df_daily.empty:
-            fig_growth = _build_growth_chart(df_daily, findings)
+            fig_growth = _build_growth_chart(df_daily, findings, T, lang)
             if fig_growth:
                 st.plotly_chart(fig_growth, use_container_width=True,
                                 config={"displayModeBar": False})
         else:
-            st.info("Keine Zeitreihendaten verfügbar.")
+            st.info(T["no_data"])
 
     with col_density:
         st.markdown(f"""
@@ -583,7 +601,7 @@ def render_landing(T):
             cols = st.columns(5)
             for col, (_, r) in zip(cols, row_df.iterrows()):
                 op        = r["operator"]
-                meta      = _OPERATOR_META.get(op, {"flag": "🚆", "country": "–", "type": "–"})
+                meta      = _OPERATOR_META.get(op, {"flag": "🚆", "country": {"en": "–", "de": "–"}, "type": {"en": "–", "de": "–"}})
                 color     = op_color(op)
                 name      = op_label(op)
                 count     = f"{int(r['records']):,}".replace(",", ".")
@@ -595,7 +613,7 @@ def render_landing(T):
                         <div class="lp-op-body">
                             <div class="lp-op-flag">{meta['flag']}</div>
                             <div class="lp-op-name">{name}</div>
-                            <div class="lp-op-type">{meta['country']} · {meta['type']}</div>
+                            <div class="lp-op-type">{meta['country'][lang]} · {meta['type'][lang]}</div>
                             <div class="lp-op-count">{count}</div>
                             <div class="lp-op-count-label">{T["lp_observations"]}</div>
                             <div class="lp-op-daterange">{daterange}</div>
@@ -684,7 +702,7 @@ def render_landing(T):
     <div class="lp-footer">
         <div class="lp-footer-top">
             <div class="lp-footer-l">
-                Rail Data Hub · Karlsruher Institut für Technologie<br>
+                Rail Data Hub · {T["lp_kit_full"]}<br>
                 {T["lp_footer_sub"]}
             </div>
             <div class="lp-footer-r">

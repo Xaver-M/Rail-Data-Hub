@@ -109,11 +109,11 @@ def render_crawler_status(T):
         else:
             # Header
             h1, h2, h3, h4, h5 = st.columns([2, 2, 1, 1, 2])
-            h1.caption("**Anbieter**")
-            h2.caption("**Letzter Lauf**")
-            h3.caption("**Records**")
-            h4.caption("**Routen**")
-            h5.caption("**Ø Preis**")
+            h1.caption(f"**{T['cr_tbl_op']}**")
+            h2.caption(f"**{T['cr_tbl_last']}**")
+            h3.caption(f"**{T['cr_tbl_rec']}**")
+            h4.caption(f"**{T['cr_tbl_rt']}**")
+            h5.caption(f"**{T['cr_tbl_price']}**")
 
             st.divider()
 
