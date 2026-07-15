@@ -4,10 +4,10 @@ import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 
-from dashboard.config import op_color, op_label, station_name, SEATS_OPERATORS
+from dashboard.config import op_color, op_label, station_name, SEATS_OPERATORS, DB_BAHNCARD_OPERATORS
 from dashboard.database import (
     load_all_route_pairs, load_route_horizon_curve, load_route_summary,
-    load_operator_comparison_at_horizon, load_seats_by_horizon,
+    load_operator_comparison_at_horizon, load_seats_by_horizon, load_booking_horizon,
 )
 
 
@@ -72,6 +72,7 @@ def render_operator_comparison(route, T):
                         "avg": float(r0["price_avg"]) if pd.notna(r0["price_avg"]) else 0.0,
                         "ops": int(r0["n_operators"]) if pd.notna(r0["n_operators"]) else 0,
                         "pts": int(r0["observations"]) if pd.notna(r0["observations"]) else 0,
+                        "cheapest_op": r0["cheapest_operator"] if pd.notna(r0["cheapest_operator"]) else None,
                     })
 
             if summary:
@@ -80,27 +81,86 @@ def render_operator_comparison(route, T):
                     best = s["route"] == cheapest_rt["route"]
                     border = "2px solid #a8e44a" if best else "1px solid #333"
                     badge = T["op_badge"] if best else ""
+                    op_name = op_label(s["cheapest_op"]) if s["cheapest_op"] else "—"
                     st.markdown(
                         f'<div style="border:{border};border-radius:8px;padding:10px 12px;background:#111;margin-bottom:8px;">'
                         f'<div style="font-size:11px;color:#888;margin-bottom:2px;">{s["route"]}{badge}</div>'
-                        f'<div style="font-size:20px;font-weight:700;color:#fff;">{s["low"]:.2f} €</div>'
+                        f'<div style="font-size:20px;font-weight:700;color:#fff;">{s["low"]:.2f} € <span style="font-size:12px;font-weight:500;color:{op_color(s["cheapest_op"])};">{op_name}</span></div>'
                         f'<div style="font-size:11px;color:#aaa;">{T["op_avg"]} {s["avg"]:.2f} € · {s["ops"]} op. · {s["pts"]:,} {T["op_pts"]}</div>'
                         f'</div>', unsafe_allow_html=True)
 
             if frames:
                 df_rhz = pd.concat(frames, ignore_index=True)
-                fig = px.line(df_rhz, x="booking_horizon_days", y="price_avg", color="route", markers=True,
-                              title=T["op_hz_t"],
-                              labels={"booking_horizon_days": T["ov_days_adv"], "price_avg": T["bh_avg"]})
-                fig.update_traces(line_width=2, marker_size=5)
-                fig.update_xaxes(autorange="reversed")
-                fig.update_yaxes(rangemode="tozero")
-                fig.update_layout(hovermode="x unified", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
-                st.plotly_chart(fig, use_container_width=True)
+                route_palette = px.colors.qualitative.Plotly
+                route_color_map = {r: route_palette[i % len(route_palette)]
+                                   for i, r in enumerate(df_rhz["route"].unique())}
+
+                bt1, bt2, bt3 = st.columns(3)
+                show_normal = bt1.toggle(T["bh_bc_normal"], value=True, key="op_route_fare_normal")
+                show_bc50 = bt2.toggle(T["bh_bc50"], value=False, key="op_route_fare_bc50")
+                show_bc25 = bt3.toggle(T["bh_bc25"], value=False, key="op_route_fare_bc25")
+                if show_bc50 or show_bc25:
+                    st.caption(T["bh_bc_note"])
+
+                plot_frames = []
+                if show_normal:
+                    base = df_rhz.copy()
+                    base["route_grp"] = base["route"]
+                    base["fare_type"] = T["bh_bc_normal"]
+                    base["series"] = base["route"]
+                    plot_frames.append(base[["route_grp", "fare_type", "series", "booking_horizon_days", "price_avg"]])
+
+                if show_bc50 or show_bc25:
+                    for rl in sel_rts:
+                        rr = all_routes[all_routes["label"] == rl].iloc[0]
+                        disp_label = _translate_label(rl, lang)
+                        bh_op = load_booking_horizon(rr["origin_name"], rr["destination_name"])
+                        if bh_op.empty:
+                            continue
+                        bh_db = bh_op[bh_op["operator"].isin(DB_BAHNCARD_OPERATORS)].copy()
+                        if bh_db.empty:
+                            continue
+                        bh_db["booking_horizon_days"] = pd.to_numeric(bh_db["booking_horizon_days"]).astype(int)
+                        bh_db["price_avg"] = pd.to_numeric(bh_db["price_avg"])
+                        for op_id in bh_db["operator"].unique():
+                            op_df = bh_db[bh_db["operator"] == op_id]
+                            if show_bc50:
+                                bc50 = op_df.copy()
+                                bc50["price_avg"] = bc50["price_avg"] * 0.5
+                                bc50["route_grp"] = disp_label
+                                bc50["fare_type"] = T["bh_bc50"]
+                                bc50["series"] = f"{disp_label} · {op_label(op_id)} {T['bh_bc50']}"
+                                plot_frames.append(bc50[["route_grp", "fare_type", "series", "booking_horizon_days", "price_avg"]])
+                            if show_bc25:
+                                bc25 = op_df.copy()
+                                bc25["price_avg"] = bc25["price_avg"] * 0.75
+                                bc25["route_grp"] = disp_label
+                                bc25["fare_type"] = T["bh_bc25"]
+                                bc25["series"] = f"{disp_label} · {op_label(op_id)} {T['bh_bc25']}"
+                                plot_frames.append(bc25[["route_grp", "fare_type", "series", "booking_horizon_days", "price_avg"]])
+
+                if not plot_frames:
+                    st.info(T["bh_bc_none"])
+                else:
+                    df_plot = pd.concat(plot_frames, ignore_index=True)
+                    fare_dash_map = {T["bh_bc_normal"]: "solid", T["bh_bc50"]: "dot", T["bh_bc25"]: "dashdot"}
+                    multi_fare = (show_bc50 or show_bc25)
+                    fig = px.line(df_plot, x="booking_horizon_days", y="price_avg", color="route_grp",
+                                  line_dash="fare_type" if multi_fare else None,
+                                  line_dash_map=fare_dash_map if multi_fare else None,
+                                  line_group="series", color_discrete_map=route_color_map,
+                                  markers=True, hover_name="series",
+                                  title=T["op_hz_t"],
+                                  labels={"booking_horizon_days": T["ov_days_adv"], "price_avg": T["bh_avg"], "route_grp": T["op_routes_lbl"]})
+                    fig.update_traces(line_width=2, marker_size=5)
+                    fig.update_xaxes(autorange="reversed")
+                    fig.update_yaxes(rangemode="tozero")
+                    fig.update_layout(hovermode="x unified", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
+                    st.plotly_chart(fig, use_container_width=True)
 
                 df_rmin = df_rhz.groupby("route").agg(low=("price_min", "min")).reset_index().sort_values("low")
-                fig2 = px.bar(df_rmin, x="route", y="low", color="route", title=T["op_low_rt"],
-                              labels={"low": T["op_low"]}, text="low")
+                fig2 = px.bar(df_rmin, x="route", y="low", color="route", color_discrete_map=route_color_map,
+                              title=T["op_low_rt"], labels={"low": T["op_low"]}, text="low")
                 fig2.update_traces(texttemplate="%{text:.2f} €", textposition="outside")
                 fig2.update_yaxes(rangemode="tozero")
                 fig2.update_layout(showlegend=False, paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
@@ -109,6 +169,7 @@ def render_operator_comparison(route, T):
             if ffreq:
                 df_frc = pd.concat(ffreq, ignore_index=True)
                 fig3 = px.bar(df_frc, x="booking_horizon_days", y="observations", color="route", barmode="group",
+                              color_discrete_map=route_color_map,
                               title=T["op_conn"], labels={"booking_horizon_days": T["ov_days_adv"], "observations": T["ov_count"]})
                 fig3.update_xaxes(autorange="reversed")
                 fig3.update_yaxes(rangemode="tozero")
@@ -154,11 +215,13 @@ def render_operator_comparison(route, T):
             c3.metric(T["op_sav"], f"{savings:.0f}%", help=T["op_sav_help"])
             c4.metric(T["op_hz_m"], f"+{hz_val}d")
 
+            op_color_map = {o: op_color(o) for o in df_cp["operator"].unique()}
+
             cl, cr = st.columns(2)
             with cl:
                 fig = go.Figure()
                 for _, r in df_cp.iterrows():
-                    c = op_color(r["operator"])
+                    c = op_color_map[r["operator"]]
                     fig.add_trace(go.Bar(name=r["op_label"], x=["Min", "Avg", "Max"],
                                          y=[float(r["price_min"]), float(r["price_avg"]), float(r["price_max"])],
                                          marker_color=_hex_to_rgba(c, 0.8),
@@ -170,14 +233,14 @@ def render_operator_comparison(route, T):
                 st.plotly_chart(fig, use_container_width=True)
             with cr:
                 df_cp["diff_pct"] = ((df_cp["price_min"] - min_p) / min_p * 100).round(4)
-                fig2 = px.bar(df_cp, x="op_label", y="diff_pct", color="diff_pct",
-                              color_continuous_scale=["#a8e44a", "#ffb547", "#ff5f5f"],
+                label_color_map = {r["op_label"]: op_color_map[r["operator"]] for _, r in df_cp.iterrows()}
+                fig2 = px.bar(df_cp, x="op_label", y="diff_pct", color="op_label",
+                              color_discrete_map=label_color_map,
                               title=f"{T['op_extra'].format(op=op_label(cheap['operator']))} — {route_lbl}",
                               labels={"op_label": T["ov_op"], "diff_pct": T["op_pct"]}, text="diff_pct")
                 fig2.update_traces(texttemplate="+%{text:.1f}%", textposition="outside")
-                fig2.update_coloraxes(showscale=False)
                 fig2.update_yaxes(rangemode="tozero")
-                fig2.update_layout(margin=dict(t=40, b=20), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
+                fig2.update_layout(showlegend=False, margin=dict(t=40, b=20), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
                 st.plotly_chart(fig2, use_container_width=True)
 
             if len(df_cp) >= 2:

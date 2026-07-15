@@ -3,7 +3,7 @@ import streamlit as st
 import plotly.express as px
 import pandas as pd
 
-from dashboard.config import op_color, op_label, price_basis_toggle, station_name
+from dashboard.config import op_color, op_label, price_basis_toggle, station_name, DB_BAHNCARD_OPERATORS
 from dashboard.database import load_booking_horizon
 
 
@@ -65,14 +65,47 @@ def render_booking_horizon(route, T):
     st.markdown("---")
 
     # ── Charts ──
-    c1, c2 = st.columns(2)
+    bh_c1_dyn = T["bh_c1_dyn"].format(basis=y_lbl)
+    st.write(f"#### 📊 {bh_c1_dyn} — {route_lbl}")
 
-    with c1:
-        bh_c1_dyn = T["bh_c1_dyn"].format(basis=y_lbl)
-        st.write(f"#### 📊 {bh_c1_dyn} — {route_lbl}")
-        fig1 = px.line(df_bh, x="booking_horizon_days", y=y_col, color="op_label",
+    bt1, bt2, bt3 = st.columns(3)
+    show_normal = bt1.toggle(T["bh_bc_normal"], value=True, key="bh_fare_normal")
+    show_bc50 = bt2.toggle(T["bh_bc50"], value=False, key="bh_fare_bc50")
+    show_bc25 = bt3.toggle(T["bh_bc25"], value=False, key="bh_fare_bc25")
+    if show_bc50 or show_bc25:
+        st.caption(T["bh_bc_note"])
+
+    price_cols = ["price_min", "price_avg", "price_max"]
+    fare_frames = []
+    if show_normal:
+        normal_df = df_bh.copy()
+        normal_df["fare_type"] = T["bh_bc_normal"]
+        fare_frames.append(normal_df)
+    if show_bc50 or show_bc25:
+        db_df = df_bh[df_bh["operator"].isin(DB_BAHNCARD_OPERATORS)]
+        if show_bc50:
+            bc50_df = db_df.copy()
+            bc50_df[price_cols] = bc50_df[price_cols] * 0.5
+            bc50_df["fare_type"] = T["bh_bc50"]
+            fare_frames.append(bc50_df)
+        if show_bc25:
+            bc25_df = db_df.copy()
+            bc25_df[price_cols] = bc25_df[price_cols] * 0.75
+            bc25_df["fare_type"] = T["bh_bc25"]
+            fare_frames.append(bc25_df)
+
+    if not fare_frames:
+        st.info(T["bh_bc_none"])
+    else:
+        plot_df = pd.concat(fare_frames, ignore_index=True)
+        fare_dash_map = {T["bh_bc_normal"]: "solid", T["bh_bc50"]: "dot", T["bh_bc25"]: "dashdot"}
+        multi_fare = (show_bc50 or show_bc25)
+        fig1 = px.line(plot_df, x="booking_horizon_days", y=y_col, color="op_label",
+                      line_dash="fare_type" if multi_fare else None,
+                      line_dash_map=fare_dash_map if multi_fare else None,
                       color_discrete_map=color_map, markers=True,
-                      labels={"booking_horizon_days": T["ov_days_adv"], y_col: y_lbl, "op_label": T["ov_op"]},
+                      labels={"booking_horizon_days": T["ov_days_adv"], y_col: y_lbl,
+                              "op_label": T["ov_op"], "fare_type": ""},
                       custom_data=["observations", "price_min", "price_avg", "price_max"])
         fig1.update_traces(line_width=2, marker_size=7,
                           hovertemplate="<b>%{fullData.name}</b><br>+%{x} days<br>"
@@ -83,18 +116,18 @@ def render_booking_horizon(route, T):
                                         "<br>%{customdata[0]} obs.")
         fig1.update_xaxes(autorange="reversed")
         fig1.update_yaxes(rangemode="tozero")
-        fig1.update_layout(hovermode="x unified", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
+        fig1.update_layout(hovermode="x unified", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                          legend_title_text=T["ov_op"], height=500)
         st.plotly_chart(fig1, use_container_width=True)
 
-    with c2:
-        st.write(f"#### 📈 {T['bh_c2']} — {route_lbl}")
-        fig2 = px.bar(df_bh, x="booking_horizon_days", y="observations", color="op_label",
-                      color_discrete_map=color_map, barmode="group",
-                      labels={"booking_horizon_days": T["ov_days_adv"], "observations": T["bh_conn"], "op_label": T["ov_op"]})
-        fig2.update_xaxes(autorange="reversed")
-        fig2.update_yaxes(rangemode="tozero")
-        fig2.update_layout(hovermode="x unified", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
-        st.plotly_chart(fig2, use_container_width=True)
+    st.write(f"#### 📈 {T['bh_c2']} — {route_lbl}")
+    fig2 = px.bar(df_bh, x="booking_horizon_days", y="observations", color="op_label",
+                  color_discrete_map=color_map, barmode="group",
+                  labels={"booking_horizon_days": T["ov_days_adv"], "observations": T["bh_conn"], "op_label": T["ov_op"]})
+    fig2.update_xaxes(autorange="reversed")
+    fig2.update_yaxes(rangemode="tozero")
+    fig2.update_layout(hovermode="x unified", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", height=500)
+    st.plotly_chart(fig2, use_container_width=True)
 
     st.markdown("---")
 

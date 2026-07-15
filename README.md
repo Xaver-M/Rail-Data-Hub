@@ -2,7 +2,7 @@
 
 > Automated collection and analysis of long-distance train ticket prices across European rail operators — empirical foundation for studying yield management and dynamic pricing strategies in passenger rail.
 
-**KIT · Institut für Wirtschaftswissenschaften · Teamprojekt SS 2026**
+**KIT · Institut für Volkswirtschaftslehre · Teamprojekt SS 2026**
 
 ---
 
@@ -218,5 +218,5 @@ Flixtrain operates only 3 daily departures on most routes, resulting in lower ab
 ## Links
 
 - **Dashboard:** http://193.196.37.50:8501
-- **Institution:** [KIT Institut für Wirtschaftswissenschaften](https://www.wiwi.kit.edu)
+- **Institution:** [KIT Institut für Volkswirtschaftslehre](https://www.wiwi.kit.edu)
 - **DB API Issue:** [db-vendo-client #78](https://github.com/public-transport/db-vendo-client/issues/78)

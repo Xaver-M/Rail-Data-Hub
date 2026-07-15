@@ -527,16 +527,21 @@ def load_route_horizon_curve(origin, destination):
 def load_route_summary(origin, destination):
     if is_offline_mode():
         df = _route(_snap(), origin, destination)
+        cheapest_operator = (
+            df.loc[df["price_eur"].idxmin(), "operator"] if not df.empty and df["price_eur"].notna().any() else None
+        )
         return pd.DataFrame([{
             "price_min":    df["price_eur"].min(),
             "price_avg":    df["price_eur"].mean(),
             "n_operators":  df["operator"].nunique(),
             "observations": len(df),
+            "cheapest_operator": cheapest_operator,
         }])
 
     query = """
         SELECT MIN(price_eur) as price_min, AVG(price_eur) as price_avg,
-               COUNT(DISTINCT operator) as n_operators, COUNT(id) as observations
+               COUNT(DISTINCT operator) as n_operators, COUNT(id) as observations,
+               (ARRAY_AGG(operator ORDER BY price_eur ASC))[1] as cheapest_operator
         FROM price_observations
         WHERE origin_name = :origin AND destination_name = :destination;
     """
