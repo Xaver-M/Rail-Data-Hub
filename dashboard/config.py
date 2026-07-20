@@ -659,12 +659,13 @@ STATION_DISPLAY_NAMES = {
     "Nice Ville":                    {"en": "Nice Main Station",          "de": "Nizza Hbf"},
     "Strasbourg Ville":              {"en": "Strasbourg Main Station",    "de": "Straßburg Hbf"},
     # ── Germany (formatting fix only, no translation) ──
-    "Frankfurt(Main)Hbf":            {"en": "Frankfurt (Main) Hbf",       "de": "Frankfurt (Main) Hbf"},
+    "Frankfurt(Main)Hbf":            {"en": "Frankfurt (Main) Main Station", "de": "Frankfurt (Main) Hbf"},
     "München Hbf":                   {"en": "Munich Main Station",        "de": "München Hbf"},
     "Köln Hbf":                      {"en": "Cologne Main Station",       "de": "Köln Hbf"},
     # ── Austria / Switzerland ──
     "Wien Hbf":                      {"en": "Vienna Main Station",        "de": "Wien Hbf"},
     "Zürich HB":                     {"en": "Zurich Main Station",        "de": "Zürich HB"},
+    "Basel Bad Bf":                  {"en": "Basel Bad Station",          "de": "Basel Bad Bf"},
     # ── Italy ──
     "Bari Centrale":                 {"en": "Bari Main Station",          "de": "Bari Hbf"},
     "Bologna Centrale":              {"en": "Bologna Main Station",       "de": "Bologna Hbf"},
