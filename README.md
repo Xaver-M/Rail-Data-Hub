@@ -202,19 +202,6 @@ The `fare_class` column is populated differently across operators (Italo: produc
 ### Flixtrain Thin Timetable
 Flixtrain operates only 3 daily departures on most routes, resulting in lower absolute record counts compared to other operators. This reflects the actual timetable, not a crawler limitation.
 
----
-
-## Team
-
-| Member | Role |
-|---|---|
-| Xaver | Infrastructure, VM, crawlers, dashboard |
-| Nico | Dashboard development |
-| Fabian | Crawler development (České dráhy) |
-| 2 × Econometrics | Analysis, regression, hypothesis testing |
-
----
-
 ## Links
 
 - **Dashboard:** http://193.196.37.50:8501
