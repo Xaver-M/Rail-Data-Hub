@@ -1,6 +1,6 @@
 services:
   timescaledb:
-    image: timescale/timescaledb:latest-pg16
+    image: timescale/timescaledb:2.28.3-pg16
     container_name: rail_data_hub_db
     restart: unless-stopped
     ports:
