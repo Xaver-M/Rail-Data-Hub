@@ -26,6 +26,14 @@ if [ -z "$PYTHON" ]; then
     exit 1
 fi
 
+# italo launches a headed Chromium (Playwright) -> needs a virtual X server
+XVFB_RUN="$(command -v xvfb-run || true)"
+if [ -z "$XVFB_RUN" ]; then
+    echo "ERROR: xvfb-run not found (needed by the italo crawler)." >&2
+    echo "Install: sudo apt-get install -y xvfb && sudo venv/bin/playwright install-deps chromium && venv/bin/playwright install chromium" >&2
+    exit 1
+fi
+
 if [ ! -f "$REPO_DIR/.env" ]; then
     echo "WARNING: $REPO_DIR/.env not found – DB credentials will be missing." >&2
 fi
@@ -47,7 +55,7 @@ User=$RUN_USER
 WorkingDirectory=$REPO_DIR
 Environment=PYTHONUNBUFFERED=1
 Environment=PYTHONIOENCODING=utf-8
-ExecStart=$PYTHON $REPO_DIR/scheduler/run_crawlers.py
+ExecStart=$XVFB_RUN -a $PYTHON $REPO_DIR/scheduler/run_crawlers.py
 TimeoutStartSec=5h
 Nice=5
 EOF

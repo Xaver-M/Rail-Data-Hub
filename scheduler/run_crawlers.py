@@ -51,15 +51,14 @@ CRAWLER_REGISTRY = {
     "db":             ("crawlers.db.db_crawler",                         "DBCrawler",            BOOKING_HORIZONS),
     # trimmed horizons to stay within Parse.bot credit budget
     "db_parsebot":    ("crawlers.db_parsebot.db_parsebot_crawler",       "DBParseBotCrawler",    DB_PARSEBOT_HORIZONS),
-    # local only (Akamai WAF blocks datacenter IPs) – never enable on the VM
+    # headed Playwright browser -> service runs under xvfb-run (deploy/install_systemd.sh)
     "italo":          ("crawlers.italo.italo_crawler",                   "ItaloCrawler",         BOOKING_HORIZONS),
     # own routes/horizons from config/flight_routes.py
     "google_flights": ("crawlers.google_flights.google_flights_crawler", "GoogleFlightsCrawler", None),
 }
 
-# Fallback if RDH_CRAWLERS is not set.
+# Fallback if RDH_CRAWLERS is not set.                                  
 # db: datacenter IP blocked (db-vendo-client #78) -> db_parsebot instead
-# italo: local only; google_flights: enable after successful test run
 DEFAULT_VM_CRAWLERS = [
     "flixtrain",
     "flixbus",
@@ -69,6 +68,8 @@ DEFAULT_VM_CRAWLERS = [
     "regiojet",
     "ceske_drahy",
     "db_parsebot",
+    "italo",
+    "google_flights",
 ]
 
 
