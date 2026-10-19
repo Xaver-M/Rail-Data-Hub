@@ -225,7 +225,7 @@ def _css():
 
 @st.cache_data(ttl=300)
 def _load_findings():
-    from dashboard.database import get_db, is_offline_mode, _snap
+    from dashboard.database import get_db, is_offline_mode, _snap, OBS_TABLE
     try:
         if is_offline_mode():
             df = _snap()
@@ -259,17 +259,17 @@ def _load_findings():
         db = get_db()
         if db is None:
             return {}
-        r  = db.query("SELECT AVG(price_eur) FILTER (WHERE booking_horizon_days >= 60) as early_avg, AVG(price_eur) FILTER (WHERE booking_horizon_days <= 7) as late_avg FROM price_observations WHERE booking_horizon_days IS NOT NULL").iloc[0]
-        rp = db.query("""
+        r  = db.query(f"SELECT AVG(price_eur) FILTER (WHERE booking_horizon_days >= 60) as early_avg, AVG(price_eur) FILTER (WHERE booking_horizon_days <= 7) as late_avg FROM {OBS_TABLE} WHERE booking_horizon_days IS NOT NULL").iloc[0]
+        rp = db.query(f"""
             SELECT origin_name, destination_name, MIN(price_eur) as low, MAX(price_eur) as high
-            FROM price_observations
+            FROM {OBS_TABLE}
             GROUP BY origin_name, destination_name
             HAVING COUNT(*) >= 30 AND MIN(price_eur) > 0
             ORDER BY (MAX(price_eur) - MIN(price_eur)) / MIN(price_eur) DESC
             LIMIT 1
         """)
-        rr = db.query("SELECT origin_name, destination_name, COUNT(*) as n FROM price_observations GROUP BY origin_name, destination_name ORDER BY n DESC LIMIT 1").iloc[0]
-        rs = db.query("SELECT MIN(collected_at) as first, MAX(collected_at) as last FROM price_observations").iloc[0]
+        rr = db.query(f"SELECT origin_name, destination_name, COUNT(*) as n FROM {OBS_TABLE} GROUP BY origin_name, destination_name ORDER BY n DESC LIMIT 1").iloc[0]
+        rs = db.query(f"SELECT MIN(collected_at) as first, MAX(collected_at) as last FROM {OBS_TABLE}").iloc[0]
         discount = ((r["late_avg"] - r["early_avg"]) / r["early_avg"] * 100) if r["early_avg"] else 0
         if not rp.empty:
             rp0 = rp.iloc[0]
@@ -294,7 +294,7 @@ def _load_findings():
 
 @st.cache_data(ttl=600)
 def _load_operator_dateranges():
-    from dashboard.database import get_db, is_offline_mode, _snap
+    from dashboard.database import get_db, is_offline_mode, _snap, OBS_TABLE
     try:
         if is_offline_mode():
             df = _snap()
@@ -304,14 +304,14 @@ def _load_operator_dateranges():
         db = get_db()
         if db is None:
             return pd.DataFrame()
-        return db.query("SELECT operator, MIN(collected_at) as first, MAX(collected_at) as last FROM price_observations GROUP BY operator")
+        return db.query(f"SELECT operator, MIN(collected_at) as first, MAX(collected_at) as last FROM {OBS_TABLE} GROUP BY operator")
     except Exception:
         return pd.DataFrame()
 
 
 @st.cache_data(ttl=600)
 def _load_density_grid():
-    from dashboard.database import get_db, is_offline_mode, _snap
+    from dashboard.database import get_db, is_offline_mode, _snap, OBS_TABLE
     try:
         if is_offline_mode():
             df = _snap()
@@ -321,7 +321,7 @@ def _load_density_grid():
         db = get_db()
         if db is None:
             return pd.DataFrame()
-        return db.query("SELECT operator, booking_horizon_days, COUNT(*) as n FROM price_observations WHERE booking_horizon_days IS NOT NULL GROUP BY operator, booking_horizon_days")
+        return db.query(f"SELECT operator, booking_horizon_days, COUNT(*) as n FROM {OBS_TABLE} WHERE booking_horizon_days IS NOT NULL GROUP BY operator, booking_horizon_days")
     except Exception:
         return pd.DataFrame()
 
@@ -532,7 +532,7 @@ def render_landing(T):
             <div class="lp-finding" style="border-left-color:#2563EB">
                 <div class="lp-finding-label">{T["lp_finding_early"]}</div>
                 <div class="lp-finding-value">
-                    <span class="lp-finding-accent" style="color:#2563EB">+{discount_abs:.1f}%</span>
+                    <span class="lp-finding-accent" style="color:#2563EB">{discount:+.1f}%</span>
                 </div>
                 <div class="lp-finding-sub">{early_text}</div>
             </div>

@@ -235,6 +235,8 @@ with st.sidebar:
         ("tabs",     T["nav_analyse"]),
         ("operator", T["nav_compare"]),
         ("crawler",  T["nav_crawler"]),
+        ("intermodal", T["nav_intermodal"]),
+        ("export",   T["nav_export"]),
     ]
     for view_key, label in nav_items:
         is_active = st.session_state.current_view == view_key
@@ -267,6 +269,17 @@ with st.sidebar:
 # ══════════════════════════════════════════════════════════════════
 if st.session_state.current_view == "landing":
     render_landing(T)
+
+# ══════════════════════════════════════════════════════════════════
+# EXPORT (eigene Filter, kein Route-Picker)
+# ══════════════════════════════════════════════════════════════════
+elif st.session_state.current_view == "export":
+    from dashboard.views.export import render_export
+    render_export(T)
+
+elif st.session_state.current_view == "intermodal":
+    from dashboard.views.intermodal import render_intermodal
+    render_intermodal(T)
 
 # ══════════════════════════════════════════════════════════════════
 # ANALYSE-VIEWS

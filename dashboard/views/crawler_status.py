@@ -46,8 +46,9 @@ def render_crawler_status(T):
             fig.update_layout(showlegend=False, paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
             st.plotly_chart(fig, use_container_width=True)
 
-            # Gestapeltes Balkendiagramm: tägliche Records pro Operator
-            df_daily = load_crawler_daily_counts(days_back=45)
+            # Gestapeltes Balkendiagramm: tägliche Records pro Operator (gesamter Zeitraum,
+            # Zoom über Range-Slider / Schnellwahl-Buttons)
+            df_daily = load_crawler_daily_counts(days_back=None)
             if not df_daily.empty:
                 df_daily["op_label"] = df_daily["operator"].map(op_label)
                 fig2 = px.bar(
@@ -56,8 +57,18 @@ def render_crawler_status(T):
                     title=T["cr_c2"],
                     labels={"col_date": T["cr_date"], "records": T["cr_rec"], "op_label": T["cr_cr"]}
                 )
-                fig2.update_yaxes(rangemode="tozero")
-                fig2.update_layout(barmode="stack", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
+                fig2.update_xaxes(
+                    rangeslider_visible=True,
+                    rangeselector=dict(buttons=[
+                        dict(count=14, label="2W", step="day", stepmode="backward"),
+                        dict(count=1, label="1M", step="month", stepmode="backward"),
+                        dict(count=3, label="3M", step="month", stepmode="backward"),
+                        dict(step="all", label=T["cr_range_all"]),
+                    ]),
+                )
+                fig2.update_yaxes(rangemode="tozero", fixedrange=False)
+                fig2.update_layout(barmode="stack", height=520,
+                                   paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
                 st.plotly_chart(fig2, use_container_width=True)
 
     # ══════════════════════════════════════════════════════════════════

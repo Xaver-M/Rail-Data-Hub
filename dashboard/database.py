@@ -1,5 +1,8 @@
 # dashboard/database.py
 import os
+from dataclasses import dataclass
+from datetime import date, timedelta
+
 import pandas as pd
 import streamlit as st
 
@@ -15,6 +18,19 @@ ARR_COL = "arrival_at"
 # Grouping by UTC date splits/misassigns such runs.
 COLLECTION_TZ = "Europe/Berlin"
 COL_DATE_SQL = f"(collected_at AT TIME ZONE '{COLLECTION_TZ}')::date"
+
+
+# Google Flights rows are collected but not shown yet (intermodal view is WIP).
+# They are identified by their bag-variant fare_class (BAG_VARIANTS in
+# config/flight_routes.py), which also catches airline slugs not known yet.
+# All dashboard queries read FROM {OBS_TABLE} instead of price_observations.
+SHOW_FLIGHTS = False
+FLIGHT_FARE_CLASSES = ("economy_nobag", "economy_cabinbag")
+_flight_list = ", ".join(f"'{fc}'" for fc in FLIGHT_FARE_CLASSES)
+OBS_TABLE = "price_observations" if SHOW_FLIGHTS else (
+    "(SELECT * FROM price_observations "
+    f"WHERE fare_class IS NULL OR fare_class NOT IN ({_flight_list})) AS price_observations"
+)
 
 
 def _col_date(series: pd.Series) -> pd.Series:
@@ -59,6 +75,8 @@ def _load_snapshot() -> pd.DataFrame:
             df[col] = pd.to_datetime(df[col], utc=True, errors="coerce")
     df["price_eur"] = pd.to_numeric(df["price_eur"], errors="coerce")
     df["booking_horizon_days"] = pd.to_numeric(df["booking_horizon_days"], errors="coerce")
+    if not SHOW_FLIGHTS and "fare_class" in df.columns:
+        df = df[~df["fare_class"].isin(FLIGHT_FARE_CLASSES)]
     return df
 
 
@@ -109,13 +127,13 @@ def load_route_list() -> pd.DataFrame:
         agg["label"] = agg["origin_name"] + " → " + agg["destination_name"]
         return agg
 
-    query = """
+    query = f"""
         SELECT
             origin_name, destination_name, route_id,
             COUNT(price_eur) as record_count,
             MAX(collected_at) as last_collected,
             ARRAY_AGG(DISTINCT operator) as operators
-        FROM price_observations
+        FROM {OBS_TABLE}
         GROUP BY origin_name, destination_name, route_id
         ORDER BY record_count DESC;
     """
@@ -139,9 +157,9 @@ def load_all_route_pairs() -> pd.DataFrame:
         result["label"] = result["origin_name"] + " → " + result["destination_name"]
         return result
 
-    query = """
+    query = f"""
         SELECT DISTINCT origin_name, destination_name, route_id
-        FROM price_observations
+        FROM {OBS_TABLE}
         WHERE origin_name IS NOT NULL AND destination_name IS NOT NULL
         ORDER BY origin_name, destination_name;
     """
@@ -173,13 +191,13 @@ def load_overview_kpis(origin, destination, days_back=30):
             "prior_avg":    prior,
         }])
 
-    query = """
+    query = f"""
         SELECT
             MIN(price_eur) as min_price, AVG(price_eur) as avg_price,
             COUNT(id) as total_obs, COUNT(DISTINCT operator) as n_operators,
             AVG(price_eur) FILTER (WHERE collected_at >= NOW() - INTERVAL '7 days') as recent_avg,
             AVG(price_eur) FILTER (WHERE collected_at <  NOW() - INTERVAL '7 days') as prior_avg
-        FROM price_observations
+        FROM {OBS_TABLE}
         WHERE origin_name = :origin AND destination_name = :destination
           AND collected_at >= NOW() - INTERVAL '1 day' * :days_back
     """
@@ -206,7 +224,7 @@ def load_timeline_data(origin, destination, days_back=30):
     query = f"""
         SELECT {COL_DATE_SQL} as col_date, operator,
                MIN(price_eur) as min_price, AVG(price_eur) as avg_price, MAX(price_eur) as max_price
-        FROM price_observations
+        FROM {OBS_TABLE}
         WHERE origin_name = :origin AND destination_name = :destination
           AND collected_at >= NOW() - INTERVAL '1 day' * :days_back
         GROUP BY 1, operator
@@ -229,10 +247,10 @@ def load_price_range_by_operator(origin, destination):
                      observations=("price_eur", "count"))
                 .reset_index())
 
-    query = """
+    query = f"""
         SELECT operator, MIN(price_eur) as price_min, AVG(price_eur) as price_avg,
                MAX(price_eur) as price_max, COUNT(id) as observations
-        FROM price_observations
+        FROM {OBS_TABLE}
         WHERE origin_name = :origin AND destination_name = :destination
         GROUP BY operator;
     """
@@ -251,7 +269,7 @@ def load_departure_hour_counts(origin, destination):
 
     query = f"""
         SELECT operator, EXTRACT(HOUR FROM {DEP_COL}) as dep_hour, COUNT(id) as connection_count
-        FROM price_observations
+        FROM {OBS_TABLE}
         WHERE origin_name = :origin AND destination_name = :destination
         GROUP BY operator, dep_hour ORDER BY dep_hour ASC;
     """
@@ -269,9 +287,9 @@ def load_fare_class_avg(origin, destination):
                      observations=("price_eur", "count"))
                 .reset_index())
 
-    query = """
+    query = f"""
         SELECT operator, fare_class, AVG(price_eur) as avg_price, COUNT(id) as observations
-        FROM price_observations
+        FROM {OBS_TABLE}
         WHERE origin_name = :origin AND destination_name = :destination
           AND fare_class IS NOT NULL AND fare_class != ''
         GROUP BY operator, fare_class;
@@ -295,7 +313,7 @@ def load_available_departure_dates(origin, destination):
 
     query = f"""
         SELECT DISTINCT {DEP_COL}::date as dep_date, COUNT(id) as n
-        FROM price_observations
+        FROM {OBS_TABLE}
         WHERE origin_name = :origin AND destination_name = :destination AND {DEP_COL} IS NOT NULL
         GROUP BY dep_date ORDER BY dep_date ASC;
     """
@@ -322,7 +340,7 @@ def load_trip_data(origin, destination, dep_date):
     query = f"""
         SELECT operator, train_number, {DEP_COL} as departure_at, collected_at,
                price_eur, booking_horizon_days, fare_class
-        FROM price_observations
+        FROM {OBS_TABLE}
         WHERE origin_name = :origin AND destination_name = :destination
           AND {DEP_COL}::date = :dep_date
         ORDER BY collected_at ASC;
@@ -354,11 +372,11 @@ def load_booking_horizon(origin, destination):
                 .reset_index()
                 .sort_values("booking_horizon_days", ascending=False))
 
-    query = """
+    query = f"""
         SELECT operator, booking_horizon_days,
                AVG(price_eur) as price_avg, MIN(price_eur) as price_min, MAX(price_eur) as price_max,
                COUNT(id) as observations
-        FROM price_observations
+        FROM {OBS_TABLE}
         WHERE origin_name = :origin AND destination_name = :destination
           AND booking_horizon_days IS NOT NULL
           AND booking_horizon_days BETWEEN 0 AND 90
@@ -380,8 +398,8 @@ def load_train_numbers(origin, destination, operator):
                 df["train_number"].notna() & (df["train_number"] != "")]
         return pd.DataFrame({"train_number": sorted(df["train_number"].unique())})
 
-    query = """
-        SELECT DISTINCT train_number FROM price_observations
+    query = f"""
+        SELECT DISTINCT train_number FROM {OBS_TABLE}
         WHERE origin_name = :origin AND destination_name = :destination
           AND operator = :operator AND train_number IS NOT NULL AND train_number != ''
         ORDER BY train_number ASC;
@@ -407,7 +425,7 @@ def load_single_train_data(origin, destination, operator, train_number):
     query = f"""
         SELECT operator, train_number, {DEP_COL} as departure_at, collected_at,
                price_eur, seats_available, booking_horizon_days, fare_class, is_direct
-        FROM price_observations
+        FROM {OBS_TABLE}
         WHERE origin_name = :origin AND destination_name = :destination
           AND operator = :operator AND train_number = :train_number
         ORDER BY collected_at DESC;
@@ -446,7 +464,7 @@ def load_time_of_day(origin, destination, operator):
             EXTRACT(HOUR   FROM {DEP_COL}) as dep_hour,
             (EXTRACT(ISODOW FROM {DEP_COL})::int - 1) as dep_dow,
             price_eur, seats_available
-        FROM price_observations
+        FROM {OBS_TABLE}
         WHERE origin_name = :origin AND destination_name = :destination
           AND operator = :operator AND {DEP_COL} IS NOT NULL;
     """
@@ -475,12 +493,12 @@ def load_operator_comparison_at_horizon(origin, destination, horizon_days):
                      observations=("price_eur", "count"))
                 .reset_index())
 
-    query = """
+    query = f"""
         SELECT operator,
                MIN(price_eur) as price_min, AVG(price_eur) as price_avg,
                MAX(price_eur) as price_max, AVG(seats_available) as seats_avg,
                COUNT(id) as observations
-        FROM price_observations
+        FROM {OBS_TABLE}
         WHERE origin_name = :origin AND destination_name = :destination
           AND booking_horizon_days = :horizon_days
         GROUP BY operator;
@@ -498,9 +516,9 @@ def load_seats_by_horizon(origin, destination):
                 .agg(seats_avg=("seats_available", "mean"))
                 .reset_index())
 
-    query = """
+    query = f"""
         SELECT operator, booking_horizon_days, AVG(seats_available) as seats_avg
-        FROM price_observations
+        FROM {OBS_TABLE}
         WHERE origin_name = :origin AND destination_name = :destination
           AND seats_available IS NOT NULL AND booking_horizon_days IS NOT NULL
         GROUP BY operator, booking_horizon_days;
@@ -522,11 +540,11 @@ def load_route_horizon_curve(origin, destination):
                 .reset_index()
                 .sort_values("booking_horizon_days"))
 
-    query = """
+    query = f"""
         SELECT booking_horizon_days,
                AVG(price_eur) as price_avg, MIN(price_eur) as price_min,
                COUNT(id) as observations
-        FROM price_observations
+        FROM {OBS_TABLE}
         WHERE origin_name = :origin AND destination_name = :destination
           AND booking_horizon_days IS NOT NULL AND booking_horizon_days BETWEEN 0 AND 90
         GROUP BY booking_horizon_days ORDER BY booking_horizon_days ASC;
@@ -550,11 +568,11 @@ def load_route_summary(origin, destination):
             "cheapest_operator": cheapest_operator,
         }])
 
-    query = """
+    query = f"""
         SELECT MIN(price_eur) as price_min, AVG(price_eur) as price_avg,
                COUNT(DISTINCT operator) as n_operators, COUNT(id) as observations,
                (ARRAY_AGG(operator ORDER BY price_eur ASC))[1] as cheapest_operator
-        FROM price_observations
+        FROM {OBS_TABLE}
         WHERE origin_name = :origin AND destination_name = :destination;
     """
     db = get_db()
@@ -597,7 +615,7 @@ def load_normalized_price_data(origin, destination):
     query = f"""
         SELECT operator, booking_horizon_days, price_eur, is_direct,
                EXTRACT(EPOCH FROM ({ARR_COL} - {DEP_COL})) / 3600.0 as travel_h
-        FROM price_observations
+        FROM {OBS_TABLE}
         WHERE origin_name = :origin AND destination_name = :destination
           AND {DEP_COL} IS NOT NULL AND {ARR_COL} IS NOT NULL
           AND booking_horizon_days IS NOT NULL AND booking_horizon_days BETWEEN 0 AND 90;
@@ -628,10 +646,10 @@ def load_crawler_overview():
             "last_collected": df["collected_at"].max(),
         }])
 
-    query = """
+    query = f"""
         SELECT COUNT(id) as total_records, COUNT(DISTINCT operator) as n_operators,
                COUNT(DISTINCT route_id) as n_routes, MAX(collected_at) as last_collected
-        FROM price_observations;
+        FROM {OBS_TABLE};
     """
     db = get_db()
     return db.query(query)
@@ -658,10 +676,10 @@ def load_crawler_stats_by_operator():
         result["avg_price"] = pd.to_numeric(result["avg_price"])
         return result.sort_values("records", ascending=False)
 
-    query = """
+    query = f"""
         SELECT operator, COUNT(id) as records, MAX(collected_at) as last_collected,
                COUNT(DISTINCT route_id) as routes, AVG(price_eur) as avg_price
-        FROM price_observations
+        FROM {OBS_TABLE}
         GROUP BY operator ORDER BY records DESC;
     """
     db = get_db()
@@ -674,10 +692,12 @@ def load_crawler_stats_by_operator():
 
 @st.cache_data(ttl=120)
 def load_crawler_daily_counts(days_back=30):
+    """days_back=None -> whole collection period."""
     if is_offline_mode():
-        df = _snap()
-        cutoff = pd.Timestamp.now(tz="UTC") - pd.Timedelta(days=days_back)
-        df = df[df["collected_at"] >= cutoff].copy()
+        df = _snap().copy()
+        if days_back is not None:
+            cutoff = pd.Timestamp.now(tz="UTC") - pd.Timedelta(days=days_back)
+            df = df[df["collected_at"] >= cutoff]
         df["col_date"] = _col_date(df["collected_at"])
         result = (df.groupby(["col_date", "operator"])
                   .size().reset_index(name="records")
@@ -686,14 +706,15 @@ def load_crawler_daily_counts(days_back=30):
         result["records"]  = pd.to_numeric(result["records"])
         return result
 
+    where = "" if days_back is None else "WHERE collected_at >= NOW() - INTERVAL '1 day' * :days_back"
     query = f"""
         SELECT {COL_DATE_SQL} as col_date, operator, COUNT(id) as records
-        FROM price_observations
-        WHERE collected_at >= NOW() - INTERVAL '1 day' * :days_back
+        FROM {OBS_TABLE}
+        {where}
         GROUP BY 1, operator ORDER BY col_date ASC;
     """
     db = get_db()
-    df = db.query(query, params={"days_back": days_back})
+    df = db.query(query, params={} if days_back is None else {"days_back": days_back})
     df["col_date"] = pd.to_datetime(df["col_date"])
     df["records"]  = pd.to_numeric(df["records"])
     return df
@@ -713,11 +734,293 @@ def load_crawler_health(days_back=7):
 
     query = f"""
         SELECT operator, {COL_DATE_SQL} as col_date, COUNT(id) as records
-        FROM price_observations
+        FROM {OBS_TABLE}
         WHERE collected_at >= NOW() - INTERVAL '1 day' * :days_back
         GROUP BY operator, 2;
     """
     db = get_db()
     df = db.query(query, params={"days_back": days_back})
     df["records"] = pd.to_numeric(df["records"])
+    return df
+
+
+# ─────────────────────────────────────────────────────────────
+# Export
+# ─────────────────────────────────────────────────────────────
+# Whitelist: export column name -> SQL expression (raw_response is never exported)
+EXPORT_RAW_COLUMNS = {
+    "collected_at":         "collected_at",
+    "collection_day":       COL_DATE_SQL,
+    "operator":             "operator",
+    "route_id":             "route_id",
+    "origin_name":          "origin_name",
+    "destination_name":     "destination_name",
+    "origin_id":            "origin_id",
+    "destination_id":       "destination_id",
+    "departure_at":         DEP_COL,
+    "arrival_at":           ARR_COL,
+    "booking_horizon_days": "booking_horizon_days",
+    "train_number":         "train_number",
+    "fare_class":           "fare_class",
+    "price_eur":            "price_eur",
+    "seats_available":      "seats_available",
+    "is_direct":            "is_direct",
+    "currency_raw":         "currency_raw",
+    "source_url":           "source_url",
+}
+EXPORT_DAILY_GROUP = ["collection_day", "route_id", "origin_name", "destination_name",
+                      "operator", "booking_horizon_days"]
+
+
+@dataclass(frozen=True)
+class ExportFilter:
+    operators: tuple = ()          # empty = all
+    route_ids: tuple = ()          # empty = all
+    col_from: date | None = None   # collection day (COLLECTION_TZ), inclusive
+    col_to: date | None = None
+    horizons: tuple = ()           # empty = all
+    direct_only: bool = False
+    dep_from: date | None = None   # departure day, inclusive (optional)
+    dep_to: date | None = None
+
+
+def _day_start_utc(d: date) -> pd.Timestamp:
+    return pd.Timestamp(d).tz_localize(COLLECTION_TZ).tz_convert("UTC")
+
+
+def _export_where(f: ExportFilter) -> tuple[str, dict]:
+    clauses, params = [], {}
+    if f.operators:
+        clauses.append("operator = ANY(:operators)")
+        params["operators"] = list(f.operators)
+    if f.route_ids:
+        clauses.append("route_id = ANY(:route_ids)")
+        params["route_ids"] = list(f.route_ids)
+    # plain collected_at bounds (not the day expression) -> hypertable chunk exclusion
+    if f.col_from:
+        clauses.append("collected_at >= :ts_from")
+        params["ts_from"] = _day_start_utc(f.col_from).to_pydatetime()
+    if f.col_to:
+        clauses.append("collected_at < :ts_to")
+        params["ts_to"] = _day_start_utc(f.col_to + timedelta(days=1)).to_pydatetime()
+    if f.horizons:
+        clauses.append("booking_horizon_days = ANY(:horizons)")
+        params["horizons"] = [int(h) for h in f.horizons]
+    if f.direct_only:
+        clauses.append("is_direct IS TRUE")
+    if f.dep_from:
+        clauses.append(f"{DEP_COL}::date >= :dep_from")
+        params["dep_from"] = f.dep_from
+    if f.dep_to:
+        clauses.append(f"{DEP_COL}::date <= :dep_to")
+        params["dep_to"] = f.dep_to
+    return ("WHERE " + " AND ".join(clauses)) if clauses else "", params
+
+
+def _export_filter_snapshot(f: ExportFilter) -> pd.DataFrame:
+    df = _snap().copy()
+    if df.empty:
+        return df
+    df["collection_day"] = _col_date(df["collected_at"])
+    if f.operators:
+        df = df[df["operator"].isin(f.operators)]
+    if f.route_ids:
+        df = df[df["route_id"].isin(f.route_ids)]
+    if f.col_from:
+        df = df[df["collection_day"] >= f.col_from]
+    if f.col_to:
+        df = df[df["collection_day"] <= f.col_to]
+    if f.horizons:
+        df = df[df["booking_horizon_days"].isin(f.horizons)]
+    if f.direct_only:
+        df = df[df["is_direct"].astype(str).str.lower().isin(["true", "t", "1"])]
+    if f.dep_from or f.dep_to:
+        dep_day = pd.to_datetime(df[DEP_COL], errors="coerce", utc=True).dt.date
+        if f.dep_from:
+            df = df[dep_day >= f.dep_from]
+        if f.dep_to:
+            df = df[dep_day <= f.dep_to]
+    return df
+
+
+def _export_daily_snapshot(df: pd.DataFrame) -> pd.DataFrame:
+    return (df.groupby(EXPORT_DAILY_GROUP, dropna=False)["price_eur"]
+              .agg(price_min="min", price_avg="mean", price_max="max", n_offers="count")
+              .reset_index()
+              .sort_values(["collection_day", "route_id", "operator", "booking_horizon_days"]))
+
+
+@st.cache_data(ttl=600)
+def load_export_date_range():
+    """First/last collection day (COLLECTION_TZ) in the visible data."""
+    if is_offline_mode():
+        df = _snap()
+        if df.empty:
+            return None, None
+        days = _col_date(df["collected_at"])
+        return days.min(), days.max()
+
+    db = get_db()
+    r = db.query(f"SELECT MIN({COL_DATE_SQL}) AS first_day, MAX({COL_DATE_SQL}) AS last_day FROM {OBS_TABLE}").iloc[0]
+    return pd.Timestamp(r["first_day"]).date(), pd.Timestamp(r["last_day"]).date()
+
+
+@st.cache_data(ttl=120)
+def count_export(f: ExportFilter, level: str) -> int:
+    """Rows the export would contain. level: 'raw' or 'daily'."""
+    if is_offline_mode():
+        df = _export_filter_snapshot(f)
+        return len(df) if level == "raw" or df.empty else len(_export_daily_snapshot(df))
+
+    where, params = _export_where(f)
+    if level == "raw":
+        query = f"SELECT COUNT(*) AS n FROM {OBS_TABLE} {where}"
+    else:
+        query = f"""
+            SELECT COUNT(*) AS n FROM (
+                SELECT 1 FROM {OBS_TABLE} {where}
+                GROUP BY {COL_DATE_SQL}, route_id, origin_name, destination_name,
+                         operator, booking_horizon_days
+            ) t
+        """
+    return int(get_db().query(query, params=params).iloc[0]["n"])
+
+
+@st.cache_data(ttl=120, max_entries=4)
+def load_export(f: ExportFilter, level: str, columns: tuple = (), limit: int | None = None) -> pd.DataFrame:
+    """Export data. level='raw' uses `columns` (keys of EXPORT_RAW_COLUMNS), 'daily' is fixed."""
+    if level == "raw":
+        columns = [c for c in columns if c in EXPORT_RAW_COLUMNS] or list(EXPORT_RAW_COLUMNS)
+
+    if is_offline_mode():
+        df = _export_filter_snapshot(f)
+        if df.empty:
+            return df
+        if level == "daily":
+            out = _export_daily_snapshot(df)
+        else:
+            out = df.sort_values(["collected_at", "route_id"])[[c for c in columns if c in df.columns]]
+        return out.head(limit) if limit else out
+
+    where, params = _export_where(f)
+    if level == "daily":
+        query = f"""
+            SELECT {COL_DATE_SQL} AS collection_day, route_id, origin_name, destination_name,
+                   operator, booking_horizon_days,
+                   MIN(price_eur) AS price_min, AVG(price_eur) AS price_avg,
+                   MAX(price_eur) AS price_max, COUNT(*) AS n_offers
+            FROM {OBS_TABLE} {where}
+            GROUP BY 1, 2, 3, 4, 5, 6
+            ORDER BY 1, 2, 5, 6
+        """
+    else:
+        select = ", ".join(f"{EXPORT_RAW_COLUMNS[c]} AS {c}" for c in columns)
+        query = f"SELECT {select} FROM {OBS_TABLE} {where} ORDER BY collected_at, route_id"
+    if limit:
+        query += " LIMIT :limit"
+        params["limit"] = int(limit)
+
+    df = get_db().query(query, params=params, ttl=0)
+    for col in ("price_min", "price_avg", "price_max", "price_eur"):
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+    return df
+
+
+# ─────────────────────────────────────────────────────────────
+# Intermodal (rail/bus vs. air) – preview
+# ─────────────────────────────────────────────────────────────
+# These queries read price_observations directly (not OBS_TABLE): they are the
+# only place where flight rows are shown. Air rows = FLIGHT_FARE_CLASSES; one
+# bag variant is compared at a time. The CSV snapshot contains no flights ->
+# offline mode returns empty frames.
+BUS_OPERATORS = ("flixbus",)
+
+_MODE_SQL = (f"CASE WHEN fare_class IN ({_flight_list}) THEN 'air' "
+             f"WHEN operator = ANY(:bus_ops) THEN 'bus' ELSE 'rail' END")
+# ground rows + only the selected bag variant of the air rows
+_ONE_AIR_VARIANT_SQL = f"(fare_class IS NULL OR fare_class NOT IN ({_flight_list}) OR fare_class = :air_fc)"
+
+
+@st.cache_data(ttl=600)
+def load_intermodal_corridors() -> pd.DataFrame:
+    """route_ids with flight data: label from the ground rows + air collection days."""
+    if is_offline_mode():
+        return pd.DataFrame()
+    query = f"""
+        WITH air AS (
+            SELECT route_id, MIN({COL_DATE_SQL}) AS first_air_day,
+                   COUNT(DISTINCT {COL_DATE_SQL}) AS air_days,
+                   COUNT(*) AS air_records,
+                   ARRAY_AGG(DISTINCT operator) AS airlines,
+                   ARRAY_AGG(DISTINCT origin_id || '-' || destination_id) AS airport_pairs
+            FROM price_observations
+            WHERE fare_class IN ({_flight_list})
+            GROUP BY route_id
+        ), ground AS (
+            SELECT DISTINCT ON (route_id) route_id, origin_name, destination_name
+            FROM {OBS_TABLE}
+            WHERE route_id IN (SELECT route_id FROM air)
+            ORDER BY route_id, collected_at DESC
+        )
+        SELECT a.route_id, g.origin_name, g.destination_name,
+               a.first_air_day, a.air_days, a.air_records, a.airlines, a.airport_pairs
+        FROM air a LEFT JOIN ground g USING (route_id)
+        ORDER BY a.route_id;
+    """
+    df = get_db().query(query)
+    df["first_air_day"] = pd.to_datetime(df["first_air_day"]).dt.date
+    df["air_records"] = pd.to_numeric(df["air_records"])
+    return df
+
+
+@st.cache_data(ttl=300)
+def load_intermodal_horizon(route_id: str, air_fare_class: str) -> pd.DataFrame:
+    """Min/avg price + travel time per mode × operator × horizon, on days with air data only."""
+    if is_offline_mode():
+        return pd.DataFrame()
+    query = f"""
+        WITH air_days AS (
+            SELECT DISTINCT {COL_DATE_SQL} AS d FROM price_observations
+            WHERE route_id = :route_id AND fare_class = :air_fc
+        )
+        SELECT {_MODE_SQL} AS mode, operator, booking_horizon_days,
+               MIN(price_eur) AS price_min, AVG(price_eur) AS price_avg, COUNT(*) AS n_offers,
+               AVG(EXTRACT(EPOCH FROM ({ARR_COL} - {DEP_COL})) / 3600.0) AS travel_h
+        FROM price_observations
+        WHERE route_id = :route_id AND {_ONE_AIR_VARIANT_SQL}
+          AND booking_horizon_days IS NOT NULL
+          AND {COL_DATE_SQL} IN (SELECT d FROM air_days)
+        GROUP BY 1, 2, 3
+        ORDER BY 3, 1, 2;
+    """
+    df = get_db().query(query, params={"route_id": route_id, "air_fc": air_fare_class,
+                                       "bus_ops": list(BUS_OPERATORS)})
+    for col in ("price_min", "price_avg", "travel_h"):
+        df[col] = pd.to_numeric(df[col], errors="coerce")
+    df["booking_horizon_days"] = pd.to_numeric(df["booking_horizon_days"]).astype(int)
+    return df
+
+
+@st.cache_data(ttl=300)
+def load_intermodal_daily(route_id: str, air_fare_class: str, horizon: int, days_back: int = 60) -> pd.DataFrame:
+    """Cheapest price per collection day × mode at one booking horizon."""
+    if is_offline_mode():
+        return pd.DataFrame()
+    query = f"""
+        SELECT {COL_DATE_SQL} AS col_date, {_MODE_SQL} AS mode,
+               MIN(price_eur) AS price_min,
+               (ARRAY_AGG(operator ORDER BY price_eur ASC))[1] AS cheapest_operator
+        FROM price_observations
+        WHERE route_id = :route_id AND {_ONE_AIR_VARIANT_SQL}
+          AND booking_horizon_days = :horizon
+          AND collected_at >= NOW() - INTERVAL '1 day' * :days_back
+        GROUP BY 1, 2
+        ORDER BY 1, 2;
+    """
+    df = get_db().query(query, params={"route_id": route_id, "air_fc": air_fare_class,
+                                       "bus_ops": list(BUS_OPERATORS), "horizon": int(horizon),
+                                       "days_back": int(days_back)})
+    df["col_date"] = pd.to_datetime(df["col_date"])
+    df["price_min"] = pd.to_numeric(df["price_min"], errors="coerce")
     return df

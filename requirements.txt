@@ -23,6 +23,11 @@ loguru==0.7.2
 # Dashboard
 streamlit>=1.32.0
 plotly>=5.20.0
+# st.connection("postgresql"): SQLAlchemy 2.1 uses psycopg (v3) for dialect "postgresql"
+SQLAlchemy==2.1.1
+psycopg[binary]==3.3.6
+# Excel export
+openpyxl==3.1.5
 
 # Italo (browser session bootstrap; also run: playwright install chromium)
 playwright==1.61.0

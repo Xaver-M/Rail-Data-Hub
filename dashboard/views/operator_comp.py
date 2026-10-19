@@ -196,7 +196,9 @@ def render_operator_comparison(route, T):
             if st.session_state.get("active_operators"):
                 df_cp = df_cp[df_cp["operator"].isin(st.session_state.active_operators)]
             if df_cp.empty:
+                # nothing left after the operator filter -> no KPIs/charts (would fail on empty frame)
                 st.info(T["op_no_hz"].format(days=hz_val))
+                return
 
             for col in ["price_min", "price_avg", "price_max", "seats_avg"]:
                 df_cp[col] = pd.to_numeric(df_cp[col], errors="coerce")
