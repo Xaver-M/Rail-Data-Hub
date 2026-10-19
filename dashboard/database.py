@@ -886,8 +886,18 @@ def count_export(f: ExportFilter, level: str) -> int:
     return int(get_db().query(query, params=params).iloc[0]["n"])
 
 
-@st.cache_data(ttl=120, max_entries=4)
-def load_export(f: ExportFilter, level: str, columns: tuple = (), limit: int | None = None) -> pd.DataFrame:
+@st.cache_data(ttl=120, max_entries=8)
+def load_export_preview(f: ExportFilter, level: str, columns: tuple = (), limit: int = 100) -> pd.DataFrame:
+    """First rows of an export (small -> cached)."""
+    return _load_export(f, level, columns, limit)
+
+
+def load_export(f: ExportFilter, level: str, columns: tuple = ()) -> pd.DataFrame:
+    """Full export. Deliberately NOT cached: the VM has <1 GB RAM, large frames must not linger."""
+    return _load_export(f, level, columns, None)
+
+
+def _load_export(f: ExportFilter, level: str, columns: tuple = (), limit: int | None = None) -> pd.DataFrame:
     """Export data. level='raw' uses `columns` (keys of EXPORT_RAW_COLUMNS), 'daily' is fixed."""
     if level == "raw":
         columns = [c for c in columns if c in EXPORT_RAW_COLUMNS] or list(EXPORT_RAW_COLUMNS)

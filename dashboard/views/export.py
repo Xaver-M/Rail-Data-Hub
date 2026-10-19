@@ -7,13 +7,14 @@ import streamlit as st
 
 from dashboard.config import op_label, route_label
 from dashboard.database import (
-    load_route_list, load_export_date_range, count_export, load_export,
+    load_route_list, load_export_date_range, count_export, load_export, load_export_preview,
     ExportFilter, EXPORT_RAW_COLUMNS, COLLECTION_TZ,
 )
 
-# Download files are built in memory -> hard caps
-RAW_ROW_LIMIT  = 500_000
-XLSX_ROW_LIMIT = 200_000
+# Download files are built in memory and the VM has <1 GB RAM -> hard caps
+# (the daily aggregate over everything, ~250k rows, still fits as CSV)
+RAW_ROW_LIMIT  = 100_000
+XLSX_ROW_LIMIT = 50_000
 PREVIEW_ROWS   = 100
 
 HORIZONS = [1, 2, 3, 4, 5, 6, 7, 10, 14, 21, 30, 45, 60, 90]
@@ -191,7 +192,7 @@ def render_export(T):
             return
 
         st.caption(T["ex_preview"].format(n=min(PREVIEW_ROWS, n_rows)))
-        st.dataframe(load_export(f, level, columns, limit=PREVIEW_ROWS),
+        st.dataframe(load_export_preview(f, level, columns, limit=PREVIEW_ROWS),
                      use_container_width=True, hide_index=True, height=260)
 
         # Build the file only on click (keeps reruns cheap); invalidate when the selection changes
@@ -208,6 +209,7 @@ def render_export(T):
                 else:
                     data = _to_csv(df, ";" if fmt == "csv_semicolon" else ",")
                     mime, ext = "text/csv", "csv"
+                del df  # free the frame right away, only the file bytes are kept
             st.session_state["ex_file"] = {
                 "key": selection_key, "data": data, "mime": mime,
                 "name": _file_name(f, level, ext),
