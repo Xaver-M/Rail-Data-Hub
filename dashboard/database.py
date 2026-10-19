@@ -9,6 +9,18 @@ import streamlit as st
 DEP_COL = "departure_at"
 ARR_COL = "arrival_at"
 
+# Collection day = calendar day in the crawlers' local time zone, not UTC.
+# Crawlers compute the queried departure date as datetime.now() + horizon in
+# local time, so a run at 23:30 UTC (= 01:30 CEST) belongs to the NEXT day.
+# Grouping by UTC date splits/misassigns such runs.
+COLLECTION_TZ = "Europe/Berlin"
+COL_DATE_SQL = f"(collected_at AT TIME ZONE '{COLLECTION_TZ}')::date"
+
+
+def _col_date(series: pd.Series) -> pd.Series:
+    """Collection day in COLLECTION_TZ for a tz-aware UTC timestamp series."""
+    return series.dt.tz_convert(COLLECTION_TZ).dt.date
+
 _SNAPSHOT_PATH = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
     "data", "snapshot.csv"
@@ -181,7 +193,7 @@ def load_timeline_data(origin, destination, days_back=30):
         df = _route(_snap(), origin, destination)
         cutoff = pd.Timestamp.now(tz="UTC") - pd.Timedelta(days=days_back)
         df = df[df["collected_at"] >= cutoff].copy()
-        df["col_date"] = df["collected_at"].dt.date
+        df["col_date"] = _col_date(df["collected_at"])
         result = (df.groupby(["col_date", "operator"])
                   .agg(min_price=("price_eur", "min"),
                        avg_price=("price_eur", "mean"),
@@ -191,13 +203,13 @@ def load_timeline_data(origin, destination, days_back=30):
         result["col_date"] = pd.to_datetime(result["col_date"])
         return result
 
-    query = """
-        SELECT collected_at::date as col_date, operator,
+    query = f"""
+        SELECT {COL_DATE_SQL} as col_date, operator,
                MIN(price_eur) as min_price, AVG(price_eur) as avg_price, MAX(price_eur) as max_price
         FROM price_observations
         WHERE origin_name = :origin AND destination_name = :destination
           AND collected_at >= NOW() - INTERVAL '1 day' * :days_back
-        GROUP BY collected_at::date, operator
+        GROUP BY 1, operator
         ORDER BY col_date ASC;
     """
     db = get_db()
@@ -666,7 +678,7 @@ def load_crawler_daily_counts(days_back=30):
         df = _snap()
         cutoff = pd.Timestamp.now(tz="UTC") - pd.Timedelta(days=days_back)
         df = df[df["collected_at"] >= cutoff].copy()
-        df["col_date"] = df["collected_at"].dt.date
+        df["col_date"] = _col_date(df["collected_at"])
         result = (df.groupby(["col_date", "operator"])
                   .size().reset_index(name="records")
                   .sort_values("col_date"))
@@ -674,11 +686,11 @@ def load_crawler_daily_counts(days_back=30):
         result["records"]  = pd.to_numeric(result["records"])
         return result
 
-    query = """
-        SELECT collected_at::date as col_date, operator, COUNT(id) as records
+    query = f"""
+        SELECT {COL_DATE_SQL} as col_date, operator, COUNT(id) as records
         FROM price_observations
         WHERE collected_at >= NOW() - INTERVAL '1 day' * :days_back
-        GROUP BY collected_at::date, operator ORDER BY col_date ASC;
+        GROUP BY 1, operator ORDER BY col_date ASC;
     """
     db = get_db()
     df = db.query(query, params={"days_back": days_back})
@@ -693,17 +705,17 @@ def load_crawler_health(days_back=7):
         df = _snap()
         cutoff = pd.Timestamp.now(tz="UTC") - pd.Timedelta(days=days_back)
         df = df[df["collected_at"] >= cutoff].copy()
-        df["col_date"] = df["collected_at"].dt.date
+        df["col_date"] = _col_date(df["collected_at"])
         result = (df.groupby(["operator", "col_date"])
                   .size().reset_index(name="records"))
         result["records"] = pd.to_numeric(result["records"])
         return result
 
-    query = """
-        SELECT operator, collected_at::date as col_date, COUNT(id) as records
+    query = f"""
+        SELECT operator, {COL_DATE_SQL} as col_date, COUNT(id) as records
         FROM price_observations
         WHERE collected_at >= NOW() - INTERVAL '1 day' * :days_back
-        GROUP BY operator, collected_at::date;
+        GROUP BY operator, 2;
     """
     db = get_db()
     df = db.query(query, params={"days_back": days_back})

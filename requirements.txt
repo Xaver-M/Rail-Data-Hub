@@ -23,3 +23,8 @@ loguru==0.7.2
 # Dashboard
 streamlit>=1.32.0
 plotly>=5.20.0
+
+# Google Flights (intermodal comparison)
+fast-flights==3.1.0
+primp==2.0.1
+selectolax==1.0.0
