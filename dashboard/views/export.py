@@ -1,4 +1,5 @@
 # dashboard/views/export.py
+import hmac
 import io
 from datetime import datetime, timezone
 
@@ -73,10 +74,36 @@ def _to_xlsx(df: pd.DataFrame, meta: pd.DataFrame) -> bytes:
     return buf.getvalue()
 
 
+def _export_unlocked(T) -> bool:
+    """Shared password from st.secrets["export_password"]; the unlock lasts for the browser session.
+    No password configured -> export stays locked (never open by accident)."""
+    if st.session_state.get("ex_unlocked"):
+        return True
+    try:
+        expected = st.secrets.get("export_password")
+    except Exception:  # no secrets.toml at all
+        expected = None
+    if not expected:
+        st.warning(T["ex_pw_missing"])
+        return False
+
+    with st.form("ex_login"):
+        pw = st.text_input(T["ex_pw_label"], type="password")
+        submitted = st.form_submit_button(T["ex_pw_unlock"], type="primary")
+    if submitted:
+        if hmac.compare_digest(pw.encode("utf-8"), str(expected).encode("utf-8")):
+            st.session_state["ex_unlocked"] = True
+            st.rerun()
+        st.error(T["ex_pw_wrong"])
+    return False
+
+
 def render_export(T):
     lang = st.session_state.lang
     st.subheader(T["ex_head"])
     st.caption(T["ex_intro"])
+    if not _export_unlocked(T):
+        return
 
     routes_df = load_route_list()
     first_day, last_day = load_export_date_range()

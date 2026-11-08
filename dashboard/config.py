@@ -398,6 +398,10 @@ EN = {
         "<b>Storage:</b> same table as rail; operator = airline, mode from <code>operator_meta</code>; join via <code>route_id</code>."
     ),
     "ex_head":               "Data Export",
+    "ex_pw_label":           "Password",
+    "ex_pw_unlock":          "Unlock export",
+    "ex_pw_wrong":           "Wrong password.",
+    "ex_pw_missing":         "🔒 The export is password-protected, but no password is configured yet.",
     "ex_intro":              "Choose which data you need and download it as CSV or Excel. Empty selections mean \"all\".",
     "ex_step_filter":        "Select data",
     "ex_step_level":         "Level of detail",
@@ -776,6 +780,10 @@ DE = {
         "<b>Speicherung:</b> dieselbe Tabelle wie die Bahn; operator = Fluglinie, Verkehrsmittel aus <code>operator_meta</code>; Verknüpfung über <code>route_id</code>."
     ),
     "ex_head":               "Datenexport",
+    "ex_pw_label":           "Passwort",
+    "ex_pw_unlock":          "Export entsperren",
+    "ex_pw_wrong":           "Falsches Passwort.",
+    "ex_pw_missing":         "🔒 Der Export ist passwortgeschützt, es ist aber noch kein Passwort hinterlegt.",
     "ex_intro":              "Wähle aus, welche Daten du brauchst, und lade sie als CSV oder Excel herunter. Leere Auswahl bedeutet „alle“.",
     "ex_step_filter":        "Daten auswählen",
     "ex_step_level":         "Detailgrad",
