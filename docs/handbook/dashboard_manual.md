@@ -273,7 +273,9 @@ As in the Individual Train tab, you can filter between direct connections and co
 
 ### Note on distances
 
-Distances are based on the **straight-line Haversine distance** between departure and arrival station. Actual rail distances are typically 15–25% longer. €/km values are therefore not equivalent to actual cost per kilometre travelled, but enable a consistent relative comparison.
+For most routes (141 of 179), distances are **rail network distances** between the two cities (`rail_km` in `config/route_distances.csv`). Stations are mapped to their city, so e.g. Paris Est and "Paris toutes gares" share the same distance.
+
+For routes without a rail distance (all routes to/from Prague, Munich–Budapest, Berlin–Binz, Paris–Hendaye, Paris–Bourg-Saint-Maurice), the dashboard falls back to the **straight-line Haversine distance** and marks it with ⚠️. Rail distances are on average ~26% longer than the straight line, so €/km on these routes is overstated and not directly comparable with the others.
 
 ---
 
@@ -362,7 +364,7 @@ The 14 booking horizons (1, 2, 3, 4, 5, 6, 7, 10, 14, 21, 30, 45, 60, 90 days) a
 
 ### Distances
 
-€/km calculations are based on the **Haversine straight-line distance** between departure and arrival station. Actual rail distances are 15-25% longer. Values are suitable for relative comparison, not for absolute cost calculations.
+€/km calculations use the **rail network distance** between the two cities where available (`distance_source = rail` in `config/route_distances.csv`), otherwise the **Haversine straight-line distance** (`distance_source = haversine`, marked with ⚠️ in the dashboard). Straight-line values understate the distance by ~26% on average.
 
 ### Time zones
 

@@ -1,0 +1,180 @@
+route_id,origin,destination,haversine_km,rail_km,distance_source
+milan-rome,Milano Centrale,Roma Termini,478.6114,559.456,rail
+milan-naples,Milano Centrale,Napoli Centrale,658.77,781.786,rail
+rome-naples,Roma Termini,Napoli Centrale,188.2249,222.33,rail
+turin-rome,Torino Porta Nuova,Roma Termini,524.1934,698.357,rail
+milan-venice,Milano Centrale,Venezia Santa Lucia,243.1071,257.704,rail
+trieste-rome,Trieste Centrale,Roma Termini,430.406,644.618,rail
+turin-salerno,Torino Porta Nuova,Salerno,808.6707,957.521,rail
+venice-salerno,Venezia Santa Lucia,Salerno,609.0063,759.178,rail
+udine-salerno,Udine,Salerno,649.6352,885.67,rail
+trieste-salerno,Trieste Centrale,Salerno,596.2574,903.781,rail
+turin-lecce,Torino Porta Nuova,Lecce,1020.1159,1136.564,rail
+turin-reggio-calabria,Torino Porta Nuova,Reggio di Calabria Centrale,1017.1631,1345.172,rail
+paris-milan,Paris - Toutes les gares,Milano Centrale,636.7846,866.845,rail
+genoa-rome,Roma Termini,Genova Piazza Principe,403.1663,474.145,rail
+rome-lecce,Roma Termini,Lecce,517.9466,626.741,rail
+rome-reggio-calabria,Roma Termini,Reggio di Calabria Centrale,499.5114,646.815,rail
+milan-genoa,Milano Centrale,Genova Piazza Principe,120.922,132.835,rail
+rome-ravenna,Roma Termini,Ravenna,276.203,426.719,rail
+turin-rome-fb,Torino Porta Nuova,Roma Termini,524.1934,698.357,rail
+turin-ps-rome,Torino Porta Susa,Roma Termini,525.6398,698.357,rail
+turin-ps-naples,Torino Porta Susa,Napoli Centrale,713.0848,920.688,rail
+turin-ps-salerno,Torino Porta Susa,Salerno,810.1036,957.521,rail
+milan-salerno,Milano Centrale,Salerno,750.7777,818.619,rail
+milan-bari,Milano Centrale,Bari Centrale,787.2579,848.919,rail
+milan-bolzano,Milano Centrale,Bolzano,203.3413,281.66,rail
+venice-rome,Venezia Santa Lucia,Roma Termini,393.885,500.015,rail
+venice-naples,Venezia Santa Lucia,Napoli Centrale,534.1381,722.345,rail
+venice-turin-ps,Venezia Santa Lucia,Torino Porta Susa,366.6368,396.606,rail
+rome-salerno,Roma Termini,Salerno,287.1036,259.163,rail
+rome-bari,Roma Termini,Bari Centrale,373.9954,477.999,rail
+naples-bari,Napoli Centrale,Bari Centrale,219.9694,313.964,rail
+naples-lecce,Napoli Centrale,Lecce,343.1507,462.706,rail
+ancona-milan,Ancona,Milano Centrale,388.7305,412.877,rail
+ancona-rome,Ancona,Roma Termini,185.0897,278.959,rail
+madrid-barcelona,Madrid - Todas las estaciones,Barcelona - Sants,501.6976,612.94,rail
+barcelona-madrid,Barcelona - Sants,Madrid - Todas las estaciones,501.6976,612.94,rail
+madrid-valencia,Madrid - Todas las estaciones,Valencia - Joaquín Sorolla,300.9351,387.327,rail
+valencia-madrid,Valencia - Joaquín Sorolla,Madrid - Todas las estaciones,300.9351,387.327,rail
+madrid-seville,Madrid - Todas las estaciones,Sevilla - Santa Justa,389.0099,451.263,rail
+seville-madrid,Sevilla - Santa Justa,Madrid - Todas las estaciones,389.0099,451.263,rail
+madrid-zaragoza,Madrid - Todas las estaciones,Zaragoza - Delicias,271.4954,294.186,rail
+zaragoza-madrid,Zaragoza - Delicias,Madrid - Todas las estaciones,271.4954,294.186,rail
+madrid-albacete,Madrid - Todas las estaciones,Albacete - Los Llanos,221.711,311.289,rail
+barcelona-zaragoza,Barcelona - Sants,Zaragoza - Delicias,255.9277,318.754,rail
+zaragoza-barcelona,Zaragoza - Delicias,Barcelona - Sants,255.9277,318.754,rail
+seville-barcelona,Sevilla - Santa Justa,Barcelona - Sants,825.854,1064.203,rail
+seville-zaragoza,Sevilla - Santa Justa,Zaragoza - Delicias,642.9515,745.449,rail
+paris-lyon,Paris - Toutes les gares,Lyon toutes gares,390.6214,431.413,rail
+paris-marseille,Paris - Toutes les gares,Marseille St Charles,658.1392,749.533,rail
+paris-nantes,Paris - Toutes les gares,Nantes,343.4305,389.625,rail
+paris-montpellier,Paris - Toutes les gares,Montpellier toutes gares,593.9689,736.041,rail
+paris-nice,Paris - Toutes les gares,Nice Ville,683.4994,961.533,rail
+paris-toulouse,Paris - Toutes les gares,Toulouse Matabiau,586.0769,793.586,rail
+paris-bordeaux,Paris - Toutes les gares,Bordeaux St Jean,499.2133,535.181,rail
+paris-hendaye,Paris - Toutes les gares,Hendaye,687.4418,,haversine
+paris-perpignan,Paris - Toutes les gares,Perpignan,684.4968,893.119,rail
+paris-rennes,Paris - Toutes les gares,Rennes,309.7207,364.897,rail
+paris-strasbourg,Paris - Toutes les gares,Strasbourg Ville,395.7318,439.628,rail
+paris-colmar,Paris - Toutes les gares,Colmar,377.1315,504.777,rail
+paris-brest,Paris - Toutes les gares,Brest,506.6488,604.108,rail
+paris-bourg-st-maurice,Paris - Toutes les gares,Bourg-Saint-Maurice,488.4335,,haversine
+paris-brussels-ouigo,Paris - Toutes les gares,Brussels-Midi,262.3822,317.213,rail
+munich-vienna,München Hbf,Wien Hbf,357.5431,405.749,rail
+prague-vienna,Praha hlavní nádraží,Wien Hbf,253.9472,,haversine
+vienna-prague,Wien Hbf,Praha hlavní nádraží,253.9472,,haversine
+prague-bratislava,Praha hlavní nádraží,Bratislava hlavná stanica,288.9783,,haversine
+bratislava-prague,Bratislava hlavná stanica,Praha hlavní nádraží,288.9783,,haversine
+prague-budapest,Praha hlavní nádraží,Budapest-Keleti,445.2642,,haversine
+budapest-prague,Budapest-Keleti,Praha hlavní nádraží,445.2642,,haversine
+prague-ostrava,Praha hlavní nádraží,Ostrava hlavní nádraží,275.1914,,haversine
+ostrava-prague,Ostrava hlavní nádraží,Praha hlavní nádraží,275.1914,,haversine
+prague-brno,Praha hlavní nádraží,Brno hlavní nádraží,185.494,,haversine
+brno-prague,Brno hlavní nádraží,Praha hlavní nádraží,185.494,,haversine
+prague-warsaw,Praha hlavní nádraží,Warszawa Centralna,516.1598,,haversine
+warsaw-prague,Warszawa Centralna,Praha hlavní nádraží,516.1598,,haversine
+prague-cracow,Praha hlavní nádraží,Kraków Główny,393.2479,,haversine
+cracow-prague,Kraków Główny,Praha hlavní nádraží,393.2479,,haversine
+prague-wroclaw,Praha hlavní nádraží,Wrocław Główny,215.5565,,haversine
+wroclaw-prague,Wrocław Główny,Praha hlavní nádraží,215.5565,,haversine
+prague-gdansk,Praha hlavní nádraží,Gdańsk Główny,554.7338,,haversine
+gdansk-prague,Gdańsk Główny,Praha hlavní nádraží,554.7338,,haversine
+prague-berlin,Praha hlavní nádraží,Berlin Hbf,281.4781,,haversine
+berlin-prague,Berlin Hbf,Praha hlavní nádraží,281.4781,,haversine
+prague-munich,Praha hlavní nádraží,München Hbf,300.8861,,haversine
+munich-prague,München Hbf,Praha hlavní nádraží,300.8861,,haversine
+prague-frankfurt,Praha hlavní nádraží,Frankfurt(Main)Hbf,411.7523,,haversine
+frankfurt-prague,Frankfurt(Main)Hbf,Praha hlavní nádraží,411.7523,,haversine
+prague-hamburg,Praha hlavní nádraží,Hamburg Hbf,491.3041,,haversine
+hamburg-prague,Hamburg Hbf,Praha hlavní nádraží,491.3041,,haversine
+prague-zurich,Praha hlavní nádraží,Zürich HB,526.5427,,haversine
+zurich-prague,Zürich HB,Praha hlavní nádraží,526.5427,,haversine
+prague-graz,Praha hlavní nádraží,Graz Hbf,342.4641,,haversine
+graz-prague,Graz Hbf,Praha hlavní nádraží,342.4641,,haversine
+prague-linz,Praha hlavní nádraží,Linz Hbf,199.6172,,haversine
+linz-prague,Linz Hbf,Praha hlavní nádraží,199.6172,,haversine
+stuttgart-berlin,Stuttgart Hbf,Berlin Hbf,509.8668,646.209,rail
+berlin-stuttgart,Berlin Hbf,Stuttgart Hbf,509.8668,646.209,rail
+frankfurt-berlin,Frankfurt(Main)Hbf,Berlin Hbf,423.3176,582.265,rail
+berlin-frankfurt,Berlin Hbf,Frankfurt(Main)Hbf,423.3176,582.265,rail
+basel-berlin,Basel Bad Bf,Berlin Hbf,687.4112,908.619,rail
+berlin-basel,Berlin Hbf,Basel Bad Bf,687.4112,908.619,rail
+hamburg-cologne,Hamburg Hbf,Köln Hbf,356.7046,425.187,rail
+cologne-hamburg,Köln Hbf,Hamburg Hbf,356.7046,425.187,rail
+cologne-berlin,Köln Hbf,Berlin Hbf,475.0089,556.307,rail
+berlin-cologne,Berlin Hbf,Köln Hbf,475.0089,556.307,rail
+hamburg-berlin,Hamburg Hbf,Berlin Hbf,252.1779,288.886,rail
+berlin-hamburg,Berlin Hbf,Hamburg Hbf,252.1779,288.886,rail
+hamburg-leipzig,Hamburg Hbf,Leipzig Hbf,293.4384,458.445,rail
+leipzig-hamburg,Leipzig Hbf,Hamburg Hbf,293.4384,458.445,rail
+berlin-dusseldorf,Berlin Hbf,Düsseldorf Hbf,473.9664,543.487,rail
+dusseldorf-berlin,Düsseldorf Hbf,Berlin Hbf,473.9664,543.487,rail
+berlin-aachen,Berlin Hbf,Aachen Hbf,538.548,624.17,rail
+aachen-berlin,Aachen Hbf,Berlin Hbf,538.548,624.17,rail
+berlin-koblenz,Berlin Hbf,Koblenz Hbf,467.7357,621.648,rail
+koblenz-berlin,Koblenz Hbf,Berlin Hbf,467.7357,621.648,rail
+berlin-munich,Berlin Hbf,München Hbf,504.1569,633.032,rail
+munich-berlin,München Hbf,Berlin Hbf,504.1569,633.032,rail
+hamburg-munich,Hamburg Hbf,München Hbf,611.5384,767.144,rail
+munich-hamburg,München Hbf,Hamburg Hbf,611.5384,767.144,rail
+berlin-zurich,Berlin Hbf,Zürich HB,668.2076,846.977,rail
+zurich-berlin,Zürich HB,Berlin Hbf,668.2076,846.977,rail
+hamburg-stuttgart,Hamburg Hbf,Stuttgart Hbf,533.3559,687.437,rail
+stuttgart-hamburg,Stuttgart Hbf,Hamburg Hbf,533.3559,687.437,rail
+hamburg-saarbrucken,Hamburg Hbf,Saarbrücken Hbf,522.9992,709.752,rail
+saarbrucken-hamburg,Saarbrücken Hbf,Hamburg Hbf,522.9992,709.752,rail
+berlin-saarbrucken,Berlin Hbf,Saarbrücken Hbf,577.1874,786.843,rail
+saarbrucken-berlin,Saarbrücken Hbf,Berlin Hbf,577.1874,786.843,rail
+hamburg-basel,Hamburg Hbf,Basel Bad Bf,686.6983,831.528,rail
+basel-hamburg,Basel Bad Bf,Hamburg Hbf,686.6983,831.528,rail
+hamburg-zurich,Hamburg Hbf,Zürich HB,694.3868,909.636,rail
+zurich-hamburg,Zürich HB,Hamburg Hbf,694.3868,909.636,rail
+berlin-binz,Berlin Hbf,Ostseebad Binz,209.1981,,haversine
+binz-berlin,Ostseebad Binz,Berlin Hbf,209.1981,,haversine
+kiel-stuttgart,Kiel Hbf,Stuttgart Hbf,618.2957,793.784,rail
+stuttgart-kiel,Stuttgart Hbf,Kiel Hbf,618.2957,793.784,rail
+kiel-munich,Kiel Hbf,München Hbf,693.4854,873.491,rail
+munich-kiel,München Hbf,Kiel Hbf,693.4854,873.491,rail
+bremen-munich,Bremen Hbf,München Hbf,582.5559,715.568,rail
+munich-bremen,München Hbf,Bremen Hbf,582.5559,715.568,rail
+hamburg-karlsruhe,Hamburg Hbf,Karlsruhe Hbf,519.1084,641.545,rail
+karlsruhe-hamburg,Karlsruhe Hbf,Hamburg Hbf,519.1084,641.545,rail
+hamburg-dresden,Hamburg Hbf,Dresden Hbf,377.0545,466.529,rail
+dresden-hamburg,Dresden Hbf,Hamburg Hbf,377.0545,466.529,rail
+hamburg-graz,Hamburg Hbf,Graz Hbf,816.0886,1174.504,rail
+graz-hamburg,Graz Hbf,Hamburg Hbf,816.0886,1174.504,rail
+lubeck-munich,Lübeck Hbf,München Hbf,639.7473,799.281,rail
+munich-lubeck,München Hbf,Lübeck Hbf,639.7473,799.281,rail
+hamburg-passau,Hamburg Hbf,Passau Hbf,603.5316,811.051,rail
+passau-hamburg,Passau Hbf,Hamburg Hbf,603.5316,811.051,rail
+dortmund-munich,Dortmund Hbf,München Hbf,476.7123,690.124,rail
+munich-dortmund,München Hbf,Dortmund Hbf,476.7123,690.124,rail
+cologne-frankfurt,Köln Hbf,Frankfurt(Main)Hbf,152.1316,180.89,rail
+frankfurt-cologne,Frankfurt(Main)Hbf,Köln Hbf,152.1316,180.89,rail
+dresden-wiesbaden,Dresden Hbf,Wiesbaden Hbf,402.3397,528.117,rail
+wiesbaden-dresden,Wiesbaden Hbf,Dresden Hbf,402.3397,528.117,rail
+dortmund-stuttgart,Dortmund Hbf,Stuttgart Hbf,327.7918,459.756,rail
+stuttgart-dortmund,Stuttgart Hbf,Dortmund Hbf,327.7918,459.756,rail
+karlsruhe-munich,Karlsruhe Hbf,München Hbf,250.8016,330.343,rail
+munich-karlsruhe,München Hbf,Karlsruhe Hbf,250.8016,330.343,rail
+dortmund-vienna,Dortmund Hbf,Wien Hbf,738.3287,983.411,rail
+vienna-dortmund,Wien Hbf,Dortmund Hbf,738.3287,983.411,rail
+munich-budapest,München Hbf,Budapest-Keleti,566.2455,,haversine
+budapest-munich,Budapest-Keleti,München Hbf,566.2455,,haversine
+berlin-amsterdam,Berlin Hbf,Amsterdam Centraal,573.7952,649.979,rail
+amsterdam-berlin,Amsterdam Centraal,Berlin Hbf,573.7952,649.979,rail
+frankfurt-amsterdam,Frankfurt(Main)Hbf,Amsterdam Centraal,363.8009,438.38,rail
+amsterdam-frankfurt,Amsterdam Centraal,Frankfurt(Main)Hbf,363.8009,438.38,rail
+frankfurt-brussels,Frankfurt(Main)Hbf,Brussels-Midi,316.6954,397.495,rail
+brussels-frankfurt,Brussels-Midi,Frankfurt(Main)Hbf,316.6954,397.495,rail
+frankfurt-paris,Frankfurt(Main)Hbf,Paris Est,475.1726,656.064,rail
+paris-frankfurt,Paris Est,Frankfurt(Main)Hbf,475.1726,656.064,rail
+stuttgart-paris,Stuttgart Hbf,Paris Est,499.3433,619.668,rail
+paris-stuttgart,Paris Est,Stuttgart Hbf,499.3433,619.668,rail
+frankfurt-marseille,Frankfurt(Main)Hbf,Marseille St Charles,796.6011,1031.342,rail
+marseille-frankfurt,Marseille St Charles,Frankfurt(Main)Hbf,796.6011,1031.342,rail
+frankfurt-milan,Frankfurt(Main)Hbf,Milano Centrale,515.3942,633.4,rail
+milan-frankfurt,Milano Centrale,Frankfurt(Main)Hbf,515.3942,633.4,rail
+munich-zurich,München Hbf,Zürich HB,240.958,308.393,rail
+zurich-munich,Zürich HB,München Hbf,240.958,308.393,rail

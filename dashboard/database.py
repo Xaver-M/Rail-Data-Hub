@@ -1,10 +1,13 @@
 # dashboard/database.py
+import logging
 import os
 from dataclasses import dataclass
 from datetime import date, timedelta
 
 import pandas as pd
 import streamlit as st
+
+logger = logging.getLogger(__name__)
 
 # ─────────────────────────────────────────────────────────────
 # Schema-Konstanten
@@ -584,16 +587,24 @@ def load_route_summary(origin, destination):
 # ─────────────────────────────────────────────────────────────
 @st.cache_data(ttl=86400)
 def load_distances() -> pd.DataFrame:
+    """Distanz pro Route: Schienendistanz (rail_km) wo vorhanden, sonst Luftlinie.
+
+    distance_source ist "rail" oder "haversine", damit die Views die Luftlinie kennzeichnen können.
+    """
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     path = os.path.join(base_dir, "config", "route_distances.csv")
+    empty = pd.DataFrame(columns=["route_id", "distance_km", "distance_source"])
     try:
         dist = pd.read_csv(path)
-        dist.columns = dist.columns.str.strip()
-        dist = dist[dist["haversine_km"] != "NA"].copy()
-        dist["haversine_km"] = pd.to_numeric(dist["haversine_km"], errors="coerce")
-        return dist[["route_id", "haversine_km"]].dropna()
-    except Exception:
-        return pd.DataFrame(columns=["route_id", "haversine_km"])
+    except Exception as e:
+        logger.warning("Could not load %s: %s", path, e)
+        return empty
+    dist.columns = dist.columns.str.strip()
+    hav = pd.to_numeric(dist["haversine_km"], errors="coerce")
+    rail = pd.to_numeric(dist["rail_km"], errors="coerce") if "rail_km" in dist.columns else pd.Series(float("nan"), index=dist.index)
+    dist["distance_km"] = rail.fillna(hav)
+    dist["distance_source"] = rail.notna().map({True: "rail", False: "haversine"})
+    return dist[["route_id", "distance_km", "distance_source"]].dropna(subset=["distance_km"])
 
 
 @st.cache_data(ttl=300)

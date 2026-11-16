@@ -191,17 +191,21 @@ def render_overview(route, T):
     # ── €/km und €/h ──
     dist_df = load_distances()
     route_id = route.get("route_id")
-    haversine_km = None
+    dist_km, dist_source = None, None
     if route_id is not None and not dist_df.empty:
         match = dist_df[dist_df["route_id"] == route_id]
         if not match.empty:
-            haversine_km = float(match.iloc[0]["haversine_km"])
+            dist_km = float(match.iloc[0]["distance_km"])
+            dist_source = match.iloc[0]["distance_source"]
 
     norm_df = load_normalized_price_data(origin, destination)
     avg_travel_h = float(norm_df["travel_h"].mean()) if not norm_df.empty and norm_df["travel_h"].notna().any() else None
 
-    eur_km_val = f"{avg_price / haversine_km:.3f} €" if haversine_km else "—"
-    eur_km_sub = T["ov_km_sub"].format(km=haversine_km) if haversine_km else T["ov_no_dist"]
+    eur_km_val = f"{avg_price / dist_km:.3f} €" if dist_km else "—"
+    if dist_km:
+        eur_km_sub = T["ov_km_sub_rail" if dist_source == "rail" else "ov_km_sub_hav"].format(km=dist_km)
+    else:
+        eur_km_sub = T["ov_no_dist"]
     eur_h_val  = f"{avg_price / avg_travel_h:.2f} €" if avg_travel_h else "—"
     eur_h_sub  = T["ov_h_sub"].format(h=avg_travel_h) if avg_travel_h else T["ov_no_time"]
 

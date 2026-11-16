@@ -22,8 +22,11 @@ def render_normalized_prices(route, T):
     if route_dist_row.empty:
         st.info(T["nm_no_dist"])
         return
-    dist_km = float(route_dist_row["haversine_km"].iloc[0])
-    st.caption(f"{T['nm_dist']}: **{dist_km:.1f} {T['nm_km']}** —  {T['nm_note']}")
+    dist_km = float(route_dist_row["distance_km"].iloc[0])
+    if route_dist_row["distance_source"].iloc[0] == "rail":
+        st.caption(f"{T['nm_dist_rail']}: **{dist_km:.1f} {T['nm_km']}** —  {T['nm_note_rail']}")
+    else:
+        st.warning(f"{T['nm_dist_hav']}: **{dist_km:.1f} {T['nm_km']}** —  {T['nm_note_hav']}")
 
     with st.spinner("..."):
         df_norm_raw = load_normalized_price_data(origin, destination)
