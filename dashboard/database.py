@@ -1045,3 +1045,76 @@ def load_intermodal_daily(route_id: str, air_fare_class: str, horizon: int, days
     df["col_date"] = pd.to_datetime(df["col_date"])
     df["price_min"] = pd.to_numeric(df["price_min"], errors="coerce")
     return df
+
+
+@st.cache_data(ttl=600)
+def load_intermodal_matrix(route_ids: tuple, air_fare_class: str, since: date) -> pd.DataFrame:
+    """Cheapest ground vs. cheapest air fare per corridor × collection day × horizon.
+
+    Only (day, horizon) cells where both modes were collected are returned.
+    """
+    if is_offline_mode() or not route_ids:
+        return pd.DataFrame()
+    query = f"""
+        WITH daily AS (
+            SELECT route_id, {COL_DATE_SQL} AS col_date, booking_horizon_days AS h,
+                   CASE WHEN fare_class = :air_fc THEN 'air' ELSE 'ground' END AS mode,
+                   MIN(price_eur) AS price_min
+            FROM price_observations
+            WHERE route_id = ANY(:route_ids) AND {_ONE_AIR_VARIANT_SQL}
+              AND booking_horizon_days IS NOT NULL
+              AND collected_at >= :since
+            GROUP BY 1, 2, 3, 4
+        )
+        SELECT route_id, col_date, h,
+               MAX(price_min) FILTER (WHERE mode = 'ground') AS ground_min,
+               MAX(price_min) FILTER (WHERE mode = 'air')    AS air_min
+        FROM daily
+        GROUP BY 1, 2, 3
+        HAVING COUNT(DISTINCT mode) = 2
+        ORDER BY 1, 2, 3;
+    """
+    df = get_db().query(query, params={"route_ids": list(route_ids), "air_fc": air_fare_class,
+                                       "since": since})
+    df["col_date"] = pd.to_datetime(df["col_date"])
+    df["h"] = pd.to_numeric(df["h"]).astype(int)
+    for col in ("ground_min", "air_min"):
+        df[col] = pd.to_numeric(df[col], errors="coerce")
+    return df
+
+
+@st.cache_data(ttl=600)
+def load_intermodal_door(route_id: str, air_fare_class: str, horizon: int, since: date) -> pd.DataFrame:
+    """Per mode (air: per airport pair): typical cheapest fare and average travel time at one horizon.
+
+    price = median over collection days of the daily cheapest fare.
+    """
+    if is_offline_mode():
+        return pd.DataFrame()
+    query = f"""
+        WITH daily AS (
+            SELECT CASE WHEN fare_class = :air_fc THEN 'air' ELSE 'ground' END AS mode,
+                   CASE WHEN fare_class = :air_fc THEN origin_id || '-' || destination_id ELSE '' END AS pair,
+                   {COL_DATE_SQL} AS col_date,
+                   MIN(price_eur) AS price_min,
+                   AVG(EXTRACT(EPOCH FROM ({ARR_COL} - {DEP_COL})) / 3600.0) AS travel_h
+            FROM price_observations
+            WHERE route_id = :route_id AND {_ONE_AIR_VARIANT_SQL}
+              AND booking_horizon_days = :horizon
+              AND collected_at >= :since
+              AND {ARR_COL} > {DEP_COL}
+            GROUP BY 1, 2, 3
+        )
+        SELECT mode, pair,
+               PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY price_min) AS price,
+               AVG(travel_h) AS travel_h,
+               COUNT(*) AS n_days
+        FROM daily
+        GROUP BY 1, 2
+        ORDER BY 1, 2;
+    """
+    df = get_db().query(query, params={"route_id": route_id, "air_fc": air_fare_class,
+                                       "horizon": int(horizon), "since": since})
+    for col in ("price", "travel_h"):
+        df[col] = pd.to_numeric(df[col], errors="coerce")
+    return df

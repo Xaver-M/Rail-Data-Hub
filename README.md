@@ -205,7 +205,7 @@ The dashboard runs on the project VM on port 8501 (address on request) or at `ht
 | **Time of Day** | Are early or late departures systematically cheaper? Heatmap by hour and weekday |
 | **Operator Comparison** | Direct price comparison across operators at a selectable horizon |
 | **€/km & €/h** | Normalised prices based on rail distance (straight line as flagged fallback) |
-| **Rail vs. Air** | Project status and live preview of rail/bus vs. flight prices on the four corridors |
+| **Rail vs. Air** | Rail/bus vs. flight on four corridors: which is cheaper (by day and horizon), door-to-door time and cost incl. value of time, price development, data basis |
 | **Data Export** | Filtered download as CSV or Excel, protected by a shared password |
 | **Crawler Status** | System health: last crawl times, record counts, 7-day availability |
 
