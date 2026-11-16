@@ -419,7 +419,6 @@ def _render_door(T, lang, corridors):
     if corridors.empty:
         st.info(T["im_no_data"])
         return
-    st.info(T["im_d2d_preview"])
     st.caption(T["im_d2d_intro"])
     route_id, fare_class = _controls(T, lang, corridors, "imd")
     row = corridors[corridors["route_id"] == route_id].iloc[0]

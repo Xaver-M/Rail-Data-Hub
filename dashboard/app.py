@@ -234,6 +234,7 @@ with st.sidebar:
         ("landing",  T["nav_start"]),
         ("tabs",     T["nav_analyse"]),
         ("operator", T["nav_compare"]),
+        ("market",   T["nav_market"]),
         ("crawler",  T["nav_crawler"]),
         ("intermodal", T["nav_intermodal"]),
         ("export",   T["nav_export"]),
@@ -280,6 +281,10 @@ elif st.session_state.current_view == "export":
 elif st.session_state.current_view == "intermodal":
     from dashboard.views.intermodal import render_intermodal
     render_intermodal(T)
+
+elif st.session_state.current_view == "market":
+    from dashboard.views.market import render_market
+    render_market(T)
 
 # ══════════════════════════════════════════════════════════════════
 # ANALYSE-VIEWS

@@ -593,18 +593,18 @@ def load_distances() -> pd.DataFrame:
     """
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     path = os.path.join(base_dir, "config", "route_distances.csv")
-    empty = pd.DataFrame(columns=["route_id", "distance_km", "distance_source"])
+    cols = ["route_id", "origin", "destination", "distance_km", "distance_source"]
     try:
         dist = pd.read_csv(path)
     except Exception as e:
         logger.warning("Could not load %s: %s", path, e)
-        return empty
+        return pd.DataFrame(columns=cols)
     dist.columns = dist.columns.str.strip()
     hav = pd.to_numeric(dist["haversine_km"], errors="coerce")
     rail = pd.to_numeric(dist["rail_km"], errors="coerce") if "rail_km" in dist.columns else pd.Series(float("nan"), index=dist.index)
     dist["distance_km"] = rail.fillna(hav)
     dist["distance_source"] = rail.notna().map({True: "rail", False: "haversine"})
-    return dist[["route_id", "distance_km", "distance_source"]].dropna(subset=["distance_km"])
+    return dist[cols].dropna(subset=["distance_km"])
 
 
 @st.cache_data(ttl=300)
@@ -1117,4 +1117,153 @@ def load_intermodal_door(route_id: str, air_fare_class: str, horizon: int, since
                                        "horizon": int(horizon), "since": since})
     for col in ("price", "travel_h"):
         df[col] = pd.to_numeric(df[col], errors="coerce")
+    return df
+
+
+# ─────────────────────────────────────────────────────────────
+# Market overview (all routes) — DB only, aggregated in SQL,
+# cached for hours: the VM has 1 CPU and <1 GB RAM.
+# ─────────────────────────────────────────────────────────────
+DEP_DATE_SQL = f"({DEP_COL} AT TIME ZONE '{COLLECTION_TZ}')::date"
+
+
+@st.cache_data(ttl=6 * 3600)
+def load_market_ranking(horizon: int) -> pd.DataFrame:
+    """Per route × operator: median of the daily cheapest fare at one booking horizon."""
+    if is_offline_mode():
+        return pd.DataFrame()
+    query = f"""
+        WITH daily AS (
+            SELECT route_id, operator, {COL_DATE_SQL} AS d, MIN(price_eur) AS p
+            FROM {OBS_TABLE}
+            WHERE booking_horizon_days = :h AND price_eur > 0
+            GROUP BY 1, 2, 3
+        )
+        SELECT route_id, operator,
+               PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY p) AS price,
+               COUNT(*) AS n_days, MIN(d) AS first_day, MAX(d) AS last_day
+        FROM daily
+        GROUP BY 1, 2;
+    """
+    df = get_db().query(query, params={"h": int(horizon)})
+    df["price"] = pd.to_numeric(df["price"], errors="coerce")
+    return df
+
+
+@st.cache_data(ttl=6 * 3600)
+def load_market_day_prices(horizon: int) -> pd.DataFrame:
+    """Cheapest fare per operator × route × departure date at one booking horizon."""
+    if is_offline_mode():
+        return pd.DataFrame()
+    query = f"""
+        SELECT operator, route_id, {DEP_DATE_SQL} AS dep_date, MIN(price_eur) AS price
+        FROM {OBS_TABLE}
+        WHERE booking_horizon_days = :h AND price_eur > 0
+        GROUP BY 1, 2, 3;
+    """
+    df = get_db().query(query, params={"h": int(horizon)})
+    df["dep_date"] = pd.to_datetime(df["dep_date"])
+    df["price"] = pd.to_numeric(df["price"], errors="coerce")
+    return df
+
+
+# Departures whose whole booking path is observed: departed within the last N days.
+_PATHS_SQL = f"""
+    SELECT operator, route_id, {DEP_COL} AS dep, booking_horizon_days AS h, MIN(price_eur) AS price
+    FROM {OBS_TABLE}
+    WHERE {DEP_COL} >= NOW() - INTERVAL '1 day' * :days AND {DEP_COL} < NOW()
+      AND collected_at >= NOW() - INTERVAL '1 day' * (:days + 95)
+      AND booking_horizon_days IS NOT NULL AND price_eur > 0
+    GROUP BY 1, 2, 3, 4
+"""
+
+
+@st.cache_data(ttl=12 * 3600)
+def load_market_yield_curve(days: int = 75, base_h: int = 30) -> pd.DataFrame:
+    """Price index (price at base_h days = 100) per operator × horizon: quartiles over all departures."""
+    if is_offline_mode():
+        return pd.DataFrame()
+    query = f"""
+        WITH p AS ({_PATHS_SQL}),
+        b AS (SELECT operator, route_id, dep, price AS base FROM p WHERE h = :base_h)
+        SELECT p.operator, p.h,
+               PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY p.price / b.base * 100) AS q25,
+               PERCENTILE_CONT(0.5)  WITHIN GROUP (ORDER BY p.price / b.base * 100) AS q50,
+               PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY p.price / b.base * 100) AS q75,
+               COUNT(*) AS n
+        FROM p JOIN b USING (operator, route_id, dep)
+        GROUP BY 1, 2
+        ORDER BY 1, 2 DESC;
+    """
+    df = get_db().query(query, params={"days": int(days), "base_h": int(base_h)})
+    for col in ("q25", "q50", "q75"):
+        df[col] = pd.to_numeric(df[col], errors="coerce")
+    df["h"] = pd.to_numeric(df["h"]).astype(int)
+    return df
+
+
+@st.cache_data(ttl=12 * 3600)
+def load_market_yield_moves(days: int = 75) -> pd.DataFrame:
+    """Per operator: price moves between consecutive observed horizons of the same departure."""
+    if is_offline_mode():
+        return pd.DataFrame()
+    query = f"""
+        WITH p AS ({_PATHS_SQL}),
+        s AS (
+            SELECT operator, route_id, dep,
+                   price - LAG(price) OVER (PARTITION BY operator, route_id, dep ORDER BY h DESC) AS d
+            FROM p
+        ),
+        per_dep AS (
+            SELECT operator, route_id, dep,
+                   COUNT(*) FILTER (WHERE d > 0)  AS up,
+                   COUNT(*) FILTER (WHERE d = 0)  AS same,
+                   COUNT(*) FILTER (WHERE d < 0)  AS down
+            FROM s WHERE d IS NOT NULL
+            GROUP BY 1, 2, 3
+        )
+        SELECT operator, SUM(up) AS up, SUM(same) AS same, SUM(down) AS down,
+               AVG(up + down) AS changes_per_dep, COUNT(*) AS n_deps
+        FROM per_dep
+        GROUP BY 1;
+    """
+    df = get_db().query(query, params={"days": int(days)})
+    for col in ("up", "same", "down", "changes_per_dep", "n_deps"):
+        df[col] = pd.to_numeric(df[col], errors="coerce")
+    return df
+
+
+@st.cache_data(ttl=6 * 3600)
+def load_market_price_points(operator: str, route_id: str, days: int = 90) -> pd.DataFrame:
+    """How often each price occurs for one operator × route (reveals fixed fare levels)."""
+    if is_offline_mode():
+        return pd.DataFrame()
+    query = f"""
+        SELECT price_eur AS price, COUNT(*) AS n
+        FROM {OBS_TABLE}
+        WHERE operator = :op AND route_id = :route_id AND price_eur > 0
+          AND collected_at >= NOW() - INTERVAL '1 day' * :days
+        GROUP BY 1
+        ORDER BY 1;
+    """
+    df = get_db().query(query, params={"op": operator, "route_id": route_id, "days": int(days)})
+    df["price"] = pd.to_numeric(df["price"], errors="coerce")
+    return df
+
+
+@st.cache_data(ttl=6 * 3600)
+def load_market_example_paths(operator: str, route_id: str, n: int = 5) -> pd.DataFrame:
+    """Booking paths of the most completely observed recent departures of one operator × route."""
+    if is_offline_mode():
+        return pd.DataFrame()
+    query = f"""
+        WITH p AS ({_PATHS_SQL}),
+        r AS (SELECT * FROM p WHERE operator = :op AND route_id = :route_id),
+        top AS (SELECT dep FROM r GROUP BY dep ORDER BY COUNT(*) DESC, dep DESC LIMIT :n)
+        SELECT dep, h, price FROM r WHERE dep IN (SELECT dep FROM top) ORDER BY dep, h DESC;
+    """
+    df = get_db().query(query, params={"days": 45, "op": operator, "route_id": route_id, "n": int(n)})
+    df["dep"] = pd.to_datetime(df["dep"], utc=True)
+    df["price"] = pd.to_numeric(df["price"], errors="coerce")
+    df["h"] = pd.to_numeric(df["h"]).astype(int)
     return df
