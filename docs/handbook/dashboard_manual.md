@@ -2,7 +2,7 @@
 
 > This manual explains the features of the Rail Data Hub dashboard and is intended for all users of the portal — regardless of technical background.
 
-**Dashboard URL:** http://193.196.37.50:8501
+**Dashboard URL:** available from the project team on request.
 
 ---
 

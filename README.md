@@ -193,7 +193,7 @@ Rail-Data-Hub/
 
 ## Dashboard
 
-The dashboard runs at `http://193.196.37.50:8501` (VM) or `http://localhost:8501` (local). A user manual is in [`docs/handbook/dashboard_manual.md`](docs/handbook/dashboard_manual.md).
+The dashboard runs on the project VM on port 8501 (address on request) or at `http://localhost:8501` (local). A user manual is in [`docs/handbook/dashboard_manual.md`](docs/handbook/dashboard_manual.md).
 
 ### Analysis Modules
 
@@ -211,7 +211,7 @@ The dashboard runs at `http://193.196.37.50:8501` (VM) or `http://localhost:8501
 
 ### Local Development
 
-Locally, the dashboard reads the database connection from `.streamlit/secrets.toml` (`[connections.postgresql]`), usually via an SSH tunnel to the VM (`ssh -L 5432:localhost:5432 vm-rdh -N`). The export password is set there as `export_password`.
+Locally, the dashboard reads the database connection from `.streamlit/secrets.toml` (`[connections.postgresql]`), usually via an SSH tunnel to the VM (`ssh -L 5432:localhost:5432 <vm> -N`). The export password is set there as `export_password`.
 
 ### Offline Mode
 
@@ -244,6 +244,5 @@ Rail distances are city-to-city, not station-to-station (e.g. Paris Est and "Par
 
 ## Links
 
-- **Dashboard:** http://193.196.37.50:8501
 - **Institution:** [KIT Institut für Volkswirtschaftslehre](https://www.wiwi.kit.edu)
 - **DB API Issue:** [db-vendo-client #78](https://github.com/public-transport/db-vendo-client/issues/78)
