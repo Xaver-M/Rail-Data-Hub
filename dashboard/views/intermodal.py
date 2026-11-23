@@ -7,10 +7,10 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
-from dashboard.config import op_color, op_label, route_label
+from dashboard.config import op_color, op_label, price_basis_toggle
 from dashboard.database import (
     load_intermodal_corridors, load_intermodal_horizon, load_intermodal_daily,
-    load_intermodal_matrix, load_intermodal_door, load_distances,
+    load_intermodal_matrix, load_intermodal_door, load_distances, load_intermodal_pair_airlines,
 )
 
 MODE_COLORS = {"rail": "#2563EB", "bus": "#18a04b", "air": "#f97316"}
@@ -89,13 +89,16 @@ def _render_wip(T, lang, corridors):
     for col, key, val in zip(st.columns(6), labels, values):
         col.markdown(_kpi(T[key], val), unsafe_allow_html=True)
 
-    # ── Strecken ──
+    # ── Strecken (Fluglinien je Paar aus der DB, sonst aus dem Testlauf) ──
+    observed = load_intermodal_pair_airlines()
+    observed = ({(r, p): tuple(a) for r, p, a in zip(observed["route_id"], observed["pair"], observed["airlines"])}
+                if not observed.empty else {})
     st.markdown(f"#### {T['im_wip_routes']}")
     st.dataframe(pd.DataFrame([{
-        T["im_wip_col_corridor"]: CORRIDOR_NAMES[r][lang],
+        T["im_wip_col_corridor"]: _corridor_name(r, lang),
         T["im_wip_col_rail"]:     _ops(rail),
         T["im_wip_col_pair"]:     pair,
-        T["im_wip_col_airlines"]: _ops(air),
+        T["im_wip_col_airlines"]: _ops(observed.get((r, pair.replace("–", "-")), air)),
         T["im_wip_col_freq"]:     freq,
         T["im_wip_col_status"]:   T["im_wip_active"] if active else T["im_wip_dropped"],
     } for r, rail, pair, air, freq, active in WIP_ROUTES]),
@@ -111,7 +114,7 @@ def _render_wip(T, lang, corridors):
     with st.expander(T["im_wip_testdata"], expanded=False):
         test = pd.DataFrame(TEST_RUN_2026_10_19,
                             columns=["route_id", "pair", "records", "low", "high", "airlines"])
-        test["corridor"] = test["route_id"].map(lambda r: CORRIDOR_NAMES[r][lang])
+        test["corridor"] = test["route_id"].map(lambda r: _corridor_name(r, lang))
         st.dataframe(pd.DataFrame({
             T["im_wip_col_corridor"]: test["corridor"],
             T["im_wip_col_pair"]:     test["pair"],
@@ -154,17 +157,11 @@ def _render_live(T, lang, corridors):
                                       days=int(corridors["air_days"].max())))
 
     # ── Steuerung ──
-    labels = {
-        r["route_id"]: (route_label(r["origin_name"], r["destination_name"], lang)
-                        if pd.notna(r["origin_name"]) else r["route_id"])
-        for _, r in corridors.iterrows()
-    }
-    c1, c2 = st.columns([3, 2])
-    with c1:
-        route_id = st.selectbox(T["im_corridor"], list(labels), format_func=labels.get, key="im_route")
-    with c2:
-        fare_class = st.radio(T["im_bags"], BAG_VARIANTS, horizontal=True, key="im_bags",
-                              format_func=lambda fc: T[f"im_bag_{fc.split('_')[1]}"], help=T["im_bags_help"])
+    route_id, fare_class = _controls(T, lang, corridors, "im")
+    basis = price_basis_toggle("im_basis", T, with_median=True)
+    y_col = f"price_{basis}"
+    stat = {"min": T["price_min"], "avg": T["price_avg"], "median": T["price_median"],
+            "max": T["price_max_label"]}[basis]
     pairs = corridors.loc[corridors["route_id"] == route_id, "airport_pairs"].iloc[0]
     st.caption(f"✈ {T['im_airports']}: {', '.join(sorted(pairs))}")
 
@@ -207,20 +204,22 @@ def _render_live(T, lang, corridors):
             st.markdown(_kpi(T["im_diff"], f"{diff:+.0f}%", T["im_diff_sub"].format(h=h)),
                         unsafe_allow_html=True)
 
-    route_lbl = labels[route_id]
+    route_lbl = _corridor_name(route_id, lang)
 
     # ── Chart 1: Preis nach Horizont ──
     color_map = {op_label(o): op_color(o) for o in df["operator"].unique()}
     dash_map = {mode_lbl[m]: d for m, d in MODE_DASH.items()}
-    fig1 = px.line(df, x="booking_horizon_days", y="price_min", color="op_label",
+    fig1 = px.line(df, x="booking_horizon_days", y=y_col, color="op_label",
                    line_dash="mode_label", line_dash_map=dash_map, color_discrete_map=color_map,
-                   markers=True, title=f"{T['im_c1']} — {route_lbl}",
-                   labels={"booking_horizon_days": T["ov_days_adv"], "price_min": T["im_price"],
+                   markers=True, title=f"{T['im_c1'].format(stat=stat)} — {route_lbl}",
+                   labels={"booking_horizon_days": T["ov_days_adv"], y_col: T["im_price"],
                            "op_label": T["ov_op"], "mode_label": T["im_mode"]},
-                   custom_data=["mode_label", "price_avg", "n_offers"])
+                   custom_data=["mode_label", "price_min", "price_avg", "price_median", "price_max", "n_offers"])
     fig1.update_traces(line_width=2, marker_size=6,
                        hovertemplate="<b>%{fullData.name}</b> (%{customdata[0]})<br>+%{x} " + T["days_unit"] +
-                                     "<br>Min %{y:.2f} €<br>Avg %{customdata[1]:.2f} €<br>%{customdata[2]} obs.")
+                                     "<br>Min %{customdata[1]:.2f} € · Avg %{customdata[2]:.2f} €"
+                                     "<br>Median %{customdata[3]:.2f} € · Max %{customdata[4]:.2f} €"
+                                     "<br>%{customdata[5]} obs.<extra></extra>")
     fig1.add_vline(x=h, line_dash="dot", line_color="rgba(128,128,128,0.5)")
     fig1.update_xaxes(autorange="reversed")
     fig1.update_yaxes(rangemode="tozero")
@@ -232,13 +231,14 @@ def _render_live(T, lang, corridors):
     if not daily.empty:
         daily["mode_label"] = daily["mode"].map(mode_lbl)
         daily["cheapest_label"] = daily["cheapest_operator"].map(op_label)
-        fig2 = px.line(daily, x="col_date", y="price_min", color="mode_label",
+        fig2 = px.line(daily, x="col_date", y=y_col, color="mode_label",
                        color_discrete_map={mode_lbl[m]: c for m, c in MODE_COLORS.items()},
-                       markers=True, title=f"{T['im_c2'].format(h=h)} — {route_lbl}",
-                       labels={"col_date": T["ov_date"], "price_min": T["im_price"], "mode_label": T["im_mode"]},
+                       markers=True, title=f"{T['im_c2'].format(h=h, stat=stat)} — {route_lbl}",
+                       labels={"col_date": T["ov_date"], y_col: T["im_price"], "mode_label": T["im_mode"]},
                        custom_data=["cheapest_label"])
+        cheapest = " · %{customdata[0]}" if basis == "min" else ""
         fig2.update_traces(line_width=2, marker_size=6,
-                           hovertemplate="<b>%{fullData.name}</b><br>%{x|%d.%m.%Y}<br>%{y:.2f} € · %{customdata[0]}")
+                           hovertemplate="<b>%{fullData.name}</b><br>%{x|%d.%m.%Y}<br>%{y:.2f} €" + cheapest)
         fig2.update_traces(selector=dict(name=mode_lbl["air"]), marker_size=11)
         fig2.update_yaxes(rangemode="tozero")
         fig2.update_layout(hovermode="x unified", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
@@ -253,7 +253,10 @@ CHEAPER_COLOR = {"ground": "#1d4ed8", "air": "#c2410c"}
 
 
 def _corridor_name(route_id, lang):
-    return CORRIDOR_NAMES.get(route_id, {}).get(lang, route_id)
+    """City names only (e.g. "Madrid – Barcelona"); unknown corridors fall back to the route_id cities."""
+    if route_id in CORRIDOR_NAMES:
+        return CORRIDOR_NAMES[route_id][lang]
+    return " – ".join(part.replace("_", " ").title() for part in route_id.split("-", 1))
 
 
 def _controls(T, lang, corridors, key):

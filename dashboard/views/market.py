@@ -12,13 +12,15 @@ import streamlit as st
 from dashboard.config import op_color, op_label, route_label
 from dashboard.database import (
     BUS_OPERATORS, is_offline_mode, load_distances, load_market_ranking, load_market_day_prices,
-    load_market_yield_curve, load_market_yield_moves, load_market_price_points, load_market_example_paths,
+    load_market_yield_curve, load_market_yield_moves, load_market_price_points, load_market_paths,
 )
 from dashboard.views.overview import _kpi_card
 
 HORIZONS = [90, 60, 45, 30, 21, 14, 10, 7, 6, 5, 4, 3, 2, 1]
 MIN_DAYS = 7          # ranking: ignore route × operator with fewer collection days
 MIN_DEPS = 200        # pricing strategies: ignore operators with fewer observed departures
+PATH_MODES = ("complete", "up", "down", "changes")   # booking paths: which departures to show
+PATH_MIN_HORIZONS = 6  # extremes only among departures observed at >= this many horizons
 UP, DOWN = "#ea580c", "#2563eb"
 
 # Home market per operator (holiday effects are pooled over the operators of a country)
@@ -56,6 +58,12 @@ def _layout(fig, **kw):
 
 def _fmt_eur(v, d=2):
     return f"{v:.{d}f} €".replace(".", ",")
+
+
+def _horizon_axis(fig, T):
+    """True-to-scale booking horizon axis (90 → 1 days), ticks at the collected horizons."""
+    fig.update_xaxes(type="linear", autorange="reversed", tickmode="array",
+                     tickvals=[90, 60, 45, 30, 21, 14, 7, 1], title=T["ov_days_adv"])
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -111,24 +119,28 @@ def _render_ranking(T, lang):
     k4.markdown(_kpi_card(T["mk_rk_count"], str(df["route_id"].nunique()),
                           T["mk_rk_count_sub"].format(n=len(df), ops=df["operator"].nunique())), unsafe_allow_html=True)
 
-    # ── Preis vs. Distanz ──
-    fig = px.scatter(df, x="distance_km", y="price", color="op_label", symbol="mode",
+    # ── Preis (oder €/km) vs. Distanz ──
+    y = st.radio(T["mk_rk_y"], ["price", "eur_km"], horizontal=True, key="mk_rk_y",
+                 format_func=lambda v: T["mk_rk_y_price"] if v == "price" else T["mk_rk_y_eurkm"])
+    per_km = y == "eur_km"
+    fig = px.scatter(df, x="distance_km", y=y, color="op_label", symbol="mode",
                      color_discrete_map=color_map, custom_data=["hover"],
                      labels={"distance_km": T["mk_rk_km"], "price": T["mk_rk_price"].format(h=h),
-                             "op_label": T["ov_op"], "mode": ""},
-                     title=T["mk_rk_c1"])
+                             "eur_km": "€ / km", "op_label": T["ov_op"], "mode": ""},
+                     title=T["mk_rk_c1_km"] if per_km else T["mk_rk_c1"])
     fig.update_traces(marker=dict(size=10, line=dict(width=1, color="white")),
                       hovertemplate="%{customdata[0]}<extra></extra>")
     if len(df) >= 3:
-        slope, icpt = np.polyfit(df["distance_km"], df["price"], 1)
-        xs = np.array([0, df["distance_km"].max() * 1.05])
-        fig.add_trace(go.Scatter(x=xs.tolist(), y=(icpt + slope * xs).round(2).tolist(), mode="lines",
+        slope, icpt = np.polyfit(df["distance_km"], df[y], 1)
+        x0 = df["distance_km"].min() * 0.95 if per_km else 0
+        xs = np.array([x0, df["distance_km"].max() * 1.05])
+        fig.add_trace(go.Scatter(x=xs.tolist(), y=(icpt + slope * xs).round(4).tolist(), mode="lines",
                                  line=dict(dash="dash", color="rgba(128,128,128,0.8)"),
                                  name=T["mk_rk_trend"], hoverinfo="skip"))
     fig.update_xaxes(rangemode="tozero")
     fig.update_yaxes(rangemode="tozero")
     st.plotly_chart(_layout(fig, height=480), use_container_width=True)
-    st.caption(T["mk_rk_c1_note"])
+    st.caption(T["mk_rk_c1_km_note"] if per_km else T["mk_rk_c1_note"])
 
     # ── Günstigste / teuerste 10 ──
     def bars(sub, title):
@@ -219,29 +231,28 @@ def _render_yield(T, lang):
     sel = st.pills(T["mk_ys_pick"], by_rise, format_func=op_label, default=by_rise[0], key="mk_ys_op") or by_rise[0]
 
     # ── Indexkurven ──
-    curve = curve.assign(op_label=curve["operator"].map(op_label), h_lbl=curve["h"].astype(str),
+    curve = curve.assign(op_label=curve["operator"].map(op_label),
                          q50r=curve["q50"].round(1))
     curve["hover"] = [f"<b>{o}</b><br>+{h} {T['days_unit']}<br>Index {q:.0f} ({a:.0f}–{b:.0f})<br>{n} obs."
                       for o, h, q, a, b, n in zip(curve["op_label"], curve["h"], curve["q50"], curve["q25"],
                                                   curve["q75"], curve["n"])]
     fig = go.Figure()
     s = curve[curve["operator"] == sel].sort_values("h", ascending=False)
-    fig.add_trace(go.Scatter(x=s["h_lbl"].tolist() + s["h_lbl"].tolist()[::-1],
+    fig.add_trace(go.Scatter(x=s["h"].tolist() + s["h"].tolist()[::-1],
                              y=s["q75"].round(1).tolist() + s["q25"].round(1).tolist()[::-1],
                              fill="toself", fillcolor=op_color(sel), opacity=0.15, line=dict(width=0),
                              hoverinfo="skip", showlegend=False))
     for op in ops:
         c = curve[curve["operator"] == op].sort_values("h", ascending=False)
-        fig.add_trace(go.Scatter(x=c["h_lbl"].tolist(), y=c["q50r"].tolist(), mode="lines+markers",
+        fig.add_trace(go.Scatter(x=c["h"].tolist(), y=c["q50r"].tolist(), mode="lines+markers",
                                  name=op_label(op), line=dict(color=op_color(op), width=4 if op == sel else 1.5),
                                  opacity=1 if op == sel else 0.45, customdata=c[["hover"]].values.tolist(),
                                  hovertemplate="%{customdata[0]}<extra></extra>"))
     fig.add_hline(y=100, line_dash="dot", line_color="rgba(128,128,128,0.6)")
-    fig.update_xaxes(type="category", categoryorder="array", categoryarray=[str(h) for h in HORIZONS],
-                     title=T["ov_days_adv"])
+    _horizon_axis(fig, T)
     fig.update_yaxes(title=T["mk_ys_index"])
     st.plotly_chart(_layout(fig, title=T["mk_ys_c1"].format(op=op_label(sel)), height=460,
-                            legend=dict(orientation="h", y=-0.2)), use_container_width=True)
+                            legend=dict(orientation="h", y=-0.28)), use_container_width=True)
 
     # ── Details für den gewählten Anbieter: eine Strecke ──
     st.divider()
@@ -270,17 +281,46 @@ def _render_yield(T, lang):
             st.plotly_chart(_layout(fig3, height=360), use_container_width=True)
             st.caption(T["mk_ys_c3_note"].format(n=len(pts), n80=n80))
     with p2:
-        paths = load_market_example_paths(sel, rid)
+        mode = st.radio(T["mk_ys_paths_pick"], list(PATH_MODES), horizontal=True, key="mk_ys_paths",
+                        format_func=lambda m: T[f"mk_ys_paths_{m}"])
+        paths = _pick_paths(load_market_paths(sel, rid), mode)
         if not paths.empty:
-            paths = paths.assign(h_lbl=paths["h"].astype(str),
-                                 dep_lbl=paths["dep"].dt.tz_convert("Europe/Berlin").dt.strftime("%d.%m. %H:%M"))
-            fig4 = px.line(paths, x="h_lbl", y="price", color="dep_lbl", line_shape="hv", markers=True,
+            paths = paths.assign(dep_lbl=paths["dep"].dt.tz_convert("Europe/Berlin").dt.strftime("%d.%m. %H:%M"))
+            fig4 = px.line(paths, x="h", y="price", color="dep_lbl", line_shape="hv", markers=True,
                            title=T["mk_ys_c4"],
-                           labels={"h_lbl": T["ov_days_adv"], "price": T["mk_rk_price_col"], "dep_lbl": T["mk_ys_dep"]})
-            fig4.update_xaxes(type="category", categoryorder="array", categoryarray=[str(h) for h in HORIZONS])
+                           labels={"h": T["ov_days_adv"], "price": T["mk_rk_price_col"], "dep_lbl": T["mk_ys_dep"]})
+            _horizon_axis(fig4, T)
             fig4.update_yaxes(rangemode="tozero")
             st.plotly_chart(_layout(fig4, height=360), use_container_width=True)
+            st.caption(T["mk_ys_paths_note"].format(n=PATH_MIN_HORIZONS))
     st.caption(T["mk_ys_method"].format(n=MIN_DEPS))
+
+
+def _pick_paths(paths: pd.DataFrame, mode: str, n: int = 5) -> pd.DataFrame:
+    """Select n departures: most completely observed, largest increase/decrease
+    (price at the shortest vs. the longest observed horizon) or most price changes."""
+    if paths.empty:
+        return paths
+    paths = paths.sort_values(["dep", "h"], ascending=[True, False])
+    g = paths.groupby("dep")
+    stats = pd.DataFrame({
+        "n": g.size(),
+        "first": g["price"].first(),                                  # longest horizon
+        "last": g["price"].last(),                                    # shortest horizon
+        "changes": g["price"].apply(lambda s: int((s.diff().fillna(0) != 0).sum())),
+    })
+    stats["change"] = stats["last"] / stats["first"] - 1
+    stats = stats.reset_index()
+    if mode != "complete":
+        stats = stats[stats["n"] >= PATH_MIN_HORIZONS]
+    cols, ascending = {
+        "complete": (["n", "dep"], [False, False]),
+        "up":       (["change", "n"], [False, False]),
+        "down":     (["change", "n"], [True, False]),
+        "changes":  (["changes", "n"], [False, False]),
+    }[mode]
+    top = stats.sort_values(cols, ascending=ascending).head(n)["dep"]
+    return paths[paths["dep"].isin(top)]
 
 
 # ══════════════════════════════════════════════════════════════════
