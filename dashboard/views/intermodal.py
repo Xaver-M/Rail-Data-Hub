@@ -19,9 +19,11 @@ BAG_VARIANTS = ["economy_cabinbag", "economy_nobag"]
 
 CORRIDOR_NAMES = {
     "milan-rome":       {"de": "Mailand – Rom",      "en": "Milan – Rome"},
+    "rome-milan":       {"de": "Rom – Mailand",      "en": "Rome – Milan"},
     "madrid-barcelona": {"de": "Madrid – Barcelona", "en": "Madrid – Barcelona"},
     "barcelona-madrid": {"de": "Barcelona – Madrid", "en": "Barcelona – Madrid"},
     "paris-nice":       {"de": "Paris – Nizza",      "en": "Paris – Nice"},
+    "nice-paris":       {"de": "Nizza – Paris",      "en": "Nice – Paris"},
 }
 
 # Airport pairs per corridor; flights/day from the local test run on 07.10.2026
@@ -30,10 +32,13 @@ WIP_ROUTES = [
     ("milan-rome",       ("trenitalia", "italo"), "LIN–FCO",                   ("ita_airways",),                    "8–10",  True),
     ("milan-rome",       ("trenitalia", "italo"), "MXP–FCO, BGY–FCO",          (),                                  "0",     False),
     ("milan-rome",       ("trenitalia", "italo"), "LIN–CIA, MXP–CIA, BGY–CIA", (),                                  "0",     False),
+    ("rome-milan",       ("trenitalia", "italo"), "FCO–LIN",                   ("ita_airways",),                    "4–10",  True),
     ("madrid-barcelona", ("ouigo_es",),           "MAD–BCN",                   ("iberia", "vueling", "air_europa"), "11–14", True),
     ("barcelona-madrid", ("ouigo_es",),           "BCN–MAD",                   ("iberia", "vueling"),               "~11",   True),
     ("paris-nice",       ("ouigo_fr",),           "ORY–NCE",                   ("transavia", "easyjet"),            "9–12",  True),
     ("paris-nice",       ("ouigo_fr",),           "CDG–NCE",                   ("air_france",),                     "8–9",   True),
+    ("nice-paris",       ("ouigo_fr",),           "NCE–ORY",                   ("transavia", "easyjet"),            "6–11",  True),
+    ("nice-paris",       ("ouigo_fr",),           "NCE–CDG",                   ("air_france",),                     "~7",    True),
 ]
 
 # VM dry run 19.10.2026 (horizons +7/+30, both bag variants, not stored in the DB)

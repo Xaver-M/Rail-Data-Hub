@@ -72,6 +72,12 @@ FLIGHT_ROUTES = [
         rail_operators=["trenitalia", "italo"],
     ),
     FlightRoute(
+        route_id="rome-milan",
+        description="Rome-Milan (air vs. Trenitalia/Italo)",
+        airport_pairs=[("FCO", "LIN")],
+        rail_operators=["trenitalia", "italo"],
+    ),
+    FlightRoute(
         route_id="madrid-barcelona",
         description="Madrid-Barcelona (air vs. OUIGO ES)",
         airport_pairs=[("MAD", "BCN")],
@@ -87,6 +93,12 @@ FLIGHT_ROUTES = [
         route_id="paris-nice",
         description="Paris-Nice (air vs. OUIGO FR)",
         airport_pairs=[("ORY", "NCE"), ("CDG", "NCE")],
+        rail_operators=["ouigo_fr"],
+    ),
+    FlightRoute(
+        route_id="nice-paris",
+        description="Nice-Paris (air vs. OUIGO FR)",
+        airport_pairs=[("NCE", "ORY"), ("NCE", "CDG")],
         rail_operators=["ouigo_fr"],
     ),
 ]

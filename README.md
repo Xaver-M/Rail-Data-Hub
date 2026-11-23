@@ -8,7 +8,7 @@
 
 ## Overview
 
-Rail Data Hub systematically crawls ticket prices from 10 European rail and bus sources across 179 routes, storing all observations in a TimescaleDB time-series database. Since October 2026, flight prices on four corridors are collected as well (Google Flights) for a rail-vs-air comparison. A Streamlit dashboard enables interactive analysis of pricing dynamics, booking horizon effects, cross-operator and cross-mode comparisons, plus a data export.
+Rail Data Hub systematically crawls ticket prices from 10 European rail and bus sources across 188 routes, storing all observations in a TimescaleDB time-series database. Since October 2026, flight prices on six corridors are collected as well (Google Flights) for a rail-vs-air comparison. A Streamlit dashboard enables interactive analysis of pricing dynamics, booking horizon effects, cross-operator and cross-mode comparisons, plus a data export.
 
 The routes cover Germany, Italy, France, Spain, Austria, Switzerland, the Netherlands, Belgium, the Czech Republic, Slovakia, Hungary and Poland. Prices are collected at 14 discrete booking horizons (1–90 days before departure) every day at 10:00 UTC.
 
@@ -28,7 +28,7 @@ The routes cover Germany, Italy, France, Spain, Austria, Switzerland, the Nether
 | OUIGO France | 🇫🇷 France | Low-cost rail | Direct API |
 | RegioJet | 🇨🇿 Czech Republic | Long-distance rail | Public REST API |
 | České dráhy | 🇨🇿 Czech Republic | Long-distance rail | Public REST API |
-| Google Flights | ✈️ IT · ES · FR | Flights (intermodal comparison) | Google Flights, 4 corridors |
+| Google Flights | ✈️ IT · ES · FR | Flights (intermodal comparison) | Google Flights, 6 corridors |
 
 ### Flight corridors
 
@@ -37,9 +37,11 @@ Flights are collected only where they compete with rail on the same route. Their
 | Corridor (`route_id`) | Airports (nonstop) |
 |---|---|
 | `milan-rome` | LIN–FCO |
+| `rome-milan` | FCO–LIN |
 | `madrid-barcelona` | MAD–BCN |
 | `barcelona-madrid` | BCN–MAD |
 | `paris-nice` | ORY–NCE, CDG–NCE |
+| `nice-paris` | NCE–ORY, NCE–CDG |
 
 Each flight is stored in two baggage variants via `fare_class` (`economy_nobag`, `economy_cabinbag`). Flights are hidden in all dashboard views except **Rail vs. Air** and the export.
 
@@ -128,10 +130,10 @@ All analyses use `MIN(price_eur)` per route, horizon and collection day — i.e.
 | Column | Description |
 |---|---|
 | `haversine_km` | Straight-line distance between the stations (from `config/geocode_stations.py`) |
-| `rail_km` | Rail network distance between the two cities (141 of 179 routes) |
+| `rail_km` | Rail network distance between the two cities (144 of 188 routes) |
 | `distance_source` | `rail` or `haversine` — which distance the dashboard uses |
 
-Rail distances are missing for all routes to/from Prague, Munich–Budapest, Berlin–Binz, Paris–Hendaye and Paris–Bourg-Saint-Maurice; there the dashboard falls back to the straight line and flags it. Re-running `geocode_stations.py` keeps `rail_km`.
+Rail distances are missing for all routes to/from Prague, Munich–Budapest, Vienna–Budapest, Budapest/Bratislava–Warsaw, Berlin–Binz, Paris–Hendaye and Paris–Bourg-Saint-Maurice; there the dashboard falls back to the straight line and flags it. Re-running `geocode_stations.py` keeps `rail_km`.
 
 ---
 
@@ -205,7 +207,7 @@ The dashboard runs on the project VM on port 8501 (address on request) or at `ht
 | **Time of Day** | Are early or late departures systematically cheaper? Heatmap by hour and weekday |
 | **Operator Comparison** | Direct price comparison across operators at a selectable horizon |
 | **€/km & €/h** | Normalised prices based on rail distance (straight line as flagged fallback) |
-| **Rail vs. Air** | Rail/bus vs. flight on four corridors: which is cheaper (by day and horizon), door-to-door time and cost incl. value of time, price development, data basis |
+| **Rail vs. Air** | Rail/bus vs. flight on six corridors: which is cheaper (by day and horizon), door-to-door time and cost incl. value of time, price development, data basis |
 | **Data Export** | Filtered download as CSV or Excel, protected by a shared password |
 | **Crawler Status** | System health: last crawl times, record counts, 7-day availability |
 
@@ -240,7 +242,7 @@ The `fare_class` column is populated differently across operators (Italo: produc
 Flixtrain operates only 3 daily departures on most routes, resulting in lower absolute record counts compared to other operators. This reflects the actual timetable, not a crawler limitation.
 
 ### Distances
-Rail distances are city-to-city, not station-to-station (e.g. Paris Est and "Paris toutes gares" share one value). 38 routes still use the straight-line distance, which understates the rail distance by ~26% on average.
+Rail distances are city-to-city, not station-to-station (e.g. Paris Est and "Paris toutes gares" share one value). 44 routes still use the straight-line distance, which understates the rail distance by ~26% on average.
 
 ## Links
 
