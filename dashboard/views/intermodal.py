@@ -1,6 +1,9 @@
 # dashboard/views/intermodal.py
 # Rail/bus vs. air per corridor (Google Flights data since 19.10.2026):
 #   which is cheaper · door to door · price development · data basis & method.
+import importlib.util
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import plotly.express as px
@@ -13,33 +16,39 @@ from dashboard.database import (
     load_intermodal_matrix, load_intermodal_door, load_distances, load_intermodal_pair_airlines,
 )
 
+
+def _load_flight_config():
+    # Under streamlit "config" resolves to dashboard/config.py, so the top-level
+    # config/flight_routes.py is loaded by path.
+    path = Path(__file__).resolve().parents[2] / "config" / "flight_routes.py"
+    spec = importlib.util.spec_from_file_location("rdh_flight_routes", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+_flights = _load_flight_config()
+FLIGHT_ROUTES, FLIGHT_HORIZONS = _flights.FLIGHT_ROUTES, _flights.FLIGHT_HORIZONS
+
 MODE_COLORS = {"rail": "#2563EB", "bus": "#18a04b", "air": "#f97316"}
 MODE_DASH   = {"rail": "solid", "bus": "dot", "air": "dash"}
 BAG_VARIANTS = ["economy_cabinbag", "economy_nobag"]
 
-CORRIDOR_NAMES = {
-    "milan-rome":       {"de": "Mailand – Rom",      "en": "Milan – Rome"},
-    "rome-milan":       {"de": "Rom – Mailand",      "en": "Rome – Milan"},
-    "madrid-barcelona": {"de": "Madrid – Barcelona", "en": "Madrid – Barcelona"},
-    "barcelona-madrid": {"de": "Barcelona – Madrid", "en": "Barcelona – Madrid"},
-    "paris-nice":       {"de": "Paris – Nizza",      "en": "Paris – Nice"},
-    "nice-paris":       {"de": "Nizza – Paris",      "en": "Nice – Paris"},
+# City names per side, used for corridor labels "A – B" (route_id "a-b")
+CITY_NAMES = {
+    "milan": ("Mailand", "Milan"), "rome": ("Rom", "Rome"), "madrid": ("Madrid", "Madrid"),
+    "barcelona": ("Barcelona", "Barcelona"), "paris": ("Paris", "Paris"), "nice": ("Nizza", "Nice"),
+    "london": ("London", "London"), "brussels": ("Brüssel", "Brussels"), "amsterdam": ("Amsterdam", "Amsterdam"),
+    "lyon": ("Lyon", "Lyon"), "vienna": ("Wien", "Vienna"), "prague": ("Prag", "Prague"),
+    "venice": ("Venedig", "Venice"), "munich": ("München", "Munich"), "budapest": ("Budapest", "Budapest"),
+    "warsaw": ("Warschau", "Warsaw"), "bratislava": ("Bratislava", "Bratislava"), "berlin": ("Berlin", "Berlin"),
+    "bucharest": ("Bukarest", "Bucharest"),
 }
-
-# Airport pairs per corridor; flights/day from the local test run on 07.10.2026
-# (see config/flight_routes.py). active=False -> dropped, no nonstop flights.
-WIP_ROUTES = [
-    ("milan-rome",       ("trenitalia", "italo"), "LIN–FCO",                   ("ita_airways",),                    "8–10",  True),
-    ("milan-rome",       ("trenitalia", "italo"), "MXP–FCO, BGY–FCO",          (),                                  "0",     False),
-    ("milan-rome",       ("trenitalia", "italo"), "LIN–CIA, MXP–CIA, BGY–CIA", (),                                  "0",     False),
-    ("rome-milan",       ("trenitalia", "italo"), "FCO–LIN",                   ("ita_airways",),                    "4–10",  True),
-    ("madrid-barcelona", ("ouigo_es",),           "MAD–BCN",                   ("iberia", "vueling", "air_europa"), "11–14", True),
-    ("barcelona-madrid", ("ouigo_es",),           "BCN–MAD",                   ("iberia", "vueling"),               "~11",   True),
-    ("paris-nice",       ("ouigo_fr",),           "ORY–NCE",                   ("transavia", "easyjet"),            "9–12",  True),
-    ("paris-nice",       ("ouigo_fr",),           "CDG–NCE",                   ("air_france",),                     "8–9",   True),
-    ("nice-paris",       ("ouigo_fr",),           "NCE–ORY",                   ("transavia", "easyjet"),            "6–11",  True),
-    ("nice-paris",       ("ouigo_fr",),           "NCE–CDG",                   ("air_france",),                     "~7",    True),
-]
+CORRIDOR_NAMES = {
+    r.route_id: {lang: " – ".join(CITY_NAMES[c][i] for c in r.route_id.split("-", 1))
+                 for i, lang in enumerate(("de", "en"))}
+    for r in FLIGHT_ROUTES if all(c in CITY_NAMES for c in r.route_id.split("-", 1))
+}
 
 # VM dry run 19.10.2026 (horizons +7/+30, both bag variants, not stored in the DB)
 TEST_RUN_2026_10_19 = [
@@ -89,20 +98,23 @@ def _render_wip(T, lang, corridors):
     for col, key, val in zip(st.columns(6), labels, values):
         col.markdown(_kpi(T[key], val), unsafe_allow_html=True)
 
-    # ── Strecken (Fluglinien je Paar aus der DB, sonst aus dem Testlauf) ──
+    # ── Strecken: alle konfigurierten Flughafenpaare, Fluglinien aus der DB ──
     observed = load_intermodal_pair_airlines()
     observed = ({(r, p): tuple(a) for r, p, a in zip(observed["route_id"], observed["pair"], observed["airlines"])}
                 if not observed.empty else {})
+    rows = []
+    for fr in FLIGHT_ROUTES:
+        for o, d in fr.airport_pairs:
+            airlines = observed.get((fr.route_id, f"{o}-{d}"))
+            rows.append({
+                T["im_wip_col_corridor"]: _corridor_name(fr.route_id, lang),
+                T["im_wip_col_rail"]:     _ops(fr.rail_operators) if fr.rail_operators else T["im_wip_air_only"],
+                T["im_wip_col_pair"]:     f"{o}–{d}",
+                T["im_wip_col_airlines"]: _ops(airlines) if airlines else "–",
+                T["im_wip_col_status"]:   T["im_wip_active"] if airlines else T["im_wip_pending"],
+            })
     st.markdown(f"#### {T['im_wip_routes']}")
-    st.dataframe(pd.DataFrame([{
-        T["im_wip_col_corridor"]: _corridor_name(r, lang),
-        T["im_wip_col_rail"]:     _ops(rail),
-        T["im_wip_col_pair"]:     pair,
-        T["im_wip_col_airlines"]: _ops(observed.get((r, pair.replace("–", "-")), air)),
-        T["im_wip_col_freq"]:     freq,
-        T["im_wip_col_status"]:   T["im_wip_active"] if active else T["im_wip_dropped"],
-    } for r, rail, pair, air, freq, active in WIP_ROUTES]),
-        use_container_width=True, hide_index=True)
+    st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
     st.caption(T["im_wip_routes_note"])
 
     # ── Methodik ──
@@ -172,7 +184,8 @@ def _render_live(T, lang, corridors):
 
     df["op_label"] = df["operator"].map(op_label)
     df["mode_label"] = df["mode"].map(mode_lbl)
-    horizons = sorted(df["booking_horizon_days"].unique().tolist())
+    # only horizons with air data (flights use every second rail horizon)
+    horizons = sorted(df.loc[df["mode"] == "air", "booking_horizon_days"].unique().tolist())
     h = st.select_slider(T["im_horizon"], options=horizons,
                          value=14 if 14 in horizons else horizons[len(horizons) // 2], key="im_h")
 
@@ -434,7 +447,7 @@ def _render_door(T, lang, corridors):
 
     c1, c2, c3 = st.columns(3)
     with c1:
-        h = st.select_slider(T["im_horizon"], options=[1, 2, 3, 4, 5, 6, 7, 10, 14, 21, 30, 45, 60, 90],
+        h = st.select_slider(T["im_horizon"], options=FLIGHT_HORIZONS,
                              value=14, key="imd_h")
     with c2:
         vot = st.slider(T["im_d2d_vot"], 0, 100, 20, step=1, key="imd_vot", help=T["im_d2d_vot_help"])
