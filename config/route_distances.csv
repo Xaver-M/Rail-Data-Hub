@@ -187,3 +187,18 @@ budapest-warsaw,Budapest-Keleti,Warszawa Centralna,543.4202,,haversine
 warsaw-budapest,Warszawa Centralna,Budapest-Keleti,543.4202,,haversine
 bratislava-warsaw,Bratislava hlavná stanica,Warszawa Centralna,530.6506,,haversine
 warsaw-bratislava,Warszawa Centralna,Bratislava hlavná stanica,530.6506,,haversine
+london-paris,London St Pancras,Paris - Toutes les gares,347.8810,,haversine
+paris-london,Paris - Toutes les gares,London St Pancras,347.8810,,haversine
+london-brussels,London St Pancras,Brussels-Midi,320.4600,,haversine
+brussels-london,Brussels-Midi,London St Pancras,320.4600,,haversine
+brussels-paris,Brussels-Midi,Paris - Toutes les gares,262.3822,,haversine
+paris-brussels,Paris - Toutes les gares,Brussels-Midi,262.3822,,haversine
+amsterdam-brussels,Amsterdam Centraal,Brussels-Midi,175.9594,,haversine
+brussels-amsterdam,Brussels-Midi,Amsterdam Centraal,175.9594,,haversine
+amsterdam-paris,Amsterdam Centraal,Paris - Toutes les gares,431.5578,,haversine
+paris-amsterdam,Paris - Toutes les gares,Amsterdam Centraal,431.5578,,haversine
+lyon-paris,Lyon toutes gares,Paris - Toutes les gares,390.6214,431.413,rail
+brussels-prague,Brussels-Midi,Praha hlavní nádraží,719.2864,,haversine
+prague-brussels,Praha hlavní nádraží,Brussels-Midi,719.2864,,haversine
+stockholm-oslo,Stockholm Central,Oslo S,415.6502,,haversine
+oslo-stockholm,Oslo S,Stockholm Central,415.6502,,haversine

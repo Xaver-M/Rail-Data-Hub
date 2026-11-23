@@ -53,6 +53,12 @@ CRAWLER_REGISTRY = {
     "db_parsebot":    ("crawlers.db_parsebot.db_parsebot_crawler",       "DBParseBotCrawler",    DB_PARSEBOT_HORIZONS),
     # headed Playwright browser -> service runs under xvfb-run (deploy/install_systemd.sh)
     "italo":          ("crawlers.italo.italo_crawler",                   "ItaloCrawler",         BOOKING_HORIZONS),
+    # headed Playwright, reads the responses of the normal eurostar.com search page
+    "eurostar":       ("crawlers.eurostar.eurostar_crawler",             "EurostarCrawler",      BOOKING_HORIZONS),
+    # headed Playwright, reads the responses of the normal booking.europeansleeper.eu pages
+    "european_sleeper": ("crawlers.european_sleeper.european_sleeper_crawler", "EuropeanSleeperCrawler", BOOKING_HORIZONS),
+    # headed Playwright, reads the responses of the normal sj.se result pages
+    "sj":             ("crawlers.sj.sj_crawler",                         "SJCrawler",            BOOKING_HORIZONS),
     # own routes/horizons from config/flight_routes.py
     "google_flights": ("crawlers.google_flights.google_flights_crawler", "GoogleFlightsCrawler", None),
 }
@@ -69,6 +75,9 @@ DEFAULT_VM_CRAWLERS = [
     "ceske_drahy",
     "db_parsebot",
     "italo",
+    "eurostar",
+    "european_sleeper",
+    "sj",
     "google_flights",
 ]
 

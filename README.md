@@ -8,9 +8,9 @@
 
 ## Overview
 
-Rail Data Hub systematically crawls ticket prices from 10 European rail and bus sources across 188 routes, storing all observations in a TimescaleDB time-series database. Since October 2026, flight prices on six corridors are collected as well (Google Flights) for a rail-vs-air comparison. A Streamlit dashboard enables interactive analysis of pricing dynamics, booking horizon effects, cross-operator and cross-mode comparisons, plus a data export.
+Rail Data Hub systematically crawls ticket prices from 13 European rail and bus sources across 203 routes, storing all observations in a TimescaleDB time-series database. Since October 2026, flight prices on six corridors are collected as well (Google Flights) for a rail-vs-air comparison. A Streamlit dashboard enables interactive analysis of pricing dynamics, booking horizon effects, cross-operator and cross-mode comparisons, plus a data export.
 
-The routes cover Germany, Italy, France, Spain, Austria, Switzerland, the Netherlands, Belgium, the Czech Republic, Slovakia, Hungary and Poland. Prices are collected at 14 discrete booking horizons (1–90 days before departure) every day at 10:00 UTC.
+The routes cover Germany, Italy, France, Spain, Austria, Switzerland, the Netherlands, Belgium, the Czech Republic, Slovakia, Hungary, Poland, the United Kingdom, Sweden and Norway. Prices are collected at 14 discrete booking horizons (1–90 days before departure) every day at 10:00 UTC.
 
 ---
 
@@ -28,6 +28,9 @@ The routes cover Germany, Italy, France, Spain, Austria, Switzerland, the Nether
 | OUIGO France | 🇫🇷 France | Low-cost rail | Direct API |
 | RegioJet | 🇨🇿 Czech Republic | Long-distance rail | Public REST API |
 | České dráhy | 🇨🇿 Czech Republic | Long-distance rail | Public REST API |
+| Eurostar | 🇬🇧 🇫🇷 🇧🇪 🇳🇱 | High-speed rail | Playwright, reads the normal eurostar.com search page (headed, under xvfb on the VM) |
+| European Sleeper | 🇧🇪 🇨🇿 | Night train | Playwright, reads the normal booking pages (headed, under xvfb on the VM) |
+| SJ | 🇸🇪 🇳🇴 | Long-distance rail | Playwright, reads the normal sj.se result pages (headed, under xvfb on the VM); SEK at a fixed rate |
 | Google Flights | ✈️ IT · ES · FR | Flights (intermodal comparison) | Google Flights, 6 corridors |
 
 ### Flight corridors
@@ -130,10 +133,10 @@ All analyses use `MIN(price_eur)` per route, horizon and collection day — i.e.
 | Column | Description |
 |---|---|
 | `haversine_km` | Straight-line distance between the stations (from `config/geocode_stations.py`) |
-| `rail_km` | Rail network distance between the two cities (144 of 188 routes) |
+| `rail_km` | Rail network distance between the two cities (145 of 203 routes) |
 | `distance_source` | `rail` or `haversine` — which distance the dashboard uses |
 
-Rail distances are missing for all routes to/from Prague, Munich–Budapest, Vienna–Budapest, Budapest/Bratislava–Warsaw, Berlin–Binz, Paris–Hendaye and Paris–Bourg-Saint-Maurice; there the dashboard falls back to the straight line and flags it. Re-running `geocode_stations.py` keeps `rail_km`.
+Rail distances are missing for all routes to/from Prague, Munich–Budapest, Vienna–Budapest, Budapest/Bratislava–Warsaw, all Eurostar, European Sleeper and SJ routes, Berlin–Binz, Paris–Hendaye and Paris–Bourg-Saint-Maurice; there the dashboard falls back to the straight line and flags it. Re-running `geocode_stations.py` keeps `rail_km`.
 
 ---
 
@@ -242,7 +245,7 @@ The `fare_class` column is populated differently across operators (Italo: produc
 Flixtrain operates only 3 daily departures on most routes, resulting in lower absolute record counts compared to other operators. This reflects the actual timetable, not a crawler limitation.
 
 ### Distances
-Rail distances are city-to-city, not station-to-station (e.g. Paris Est and "Paris toutes gares" share one value). 44 routes still use the straight-line distance, which understates the rail distance by ~26% on average.
+Rail distances are city-to-city, not station-to-station (e.g. Paris Est and "Paris toutes gares" share one value). 58 routes still use the straight-line distance, which understates the rail distance by ~26% on average.
 
 ## Links
 

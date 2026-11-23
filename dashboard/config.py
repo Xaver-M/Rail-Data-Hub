@@ -7,7 +7,8 @@ import streamlit as st
 OPERATOR_COLORS = {
     "db": "#4a9eff", "flixtrain": "#a8e44a", "regiojet": "#ff7c5c",
     "trenitalia": "#ffb547", "italo": "#ff4f4f", "ouigo_es": "#b47fff", "ouigo_fr": "#ff6eb4",
-    "flixbus": "#18a04b", "ceske-drahy": "#003f87", "db_parsebot": "#f01414",
+    "flixbus": "#18a04b", "ceske-drahy": "#003f87", "db_parsebot": "#f01414", "eurostar": "#1b2e5a",
+    "european_sleeper": "#5b1f3f", "sj": "#00a54f",
     # airlines (Google Flights, rail-vs-air view only)
     "ita_airways": "#1f4e9c", "aeroitalia": "#7a2e8e", "iberia": "#c8102e", "vueling": "#e6b800",
     "air_europa": "#0a3d91", "air_france": "#5b7db1", "transavia": "#00a651", "easyjet": "#ff6600",
@@ -25,7 +26,8 @@ DB_BAHNCARD_OPERATORS = ("db", "db_parsebot")
 OPERATOR_LABELS = {
     "db": "DB", "flixtrain": "Flixtrain", "regiojet": "RegioJet",
     "trenitalia": "Trenitalia", "italo": "Italo", "ouigo_es": "Ouigo ES", "ouigo_fr": "Ouigo FR",
-    "flixbus": "Flixbus", "ceske-drahy": "České dráhy", "db_parsebot": "DB (ParseBot)",
+    "flixbus": "Flixbus", "ceske-drahy": "České dráhy", "db_parsebot": "DB (ParseBot)", "eurostar": "Eurostar",
+    "european_sleeper": "European Sleeper", "sj": "SJ",
     "ita_airways": "ITA Airways", "aeroitalia": "Aeroitalia", "iberia": "Iberia", "vueling": "Vueling",
     "air_europa": "Air Europa", "air_france": "Air France", "transavia": "Transavia", "easyjet": "easyJet",
     "ryanair": "Ryanair", "volotea": "Volotea",
@@ -1159,6 +1161,8 @@ STATION_DISPLAY_NAMES = {
     "Venezia Santa Lucia":           {"en": "Venice Santa Lucia",         "de": "Venedig Santa Lucia"},
     # ── Netherlands ──
     "Amsterdam Centraal":            {"en": "Amsterdam Central Station",  "de": "Amsterdam Hbf"},
+    # ── United Kingdom ──
+    "London St Pancras":             {"en": "London St Pancras",          "de": "London St Pancras"},
     # ── Spain ──
     "Madrid - Todas las estaciones": {"en": "Madrid - All Stations",      "de": "Madrid - Alle Bahnhöfe"},
     "Sevilla - Santa Justa":         {"en": "Seville - Santa Justa",      "de": "Sevilla - Santa Justa"},

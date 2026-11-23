@@ -39,6 +39,7 @@ STATION_COORDINATES: dict[str, tuple[float, float]] = {
     'Lecce': (40.152217, 18.226063),  # Lecce, Puglia, Italia
     'Leipzig Hbf': (51.346552, 12.383086),  # Leipzig Hauptbahnhof, 5, Willy-Brandt-Platz, Zentrum-Ost, Mitte, 
     'Linz Hbf': (48.290241, 14.291862),  # Linz Hauptbahnhof, Verbindungstunnel TS Werk - Hbf Linz, Innere S
+    'London St Pancras': (51.531921, -0.126361),  # St Pancras International, Euston Road, London (added by hand)
     'Lyon toutes gares': (45.748322, 4.825327),  # Lyon-Perrache, Passage France Pejot, Perrache, Lyon 2e Arrondisse
     'Lübeck Hbf': (53.867123, 10.670478),  # Lübeck Hauptbahnhof, 2-6, Am Bahnhof, Sankt Lorenz Süd, Lübeck, S
     'Madrid - Todas las estaciones': (40.404661, -3.688970),  # Madrid-Puerta de Atocha-Almudena Grandes, Calle del Áncora, Palos
@@ -49,6 +50,7 @@ STATION_COORDINATES: dict[str, tuple[float, float]] = {
     'Nantes': (47.218637, -1.554136),  # Nantes, Loire-Atlantique, Pays de la Loire, France métropolitaine
     'Napoli Centrale': (40.853024, 14.273140),  # Napoli Centrale, Corso Meridionale, Rione Vasto, Vicaria, Municip
     'Nice Ville': (43.704784, 7.261832),  # Nice-Ville, Parvis de la Gare, Vernier, Thiers, La Buffa, Nice, A
+    'Oslo S': (59.910924, 10.752245),  # Oslo sentralstasjon, Jernbanetorget, Oslo (added by hand)
     'Ostrava hlavní nádraží': (49.850670, 18.267072),  # Ostrava hlavní nádraží, Nádražní, Přívoz, Moravská Ostrava a Přív
     'Ostseebad Binz': (54.401029, 13.607648),  # Binz, Vorpommern-Rügen, Mecklenburg-Vorpommern, 18609, Deutschlan
     'Paris - Toutes les gares': (48.843663, 2.374487),  # Gare de Lyon, Allée de Bercy, Quartier des Quinze-Vingts, Paris 1
@@ -63,6 +65,7 @@ STATION_COORDINATES: dict[str, tuple[float, float]] = {
     'Saarbrücken Hbf': (49.241197, 6.990794),  # Saarbrücken Hauptbahnhof, Am Hauptbahnhof, Hauptbahnhof, St. Joha
     'Salerno': (40.419442, 15.310609),  # Salerno, Campania, Italia
     'Sevilla - Santa Justa': (37.392092, -5.975206),  # Sevilla - Santa Justa, Carril Taxi, Huerta de Santa Teresa, San P
+    'Stockholm Central': (59.330158, 18.057907),  # Stockholm Centralstation, Centralplan, Stockholm (added by hand)
     'Strasbourg Ville': (48.569103, 7.752492),  # Strasbourg-Ville (avant 2015), Strasbourg, Bas-Rhin, Collectivité
     'Stuttgart Hbf': (48.784266, 9.182117),  # Stuttgart Hauptbahnhof, 2, Arnulf-Klett-Platz, Hauptbahnhof, Stut
     'Torino Porta Nuova': (45.061892, 7.678369),  # Torino Porta Nuova, Piazza Carlo Felice, Centro, Circoscrizione 1

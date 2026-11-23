@@ -22,6 +22,9 @@ class Station:
     regiojet_station_id: Optional[str] = None
     regiojet_city_id: Optional[str] = None
     cd_station_name: Optional[str] = None      # Name for CD CDIS API (Czech spelling)
+    eurostar_id: Optional[str] = None          # UIC code used by eurostar.com
+    europeansleeper_id: Optional[str] = None   # station id of booking.europeansleeper.eu
+    sj_name: Optional[str] = None              # station name in sj.se result URLs
 
 
 @dataclass
@@ -65,6 +68,8 @@ BRUSSELS = Station(
     name="Brussels-Midi",
     db_id="8814001",
     ouigo_fr_id="88140010",
+    eurostar_id="8814001",
+    europeansleeper_id="8800104",
 )
 
 # ── Czech Republic ────────────────────────────────────────────
@@ -88,6 +93,7 @@ PRAGUE = Station(
     regiojet_city_id="10202003",
     regiojet_station_id="372825000",
     cd_station_name="Praha hl.n.",
+    europeansleeper_id="5457076",
 )
 
 # ── France ────────────────────────────────────────────────────
@@ -148,6 +154,7 @@ PARIS = Station(
     name="Paris - Toutes les gares",
     ouigo_fr_id="PT1",
     trenitalia_id=870075890,
+    eurostar_id="8727100",      # Paris Gare du Nord
 )
 
 PARIS_EST = Station(
@@ -557,6 +564,7 @@ VERONA = Station(
 AMSTERDAM = Station(
     name="Amsterdam Centraal",
     db_id="8400058",
+    eurostar_id="8400058",
 )
 
 # ── Poland ────────────────────────────────────────────────────
@@ -627,6 +635,27 @@ VALENCIA = Station(
 ZARAGOZA = Station(
     name="Zaragoza - Delicias",
     ouigo_es_id="7104040",
+)
+
+# ── Norway ────────────────────────────────────────────────────
+
+OSLO = Station(
+    name="Oslo S",
+    sj_name="Oslo S",
+)
+
+# ── Sweden ────────────────────────────────────────────────────
+
+STOCKHOLM = Station(
+    name="Stockholm Central",
+    sj_name="Stockholm Central",
+)
+
+# ── United Kingdom ────────────────────────────────────────────
+
+LONDON = Station(
+    name="London St Pancras",
+    eurostar_id="7015400",
 )
 
 # ── Switzerland ───────────────────────────────────────────────
@@ -1016,6 +1045,13 @@ ROUTES = [
         route_id="paris-lyon"
     ),
     Route(
+        origin=LYON,
+        destination=PARIS,
+        operators=["ouigo_fr", "SNCF", "trenitalia"],
+        description="Lyon-Paris (Ouigo vs. SNCF vs. Trenitalia)",
+        route_id="lyon-paris"
+    ),
+    Route(
         origin=PARIS,
         destination=MARSEILLE,
         operators=["ouigo_fr", "SNCF", "trenitalia"],
@@ -1119,6 +1155,110 @@ ROUTES = [
         operators=["ouigo_fr"],
         description="Paris-Brussels (Ouigo OGV)",
         route_id="paris-brussels-ouigo"
+    ),
+
+    # ── Eurostar: Amsterdam–Brussels–Paris, Brussels/Paris–London ─────────
+    Route(
+        origin=LONDON,
+        destination=PARIS,
+        operators=["eurostar"],
+        description="London-Paris (Eurostar)",
+        route_id="london-paris"
+    ),
+    Route(
+        origin=PARIS,
+        destination=LONDON,
+        operators=["eurostar"],
+        description="Paris-London (Eurostar)",
+        route_id="paris-london"
+    ),
+    Route(
+        origin=LONDON,
+        destination=BRUSSELS,
+        operators=["eurostar"],
+        description="London-Brussels (Eurostar)",
+        route_id="london-brussels"
+    ),
+    Route(
+        origin=BRUSSELS,
+        destination=LONDON,
+        operators=["eurostar"],
+        description="Brussels-London (Eurostar)",
+        route_id="brussels-london"
+    ),
+    Route(
+        origin=BRUSSELS,
+        destination=PARIS,
+        operators=["eurostar"],
+        description="Brussels-Paris (Eurostar)",
+        route_id="brussels-paris"
+    ),
+    Route(
+        origin=PARIS,
+        destination=BRUSSELS,
+        operators=["eurostar"],
+        description="Paris-Brussels (Eurostar)",
+        route_id="paris-brussels"
+    ),
+    Route(
+        origin=AMSTERDAM,
+        destination=BRUSSELS,
+        operators=["eurostar"],
+        description="Amsterdam-Brussels (Eurostar)",
+        route_id="amsterdam-brussels"
+    ),
+    Route(
+        origin=BRUSSELS,
+        destination=AMSTERDAM,
+        operators=["eurostar"],
+        description="Brussels-Amsterdam (Eurostar)",
+        route_id="brussels-amsterdam"
+    ),
+    Route(
+        origin=AMSTERDAM,
+        destination=PARIS,
+        operators=["eurostar"],
+        description="Amsterdam-Paris (Eurostar)",
+        route_id="amsterdam-paris"
+    ),
+    Route(
+        origin=PARIS,
+        destination=AMSTERDAM,
+        operators=["eurostar"],
+        description="Paris-Amsterdam (Eurostar)",
+        route_id="paris-amsterdam"
+    ),
+
+    # ── European Sleeper: night train Brussels–Prague (3x/week per direction) ──
+    Route(
+        origin=BRUSSELS,
+        destination=PRAGUE,
+        operators=["european_sleeper"],
+        description="Brussels-Prague (European Sleeper)",
+        route_id="brussels-prague"
+    ),
+    Route(
+        origin=PRAGUE,
+        destination=BRUSSELS,
+        operators=["european_sleeper"],
+        description="Prague-Brussels (European Sleeper)",
+        route_id="prague-brussels"
+    ),
+
+    # ── SJ: Stockholm–Oslo (direct trains) ─────────────────────
+    Route(
+        origin=STOCKHOLM,
+        destination=OSLO,
+        operators=["sj"],
+        description="Stockholm-Oslo (SJ)",
+        route_id="stockholm-oslo"
+    ),
+    Route(
+        origin=OSLO,
+        destination=STOCKHOLM,
+        operators=["sj"],
+        description="Oslo-Stockholm (SJ)",
+        route_id="oslo-stockholm"
     ),
 
     # ── International ──────────────────────────────────────────
