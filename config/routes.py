@@ -652,6 +652,13 @@ ROUTES = [
         route_id="milan-rome"
     ),
     Route(
+        origin=ROME,
+        destination=MILAN,
+        operators=["trenitalia", "italo"],
+        description="Rome-Milan (Trenitalia vs. Italo)",
+        route_id="rome-milan"
+    ),
+    Route(
         origin=MILAN,
         destination=NAPLES,
         operators=["trenitalia", "italo"],
@@ -737,6 +744,13 @@ ROUTES = [
         operators=["trenitalia"],
         description="Paris-Milan (FR international)",
         route_id="paris-milan"
+    ),
+    Route(
+        origin=MILAN,
+        destination=PARIS,
+        operators=["trenitalia"],
+        description="Milan-Paris (FR international)",
+        route_id="milan-paris"
     ),
 
     # ── Italy: Trenitalia Frecciargento (FA) ───────────────────
@@ -1030,6 +1044,13 @@ ROUTES = [
         route_id="paris-nice"
     ),
     Route(
+        origin=NICE,
+        destination=PARIS,
+        operators=["ouigo_fr"],
+        description="Nice-Paris (Ouigo OGV)",
+        route_id="nice-paris"
+    ),
+    Route(
         origin=PARIS,
         destination=TOULOUSE,
         operators=["ouigo_fr"],
@@ -1154,6 +1175,20 @@ ROUTES = [
         route_id="budapest-prague"
     ),
     Route(
+        origin=VIENNA,
+        destination=BUDAPEST,
+        operators=["regiojet", "ceske-drahy"],
+        description="Vienna-Budapest (RegioJet vs. CD)",
+        route_id="vienna-budapest"
+    ),
+    Route(
+        origin=BUDAPEST,
+        destination=VIENNA,
+        operators=["regiojet", "ceske-drahy"],
+        description="Budapest-Vienna (RegioJet vs. CD)",
+        route_id="budapest-vienna"
+    ),
+    Route(
         origin=PRAGUE,
         destination=OSTRAVA,
         operators=["regiojet", "ceske-drahy"],
@@ -1196,6 +1231,34 @@ ROUTES = [
         operators=["regiojet", "ceske-drahy"],
         description="Warsaw-Prague (RegioJet vs. CD)",
         route_id="warsaw-prague"
+    ),
+    Route(
+        origin=BUDAPEST,
+        destination=WARSAW,
+        operators=["regiojet", "ceske-drahy"],
+        description="Budapest-Warsaw (RegioJet vs. CD)",
+        route_id="budapest-warsaw"
+    ),
+    Route(
+        origin=WARSAW,
+        destination=BUDAPEST,
+        operators=["regiojet", "ceske-drahy"],
+        description="Warsaw-Budapest (RegioJet vs. CD)",
+        route_id="warsaw-budapest"
+    ),
+    Route(
+        origin=BRATISLAVA,
+        destination=WARSAW,
+        operators=["regiojet", "ceske-drahy"],
+        description="Bratislava-Warsaw (RegioJet vs. CD)",
+        route_id="bratislava-warsaw"
+    ),
+    Route(
+        origin=WARSAW,
+        destination=BRATISLAVA,
+        operators=["regiojet", "ceske-drahy"],
+        description="Warsaw-Bratislava (RegioJet vs. CD)",
+        route_id="warsaw-bratislava"
     ),
     Route(
         origin=PRAGUE,

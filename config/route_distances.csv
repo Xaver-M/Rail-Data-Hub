@@ -178,3 +178,12 @@ frankfurt-milan,Frankfurt(Main)Hbf,Milano Centrale,515.3942,633.4,rail
 milan-frankfurt,Milano Centrale,Frankfurt(Main)Hbf,515.3942,633.4,rail
 munich-zurich,München Hbf,Zürich HB,240.958,308.393,rail
 zurich-munich,Zürich HB,München Hbf,240.958,308.393,rail
+rome-milan,Roma Termini,Milano Centrale,478.6114,559.456,rail
+milan-paris,Milano Centrale,Paris - Toutes les gares,636.7846,866.845,rail
+nice-paris,Nice Ville,Paris - Toutes les gares,683.4994,961.533,rail
+vienna-budapest,Wien Hbf,Budapest-Keleti,215.8084,,haversine
+budapest-vienna,Budapest-Keleti,Wien Hbf,215.8084,,haversine
+budapest-warsaw,Budapest-Keleti,Warszawa Centralna,543.4202,,haversine
+warsaw-budapest,Warszawa Centralna,Budapest-Keleti,543.4202,,haversine
+bratislava-warsaw,Bratislava hlavná stanica,Warszawa Centralna,530.6506,,haversine
+warsaw-bratislava,Warszawa Centralna,Bratislava hlavná stanica,530.6506,,haversine
