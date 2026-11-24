@@ -72,6 +72,15 @@ AIRLINE_SLUGS = {
     "easyJet": "easyjet",
     "Ryanair": "ryanair",
     "Volotea": "volotea",
+    "Austrian": "austrian",
+    "Austrian Airlines": "austrian",
+    "British Airways": "british_airways",
+    "Brussels Airlines": "brussels_airlines",
+    "KLM": "klm",
+    "LOT": "lot",
+    "LOT Polish Airlines": "lot",
+    "TAROM": "tarom",
+    "Wizz Air": "wizz_air",
 }
 
 
