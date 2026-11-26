@@ -58,6 +58,8 @@ AIRPORT_TZ = {
     "WAW": "Europe/Warsaw",
     "WMI": "Europe/Warsaw",
     "OTP": "Europe/Bucharest",
+    "ARN": "Europe/Stockholm",
+    "OSL": "Europe/Oslo",
 }
 
 AIRPORT_NAMES = {
@@ -91,6 +93,8 @@ AIRPORT_NAMES = {
     "WAW": "Warszawa Chopin",
     "WMI": "Warszawa Modlin",
     "OTP": "București Henri Coandă",
+    "ARN": "Stockholm Arlanda",
+    "OSL": "Oslo Gardermoen",
 }
 
 
@@ -104,8 +108,8 @@ AIRPORT_NAMES = {
 # No nonstop flights (pruned, both directions): MXP/BGY-FCO, all -CIA pairs,
 # EIN/RTM-Paris, LCY-Paris, LGW/STN/LTN-ORY, LGW/LCY/STN/LTN-Brussels, CRL-AMS/CDG/ORY,
 # BGY-CDG/ORY, LIN-BVA, AMS-ORY/BVA, BTS-PRG, BTS-WAW.
-# Stockholm-Oslo: ARN-OSL is served, but the result page is not parsed
-# correctly (0 flights) -> left out until fixed.
+# Stockholm-Oslo: added 26.11.2026 after the parser fix; Google shows SAS on ARN-OSL
+# without a price, so only Norwegian/Ethiopian are collected there.
 
 
 def _both_ways(fwd_id: str, desc: str, pairs: list[tuple[str, str]],
@@ -159,6 +163,7 @@ FLIGHT_ROUTES = [
     *_both_ways("prague-warsaw", "Prague-Warsaw", [("PRG", "WAW")], ["regiojet", "ceske-drahy"]),
     *_both_ways("berlin-warsaw", "Berlin-Warsaw", [("BER", "WAW")], ["pkp_intercity"]),
     *_both_ways("budapest-bucharest", "Budapest-Bucharest", [("BUD", "OTP")], []),
+    *_both_ways("stockholm-oslo", "Stockholm-Oslo", [("ARN", "OSL")], ["sj"]),
 ]
 
 

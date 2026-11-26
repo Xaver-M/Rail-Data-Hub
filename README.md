@@ -8,7 +8,7 @@
 
 ## Overview
 
-Rail Data Hub systematically crawls ticket prices from 15 European rail and bus sources across 208 routes, storing all observations in a TimescaleDB time-series database. Since October 2026, flight prices on 46 corridors are collected as well (Google Flights) for a rail-vs-air comparison. A Streamlit dashboard enables interactive analysis of pricing dynamics, booking horizon effects, cross-operator and cross-mode comparisons, plus a data export.
+Rail Data Hub systematically crawls ticket prices from 15 European rail and bus sources across 208 routes, storing all observations in a TimescaleDB time-series database. Since October 2026, flight prices on 48 corridors are collected as well (Google Flights) for a rail-vs-air comparison. A Streamlit dashboard enables interactive analysis of pricing dynamics, booking horizon effects, cross-operator and cross-mode comparisons, plus a data export.
 
 The routes cover Germany, Italy, France, Spain, Austria, Switzerland, the Netherlands, Belgium, the Czech Republic, Slovakia, Hungary, Poland, the United Kingdom, Sweden and Norway. Prices are collected at 14 discrete booking horizons (1–90 days before departure) every day at 10:00 UTC.
 
@@ -33,7 +33,7 @@ The routes cover Germany, Italy, France, Spain, Austria, Switzerland, the Nether
 | SJ | 🇸🇪 🇳🇴 | Long-distance rail | Playwright, reads the normal sj.se result pages (headed, under xvfb on the VM); SEK at a fixed rate |
 | Renfe | 🇪🇸 Spain | High-speed rail | Playwright, reads the normal renfe.com search (headed, under xvfb on the VM); Madrid–Barcelona |
 | PKP Intercity | 🇵🇱 🇩🇪 | Long-distance rail | Playwright, fills the normal ebilet.intercity.pl search form (headed, under xvfb on the VM); Berlin–Warsaw |
-| Google Flights | ✈️ Europe | Flights (intermodal comparison) | Google Flights, 46 corridors |
+| Google Flights | ✈️ Europe | Flights (intermodal comparison) | Google Flights, 48 corridors |
 
 ### Flight corridors
 
@@ -45,9 +45,11 @@ Flights are collected on corridors where they compete with rail: the original co
 | International high speed | London–Paris, London–Brussels, Amsterdam–Paris, Amsterdam–Brussels, Brussels–Paris, Milan–Paris, Barcelona–Paris* | LHR/LGW/STN/LTN, BRU, AMS, CDG/ORY/BVA, LIN/MXP/BGY, BCN |
 | Domestic high speed | Paris–Lyon | CDG–LYS |
 | Night trains | Brussels–Vienna*, Brussels–Prague, Vienna–Venice*, Budapest–Warsaw, Budapest–Prague, Bratislava–Warsaw | BRU/CRL, VIE, PRG, VCE/TSF, BUD, WAW/WMI, BTS |
-| Long distance | Vienna–Munich*, Vienna–Prague, Vienna–Budapest, Prague–Warsaw, Berlin–Warsaw, Budapest–Bucharest* | VIE, MUC, PRG, BUD, BER, WAW, OTP |
+| Long distance | Vienna–Munich*, Vienna–Prague, Vienna–Budapest, Prague–Warsaw, Berlin–Warsaw, Budapest–Bucharest*, Stockholm–Oslo | VIE, MUC, PRG, BUD, BER, WAW, OTP, ARN, OSL |
 
-\* air only (no rail crawler). 46 corridors, 78 airport pairs. Stockholm–Oslo is not included yet (result page not parsed correctly).
+\* air only (no rail crawler). 48 corridors, 80 airport pairs. On Stockholm–Oslo Google shows SAS without a price, so only Norwegian and Ethiopian are collected there.
+
+**Level shift on 27.11.2026:** until 26.11.2026 the parser only read Google's "other flights" section and missed the "best flights" (usually the 2–5 cheapest per search). From 27.11.2026 both are collected, so flight minimum and average prices drop noticeably from that date (e.g. Milan–Rome min 107 → 79 €, London–Paris 211 → 144 € in a test on 26.11.). Compare flight prices across this date only with care.
 
 Flights are collected at every second rail horizon (1, 3, 5, 7, 14, 30, 60, 90 days), one-way only (~1,200 queries/day, ~2 h runtime).
 
@@ -215,7 +217,7 @@ The dashboard runs on the project VM on port 8501 (address on request) or at `ht
 | **Time of Day** | Are early or late departures systematically cheaper? Heatmap by hour and weekday |
 | **Operator Comparison** | Direct price comparison across operators at a selectable horizon |
 | **€/km & €/h** | Normalised prices based on rail distance (straight line as flagged fallback) |
-| **Rail vs. Air** | Rail/bus vs. flight on 46 corridors: which is cheaper (by day and horizon), door-to-door time and cost incl. value of time, price development, data basis |
+| **Rail vs. Air** | Rail/bus vs. flight on 48 corridors: which is cheaper (by day and horizon), door-to-door time and cost incl. value of time, price development, data basis |
 | **Data Export** | Filtered download as CSV or Excel, protected by a shared password |
 | **Crawler Status** | System health: last crawl times, record counts, 7-day availability |
 

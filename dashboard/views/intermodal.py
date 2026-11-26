@@ -42,7 +42,7 @@ CITY_NAMES = {
     "lyon": ("Lyon", "Lyon"), "vienna": ("Wien", "Vienna"), "prague": ("Prag", "Prague"),
     "venice": ("Venedig", "Venice"), "munich": ("München", "Munich"), "budapest": ("Budapest", "Budapest"),
     "warsaw": ("Warschau", "Warsaw"), "bratislava": ("Bratislava", "Bratislava"), "berlin": ("Berlin", "Berlin"),
-    "bucharest": ("Bukarest", "Bucharest"),
+    "bucharest": ("Bukarest", "Bucharest"), "stockholm": ("Stockholm", "Stockholm"), "oslo": ("Oslo", "Oslo"),
 }
 CORRIDOR_NAMES = {
     r.route_id: {lang: " – ".join(CITY_NAMES[c][i] for c in r.route_id.split("-", 1))

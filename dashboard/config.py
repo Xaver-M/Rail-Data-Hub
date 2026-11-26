@@ -14,7 +14,7 @@ OPERATOR_COLORS = {
     "air_europa": "#0a3d91", "air_france": "#5b7db1", "transavia": "#00a651", "easyjet": "#ff6600",
     "ryanair": "#073590", "volotea": "#e6007e", "austrian": "#d81e05", "british_airways": "#2e5c99",
     "brussels_airlines": "#b0004c", "klm": "#00a1de", "lot": "#11397e", "tarom": "#4d7cbf",
-    "wizz_air": "#c6007e",
+    "wizz_air": "#c6007e", "sas": "#000f9f", "norwegian": "#d81939", "ethiopian": "#078930",
 }
 
 # Anbieter mit verlässlichen seats_available-Daten (geprüft im Snapshot: DB, DB-Parsebot,
@@ -34,7 +34,7 @@ OPERATOR_LABELS = {
     "air_europa": "Air Europa", "air_france": "Air France", "transavia": "Transavia", "easyjet": "easyJet",
     "ryanair": "Ryanair", "volotea": "Volotea", "austrian": "Austrian", "british_airways": "British Airways",
     "brussels_airlines": "Brussels Airlines", "klm": "KLM", "lot": "LOT", "tarom": "TAROM",
-    "wizz_air": "Wizz Air",
+    "wizz_air": "Wizz Air", "sas": "SAS", "norwegian": "Norwegian", "ethiopian": "Ethiopian",
 }
 # Zentrales Custom-CSS für den 1+ Premium Look (Schatten, Karten, abgerundete Ecken)
 CUSTOM_CSS = """
