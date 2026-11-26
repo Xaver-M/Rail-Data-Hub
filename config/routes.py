@@ -961,42 +961,42 @@ ROUTES = [
     Route(
         origin=MADRID,
         destination=VALENCIA,
-        operators=["renfe", "ouigo_es"],
+        operators=["ouigo_es"],
         description="Madrid-Valencia (Renfe vs. Ouigo)",
         route_id="madrid-valencia"
     ),
     Route(
         origin=VALENCIA,
         destination=MADRID,
-        operators=["renfe", "ouigo_es"],
+        operators=["ouigo_es"],
         description="Valencia-Madrid (Renfe vs. Ouigo)",
         route_id="valencia-madrid"
     ),
     Route(
         origin=MADRID,
         destination=SEVILLE,
-        operators=["renfe", "ouigo_es"],
+        operators=["ouigo_es"],
         description="Madrid-Seville (Renfe vs. Ouigo)",
         route_id="madrid-seville"
     ),
     Route(
         origin=SEVILLE,
         destination=MADRID,
-        operators=["renfe", "ouigo_es"],
+        operators=["ouigo_es"],
         description="Seville-Madrid (Renfe vs. Ouigo)",
         route_id="seville-madrid"
     ),
     Route(
         origin=MADRID,
         destination=ZARAGOZA,
-        operators=["renfe", "ouigo_es"],
+        operators=["ouigo_es"],
         description="Madrid-Zaragoza (Renfe vs. Ouigo)",
         route_id="madrid-zaragoza"
     ),
     Route(
         origin=ZARAGOZA,
         destination=MADRID,
-        operators=["renfe", "ouigo_es"],
+        operators=["ouigo_es"],
         description="Zaragoza-Madrid (Renfe vs. Ouigo)",
         route_id="zaragoza-madrid"
     ),
@@ -1010,21 +1010,21 @@ ROUTES = [
     Route(
         origin=BARCELONA,
         destination=ZARAGOZA,
-        operators=["renfe", "ouigo_es"],
+        operators=["ouigo_es"],
         description="Barcelona-Zaragoza (Renfe vs. Ouigo)",
         route_id="barcelona-zaragoza"
     ),
     Route(
         origin=ZARAGOZA,
         destination=BARCELONA,
-        operators=["renfe", "ouigo_es"],
+        operators=["ouigo_es"],
         description="Zaragoza-Barcelona (Renfe vs. Ouigo)",
         route_id="zaragoza-barcelona"
     ),
     Route(
         origin=SEVILLE,
         destination=BARCELONA,
-        operators=["renfe", "ouigo_es"],
+        operators=["ouigo_es"],
         description="Seville-Barcelona (Renfe vs. Ouigo)",
         route_id="seville-barcelona"
     ),
@@ -1261,6 +1261,22 @@ ROUTES = [
         route_id="oslo-stockholm"
     ),
 
+    # ── PKP Intercity: Berlin–Warsaw (EC Berlin-Warszawa-Express, EC Ursa) ──
+    Route(
+        origin=BERLIN,
+        destination=WARSAW,
+        operators=["pkp_intercity"],
+        description="Berlin-Warsaw (PKP Intercity)",
+        route_id="berlin-warsaw"
+    ),
+    Route(
+        origin=WARSAW,
+        destination=BERLIN,
+        operators=["pkp_intercity"],
+        description="Warsaw-Berlin (PKP Intercity)",
+        route_id="warsaw-berlin"
+    ),
+
     # ── International ──────────────────────────────────────────
 
     Route(
@@ -1269,6 +1285,13 @@ ROUTES = [
         operators=["db", "oebb"],
         description="Munich-Vienna (DB vs. OeBB)",
         route_id="munich-vienna"
+    ),
+    Route(
+        origin=VIENNA,
+        destination=MUNICH,
+        operators=["db", "oebb"],
+        description="Vienna-Munich (DB vs. OeBB)",
+        route_id="vienna-munich"
     ),
 
     # ── RegioJet + České dráhy: Czech Republic / Austria / Slovakia / Hungary ──
@@ -1313,6 +1336,20 @@ ROUTES = [
         operators=["regiojet", "ceske-drahy"],
         description="Budapest-Prague (RegioJet vs. CD)",
         route_id="budapest-prague"
+    ),
+    Route(
+        origin=BUDAPEST,
+        destination=BRATISLAVA,
+        operators=["regiojet", "ceske-drahy"],
+        description="Budapest-Bratislava (RegioJet vs. CD)",
+        route_id="budapest-bratislava"
+    ),
+    Route(
+        origin=BRATISLAVA,
+        destination=BUDAPEST,
+        operators=["regiojet", "ceske-drahy"],
+        description="Bratislava-Budapest (RegioJet vs. CD)",
+        route_id="bratislava-budapest"
     ),
     Route(
         origin=VIENNA,

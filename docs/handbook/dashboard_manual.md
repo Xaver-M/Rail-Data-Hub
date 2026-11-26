@@ -273,9 +273,9 @@ As in the Individual Train tab, you can filter between direct connections and co
 
 ### Note on distances
 
-For most routes (145 of 203), distances are **rail network distances** between the two cities (`rail_km` in `config/route_distances.csv`). Stations are mapped to their city, so e.g. Paris Est and "Paris toutes gares" share the same distance.
+For most routes (146 of 208), distances are **rail network distances** between the two cities (`rail_km` in `config/route_distances.csv`). Stations are mapped to their city, so e.g. Paris Est and "Paris toutes gares" share the same distance.
 
-For routes without a rail distance (all routes to/from Prague, Munich–Budapest, Vienna–Budapest, Budapest/Bratislava–Warsaw, all Eurostar, European Sleeper and SJ routes, Berlin–Binz, Paris–Hendaye, Paris–Bourg-Saint-Maurice), the dashboard falls back to the **straight-line Haversine distance** and marks it with ⚠️. Rail distances are on average ~26% longer than the straight line, so €/km on these routes is overstated and not directly comparable with the others.
+For routes without a rail distance (all routes to/from Prague, Munich–Budapest, Vienna–Budapest, Budapest/Bratislava–Warsaw, Budapest–Bratislava, Berlin–Warsaw, all Eurostar, European Sleeper and SJ routes, Berlin–Binz, Paris–Hendaye, Paris–Bourg-Saint-Maurice), the dashboard falls back to the **straight-line Haversine distance** and marks it with ⚠️. Rail distances are on average ~26% longer than the straight line, so €/km on these routes is overstated and not directly comparable with the others.
 
 ---
 

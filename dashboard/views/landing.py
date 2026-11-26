@@ -30,6 +30,16 @@ _OPERATOR_META = {
                       "type": {"en": "Long-distance rail", "de": "Fernbahn"}},
     "ceske-drahy":  {"flag": "🇨🇿", "country": {"en": "Czech Republic", "de": "Tschechien"},
                       "type": {"en": "Long-distance rail", "de": "Fernbahn"}},
+    "eurostar":     {"flag": "🇪🇺", "country": {"en": "Europe", "de": "Europa"},
+                      "type": {"en": "High-speed", "de": "High-Speed"}},
+    "european_sleeper": {"flag": "🇳🇱", "country": {"en": "Europe", "de": "Europa"},
+                      "type": {"en": "Night train", "de": "Nachtzug"}},
+    "sj":           {"flag": "🇸🇪", "country": {"en": "Sweden", "de": "Schweden"},
+                      "type": {"en": "Long-distance rail", "de": "Fernbahn"}},
+    "renfe":        {"flag": "🇪🇸", "country": {"en": "Spain", "de": "Spanien"},
+                      "type": {"en": "High-speed", "de": "High-Speed"}},
+    "pkp_intercity": {"flag": "🇵🇱", "country": {"en": "Poland", "de": "Polen"},
+                      "type": {"en": "Long-distance rail", "de": "Fernbahn"}},
 }
 
 _HORIZONS = [90, 60, 45, 30, 21, 14, 10, 7, 6, 5, 4, 3, 2, 1]

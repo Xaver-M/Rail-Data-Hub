@@ -202,3 +202,8 @@ brussels-prague,Brussels-Midi,Praha hlavní nádraží,719.2864,,haversine
 prague-brussels,Praha hlavní nádraží,Brussels-Midi,719.2864,,haversine
 stockholm-oslo,Stockholm Central,Oslo S,415.6502,,haversine
 oslo-stockholm,Oslo S,Stockholm Central,415.6502,,haversine
+berlin-warsaw,Berlin Hbf,Warszawa Centralna,518.9832,,haversine
+warsaw-berlin,Warszawa Centralna,Berlin Hbf,518.9832,,haversine
+budapest-bratislava,Budapest-Keleti,Bratislava hlavná stanica,164.7995,,haversine
+bratislava-budapest,Bratislava hlavná stanica,Budapest-Keleti,164.7995,,haversine
+vienna-munich,Wien Hbf,München Hbf,357.5431,405.749,rail

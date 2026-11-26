@@ -59,6 +59,10 @@ CRAWLER_REGISTRY = {
     "european_sleeper": ("crawlers.european_sleeper.european_sleeper_crawler", "EuropeanSleeperCrawler", BOOKING_HORIZONS),
     # headed Playwright, reads the responses of the normal sj.se result pages
     "sj":             ("crawlers.sj.sj_crawler",                         "SJCrawler",            BOOKING_HORIZONS),
+    # headed Playwright, reads the responses of the normal renfe.com search page
+    "renfe":          ("crawlers.renfe.renfe_crawler",                   "RenfeCrawler",         BOOKING_HORIZONS),
+    # headed Playwright, fills the ebilet.intercity.pl search form, reads the page's responses
+    "pkp_intercity":  ("crawlers.pkp_intercity.pkp_intercity_crawler",   "PKPIntercityCrawler",  BOOKING_HORIZONS),
     # own routes/horizons from config/flight_routes.py
     "google_flights": ("crawlers.google_flights.google_flights_crawler", "GoogleFlightsCrawler", None),
 }
@@ -78,6 +82,8 @@ DEFAULT_VM_CRAWLERS = [
     "eurostar",
     "european_sleeper",
     "sj",
+    "renfe",
+    "pkp_intercity",
     "google_flights",
 ]
 

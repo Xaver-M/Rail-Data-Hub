@@ -8,7 +8,7 @@
 
 ## Overview
 
-Rail Data Hub systematically crawls ticket prices from 13 European rail and bus sources across 203 routes, storing all observations in a TimescaleDB time-series database. Since October 2026, flight prices on 44 corridors are collected as well (Google Flights) for a rail-vs-air comparison. A Streamlit dashboard enables interactive analysis of pricing dynamics, booking horizon effects, cross-operator and cross-mode comparisons, plus a data export.
+Rail Data Hub systematically crawls ticket prices from 15 European rail and bus sources across 208 routes, storing all observations in a TimescaleDB time-series database. Since October 2026, flight prices on 46 corridors are collected as well (Google Flights) for a rail-vs-air comparison. A Streamlit dashboard enables interactive analysis of pricing dynamics, booking horizon effects, cross-operator and cross-mode comparisons, plus a data export.
 
 The routes cover Germany, Italy, France, Spain, Austria, Switzerland, the Netherlands, Belgium, the Czech Republic, Slovakia, Hungary, Poland, the United Kingdom, Sweden and Norway. Prices are collected at 14 discrete booking horizons (1–90 days before departure) every day at 10:00 UTC.
 
@@ -31,7 +31,9 @@ The routes cover Germany, Italy, France, Spain, Austria, Switzerland, the Nether
 | Eurostar | 🇬🇧 🇫🇷 🇧🇪 🇳🇱 | High-speed rail | Playwright, reads the normal eurostar.com search page (headed, under xvfb on the VM) |
 | European Sleeper | 🇧🇪 🇨🇿 | Night train | Playwright, reads the normal booking pages (headed, under xvfb on the VM) |
 | SJ | 🇸🇪 🇳🇴 | Long-distance rail | Playwright, reads the normal sj.se result pages (headed, under xvfb on the VM); SEK at a fixed rate |
-| Google Flights | ✈️ Europe | Flights (intermodal comparison) | Google Flights, 44 corridors |
+| Renfe | 🇪🇸 Spain | High-speed rail | Playwright, reads the normal renfe.com search (headed, under xvfb on the VM); Madrid–Barcelona |
+| PKP Intercity | 🇵🇱 🇩🇪 | Long-distance rail | Playwright, fills the normal ebilet.intercity.pl search form (headed, under xvfb on the VM); Berlin–Warsaw |
+| Google Flights | ✈️ Europe | Flights (intermodal comparison) | Google Flights, 46 corridors |
 
 ### Flight corridors
 
@@ -43,9 +45,9 @@ Flights are collected on corridors where they compete with rail: the original co
 | International high speed | London–Paris, London–Brussels, Amsterdam–Paris, Amsterdam–Brussels, Brussels–Paris, Milan–Paris, Barcelona–Paris* | LHR/LGW/STN/LTN, BRU, AMS, CDG/ORY/BVA, LIN/MXP/BGY, BCN |
 | Domestic high speed | Paris–Lyon | CDG–LYS |
 | Night trains | Brussels–Vienna*, Brussels–Prague, Vienna–Venice*, Budapest–Warsaw, Budapest–Prague, Bratislava–Warsaw | BRU/CRL, VIE, PRG, VCE/TSF, BUD, WAW/WMI, BTS |
-| Long distance | Vienna–Munich*, Vienna–Prague, Vienna–Budapest, Berlin–Warsaw*, Budapest–Bucharest* | VIE, MUC, PRG, BUD, BER, WAW, OTP |
+| Long distance | Vienna–Munich*, Vienna–Prague, Vienna–Budapest, Prague–Warsaw, Berlin–Warsaw, Budapest–Bucharest* | VIE, MUC, PRG, BUD, BER, WAW, OTP |
 
-\* air only (no rail crawler). 44 corridors, 76 airport pairs. Stockholm–Oslo is not included yet (result page not parsed correctly).
+\* air only (no rail crawler). 46 corridors, 78 airport pairs. Stockholm–Oslo is not included yet (result page not parsed correctly).
 
 Flights are collected at every second rail horizon (1, 3, 5, 7, 14, 30, 60, 90 days), one-way only (~1,200 queries/day, ~2 h runtime).
 
@@ -136,10 +138,10 @@ All analyses use `MIN(price_eur)` per route, horizon and collection day — i.e.
 | Column | Description |
 |---|---|
 | `haversine_km` | Straight-line distance between the stations (from `config/geocode_stations.py`) |
-| `rail_km` | Rail network distance between the two cities (145 of 203 routes) |
+| `rail_km` | Rail network distance between the two cities (146 of 208 routes) |
 | `distance_source` | `rail` or `haversine` — which distance the dashboard uses |
 
-Rail distances are missing for all routes to/from Prague, Munich–Budapest, Vienna–Budapest, Budapest/Bratislava–Warsaw, all Eurostar, European Sleeper and SJ routes, Berlin–Binz, Paris–Hendaye and Paris–Bourg-Saint-Maurice; there the dashboard falls back to the straight line and flags it. Re-running `geocode_stations.py` keeps `rail_km`.
+Rail distances are missing for all routes to/from Prague, Munich–Budapest, Vienna–Budapest, Budapest/Bratislava–Warsaw, Budapest–Bratislava, Berlin–Warsaw, all Eurostar, European Sleeper and SJ routes, Berlin–Binz, Paris–Hendaye and Paris–Bourg-Saint-Maurice; there the dashboard falls back to the straight line and flags it. Re-running `geocode_stations.py` keeps `rail_km`.
 
 ---
 
@@ -213,7 +215,7 @@ The dashboard runs on the project VM on port 8501 (address on request) or at `ht
 | **Time of Day** | Are early or late departures systematically cheaper? Heatmap by hour and weekday |
 | **Operator Comparison** | Direct price comparison across operators at a selectable horizon |
 | **€/km & €/h** | Normalised prices based on rail distance (straight line as flagged fallback) |
-| **Rail vs. Air** | Rail/bus vs. flight on 44 corridors: which is cheaper (by day and horizon), door-to-door time and cost incl. value of time, price development, data basis |
+| **Rail vs. Air** | Rail/bus vs. flight on 46 corridors: which is cheaper (by day and horizon), door-to-door time and cost incl. value of time, price development, data basis |
 | **Data Export** | Filtered download as CSV or Excel, protected by a shared password |
 | **Crawler Status** | System health: last crawl times, record counts, 7-day availability |
 

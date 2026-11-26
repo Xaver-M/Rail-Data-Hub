@@ -156,7 +156,8 @@ FLIGHT_ROUTES = [
     *_both_ways("vienna-munich", "Vienna-Munich", [("VIE", "MUC")], []),
     *_both_ways("vienna-prague", "Vienna-Prague", [("VIE", "PRG")], ["regiojet", "ceske-drahy"]),
     *_both_ways("vienna-budapest", "Vienna-Budapest", [("VIE", "BUD")], ["regiojet", "ceske-drahy"]),
-    *_both_ways("berlin-warsaw", "Berlin-Warsaw", [("BER", "WAW")], []),
+    *_both_ways("prague-warsaw", "Prague-Warsaw", [("PRG", "WAW")], ["regiojet", "ceske-drahy"]),
+    *_both_ways("berlin-warsaw", "Berlin-Warsaw", [("BER", "WAW")], ["pkp_intercity"]),
     *_both_ways("budapest-bucharest", "Budapest-Bucharest", [("BUD", "OTP")], []),
 ]
 
