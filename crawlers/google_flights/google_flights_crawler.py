@@ -6,9 +6,14 @@ Location in repo: crawlers/google_flights/google_flights_crawler.py
 
 Design notes:
 - Fetches the Google Flights HTML itself (primp client with EU consent cookies),
-  then uses fast-flights only for query encoding and parsing. The default
+  then uses fast-flights for query encoding and its data models. The default
   fast-flights fetcher sends no consent cookies and ends up on the
   consent.google.com page when run from the EU.
+- The embedded result payload is parsed here (_parse_result_page), not with
+  fast_flights.parser.parse: that parser (v3.1.0) only reads the "other flights"
+  section (payload[3]) and drops "best flights" (payload[2], usually the cheapest
+  ones), and it crashes on the whole page as soon as one itinerary has no price
+  (e.g. SAS on Stockholm-Oslo shows "price unavailable").
 - Reuses BaseCrawler for logging, DB connection, validation, save() and log_run().
 - operator = airline slug (e.g. "ita_airways"); the transport mode comes from
   the operator_meta table (see database/migrations/2026_10_intermodal.sql).
@@ -16,9 +21,14 @@ Design notes:
 - fare_class encodes the bag variant ("economy_nobag" / "economy_cabinbag").
 
 Test without DB writes (from repo root):
-    py -m crawlers.google_flights.google_flights_crawler
+    py -m crawlers.google_flights.google_flights_crawler            # all FLIGHT_ROUTES
+    # ad-hoc pairs (--tz only needed for airports not yet in AIRPORT_TZ):
+    py -m crawlers.google_flights.google_flights_crawler \
+        --pairs stockholm-oslo:ARN-OSL,oslo-stockholm:OSL-ARN \
+        --tz ARN=Europe/Stockholm,OSL=Europe/Oslo --horizons 7,30
 """
 
+import json
 import os
 import random
 import re
@@ -28,7 +38,8 @@ from zoneinfo import ZoneInfo
 
 from primp import Client
 from fast_flights import FlightQuery, Passengers, create_query
-from fast_flights.parser import parse as parse_flights_html
+from fast_flights.model import Airport, CarbonEmission, Flights, SimpleDatetime, SingleFlight
+from selectolax.lexbor import LexborHTMLParser
 try:
     from fast_flights.exceptions import FlightsNotFound
 except ImportError:  # other library layouts
@@ -81,6 +92,12 @@ AIRLINE_SLUGS = {
     "LOT Polish Airlines": "lot",
     "TAROM": "tarom",
     "Wizz Air": "wizz_air",
+    "SAS": "sas",
+    "Scandinavian Airlines": "sas",
+    "Norwegian": "norwegian",
+    "Norwegian Air Shuttle": "norwegian",
+    "Norwegian Air Sweden": "norwegian",
+    "Ethiopian": "ethiopian",          # ET714/715 ARN-OSL (fifth-freedom leg to/from ADD)
 }
 
 
@@ -92,6 +109,84 @@ def _airline_slug(name: str) -> str:
 
 class BlockedError(Exception):
     """Consent page or bot block – retrying the same request is pointless."""
+
+
+# ─────────────────────────────────────────────────────────────
+# RESULT PAGE PARSER
+# ─────────────────────────────────────────────────────────────
+# The result page embeds its data as JSON in <script class="ds:1">.
+# payload[2][0] = "best flights", payload[3][0] = "other flights"; both are
+# lists of itineraries k with k[0] = flight data, k[1][0] = [None, price]
+# (k[1][0] == [] when Google shows "price unavailable").
+
+PAYLOAD_SECTIONS = (2, 3)
+
+
+def _parse_time(value) -> tuple[int, int]:
+    # Google drops zero components: [8] = 08:00, [None, 31] = 00:31
+    padded = [*(value or []), None, None]
+    return (padded[0] or 0, padded[1] or 0)
+
+
+def _parse_itinerary(k) -> Flights | None:
+    """One payload itinerary -> fast-flights Flights; None if it has no price."""
+    flight = k[0]
+    price_block = k[1][0] if k[1] else None
+    if not price_block or len(price_block) < 2 or price_block[1] is None:
+        return None
+
+    legs = []
+    for sf in flight[2]:
+        legs.append(SingleFlight(
+            from_airport=Airport(code=sf[3], name=sf[4]),
+            to_airport=Airport(code=sf[6], name=sf[5]),
+            departure=SimpleDatetime(date=tuple(sf[20]), time=_parse_time(sf[8])),
+            arrival=SimpleDatetime(date=tuple(sf[21]), time=_parse_time(sf[10])),
+            duration=sf[11],
+            plane_type=sf[17],
+        ))
+
+    extras = flight[22] if len(flight) > 22 and flight[22] else []
+    return Flights(
+        type=flight[0],
+        price=price_block[1],
+        airlines=flight[1],
+        flights=legs,
+        carbon=CarbonEmission(
+            typical_on_route=extras[8] if len(extras) > 8 else None,
+            emission=extras[7] if len(extras) > 7 else None,
+        ),
+    )
+
+
+def _parse_result_page(html: str) -> tuple[list[Flights], int, int]:
+    """
+    Returns (priced itineraries, n_unpriced, n_malformed).
+    Raises FlightsNotFound for Google's "no results" payload and AttributeError
+    if the data script is missing (unknown page layout).
+    """
+    script = LexborHTMLParser(html).css_first(r"script.ds\:1")
+    js = script.text()   # AttributeError if missing -> handled by caller
+    data = js.split("data:", 1)[1].rsplit(",", 1)[0]
+    if data.endswith("errorHasStatus: true"):
+        raise FlightsNotFound("no flights found; received error")
+    payload = json.loads(data)
+
+    results, unpriced, malformed = [], 0, 0
+    for idx in PAYLOAD_SECTIONS:
+        section = payload[idx] if len(payload) > idx else None
+        rows = (section[0] if section else None) or []
+        for k in rows:
+            try:
+                it = _parse_itinerary(k)
+            except (TypeError, IndexError, KeyError):
+                malformed += 1
+                continue
+            if it is None:
+                unpriced += 1
+            else:
+                results.append(it)
+    return results, unpriced, malformed
 
 
 class GoogleFlightsCrawler(BaseCrawler):
@@ -201,14 +296,12 @@ class GoogleFlightsCrawler(BaseCrawler):
             try:
                 html = self._fetch_html(query)
                 try:
-                    result = parse_flights_html(html)
+                    flights, unpriced, malformed = _parse_result_page(html)
                 except FlightsNotFound:
                     # Valid page, but no (nonstop) flights for this pair/date -> 0 records, no retry
                     return []
-                except (TypeError, IndexError) as e:
-                    # Result page without flight data: fast-flights then fails on empty
-                    # payload sections ('NoneType' object is not subscriptable).
-                    # Treat as "no flights" -> 0 records, no retry.
+                except (TypeError, IndexError, ValueError) as e:
+                    # Result page without flight data (empty payload sections) -> 0 records
                     self.logger.info(
                         f"{origin}-{destination} {date} bags={carry_on_bags}: "
                         f"no flights in result payload ({type(e).__name__}: {e})"
@@ -221,8 +314,12 @@ class GoogleFlightsCrawler(BaseCrawler):
                         f"Flight data not found in HTML ({len(html)} bytes) – "
                         f"see {DEBUG_HTML_PATH}: {e}"
                     )
-                flights = getattr(result, "flights", result)
-                return list(flights or [])
+                if unpriced or malformed:
+                    self.logger.info(
+                        f"{origin}-{destination} {date} bags={carry_on_bags}: skipped "
+                        f"{unpriced} itineraries without price, {malformed} malformed"
+                    )
+                return flights
 
             except BlockedError:
                 raise  # no retry – would fail identically
@@ -259,6 +356,12 @@ class GoogleFlightsCrawler(BaseCrawler):
             legs = itinerary.flights
             first, last = legs[0], legs[-1]
 
+            if origin not in AIRPORT_TZ or destination not in AIRPORT_TZ:
+                self.logger.error(
+                    f"{origin}-{destination}: airport missing in AIRPORT_TZ "
+                    f"(config/flight_routes.py) – all flights skipped"
+                )
+                return []
             try:
                 dep = self._to_datetime(first.departure, AIRPORT_TZ[origin])
                 arr = self._to_datetime(last.arrival, AIRPORT_TZ[destination])
@@ -412,11 +515,38 @@ class GoogleFlightsCrawler(BaseCrawler):
 # ─────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    crawler = GoogleFlightsCrawler()
-    # Small smoke test: all routes, 2 horizons
-    records = crawler.run(horizons=[7, 30], write_db=False)
+    import argparse
+    import sys
+    from config.flight_routes import FlightRoute
 
-    configured = [(r.route_id, o, d) for r in FLIGHT_ROUTES for o, d in r.airport_pairs]
+    sys.stdout.reconfigure(encoding="utf-8")
+    ap = argparse.ArgumentParser(description="Google Flights test run (no DB writes)")
+    ap.add_argument("--pairs", help="route_id:ORIG-DEST[,...]; default: all FLIGHT_ROUTES")
+    ap.add_argument("--tz", help="CODE=Zone[,...] for airports not yet in AIRPORT_TZ (test only)")
+    ap.add_argument("--horizons", default="7,30")
+    args = ap.parse_args()
+
+    if args.tz:
+        for item in args.tz.split(","):
+            code, zone = item.split("=", 1)
+            AIRPORT_TZ.setdefault(code, zone)
+
+    test_routes = FLIGHT_ROUTES
+    if args.pairs:
+        grouped: dict[str, list[tuple[str, str]]] = {}
+        for item in args.pairs.split(","):
+            rid, pair = item.split(":", 1)
+            o, d = pair.split("-", 1)
+            grouped.setdefault(rid, []).append((o, d))
+        test_routes = [FlightRoute(route_id=rid, description="test", airport_pairs=pairs)
+                       for rid, pairs in grouped.items()]
+
+    crawler = GoogleFlightsCrawler()
+    records = crawler.run(routes=test_routes,
+                          horizons=[int(h) for h in args.horizons.split(",")],
+                          write_db=False)
+
+    configured = [(r.route_id, o, d) for r in test_routes for o, d in r.airport_pairs]
 
     print("\n=== Results per airport pair (horizons 7 + 30, both bag variants) ===")
     for key in configured:
@@ -437,6 +567,7 @@ if __name__ == "__main__":
     for r in records[:10]:
         print(
             f"  {r['route_id']:<18} {r['origin_id']}-{r['destination_id']} "
-            f"{r['departure_time']:%Y-%m-%d %H:%M} {r['operator']:<12} "
-            f"{r['travel_class']:<17} {r['price_eur']:>8.2f} EUR"
+            f"{r['departure_time']:%Y-%m-%d %H:%M} -> {r['arrival_time']:%H:%M} "
+            f"{r['operator']:<12} {r['train_number']:<16} "
+            f"{r['travel_class']:<17} {r['price_eur']:>8.2f} EUR  +{r['booking_horizon_days']}d"
         )
